@@ -55,11 +55,20 @@ refresh official data
 → optionally run Jev
 → run integrity checks
 → build dist/
-→ upload GitHub Pages artifact
-→ deploy Pages
+→ verify Pages is enabled
+→ upload the artifact
+→ deploy
 ```
 
-GitHub repository settings should use **GitHub Actions** as the Pages source.
+### One-time Pages setup
+
+GitHub does not allow the normal workflow `GITHUB_TOKEN` to create/enable a Pages site. For first-time setup, open:
+
+**Repository → Settings → Pages → Build and deployment → Source → GitHub Actions**
+
+After that one-time switch, the existing workflow deploys automatically. If Pages is not enabled, the workflow now finishes the verified build successfully and emits a clear warning instead of failing at `configure-pages`.
+
+GitHub Pages supports private repositories only on plans that include private Pages. If the repository remains private and the Pages option is unavailable, use a plan that supports private Pages or make the repository public before enabling it.
 
 ## Local development
 
@@ -106,6 +115,8 @@ Those refresh commands require network access to the official endpoints.
 ├── index.html
 └── package.json
 ```
+
+The build preserves that browser-facing structure in `dist/`: assets stay under `dist/src/`, docs stay under `dist/docs/`, while `public/` is copied to the site root.
 
 ## Important modelling limits
 
