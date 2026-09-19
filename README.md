@@ -28,7 +28,7 @@ The browser then:
 3. scales it by the latest official population snapshot and national 15+ share;
 4. population-weights the ten provincial estimates into a Canadian snapshot.
 
-The core model therefore advances locally without a server. The scheduled Pages workflow refreshes source data twice an hour so population/live-feed snapshots stay fresh. The Time Use Survey itself is a survey profile, not a live sensor feed.
+The core model therefore advances locally without a server. The scheduled Pages workflow refreshes population and live-feed snapshots at the interval configured in `.github/workflows/pages.yml`. The Time Use Survey itself is a survey profile, not a live sensor feed.
 
 ## Jev / TypeSafe System One
 
@@ -48,7 +48,7 @@ Without the secret, the build writes a deterministic fact card and the rest of t
 
 The repository includes `.github/workflows/pages.yml`.
 
-On push to `main`, manual dispatch, and twice-hourly schedule it:
+On push to `main`, manual dispatch, and its configured schedule it:
 
 ```text
 refresh official data
