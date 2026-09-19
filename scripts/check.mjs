@@ -17,6 +17,16 @@ if(existsSync('public/data/population.json')){
     if(ratio<.75||ratio>1.3)throw new Error(`generated population mapping for ${id} is implausible: ${value} vs verified ${baseline}`);
   }
 }
+if(existsSync('public/data/live-signals.json')){
+  const signals=JSON.parse(await readFile('public/data/live-signals.json','utf8'));
+  if(!signals.generatedAt)throw new Error('live signal bundle missing generatedAt');
+  if(signals.openGovernment?.status==='ready'&&!Number.isFinite(Number(signals.openGovernment.changedLast24h)))throw new Error('Open Government 24h change count missing');
+  if(signals.statcan?.status==='ready'){
+    if(!Array.isArray(signals.statcan.indicators)||!signals.statcan.indicators.length)throw new Error('StatCan indicator snapshot missing');
+    if(!Array.isArray(signals.statcan.schedule)||!signals.statcan.schedule.length)throw new Error('StatCan release schedule missing');
+    if(signals.statcan.changed?.status==='ready'&&!Array.isArray(signals.statcan.changed.items))throw new Error('StatCan changed-table metadata missing');
+  }
+}
 if(existsSync('public/data/canada-provinces.geojson')){
   const geo=JSON.parse(await readFile('public/data/canada-provinces.geojson','utf8'));
   if(geo?.type!=='FeatureCollection'||geo.features?.length!==13)throw new Error('generated Canada boundary bundle must contain 13 regions');
