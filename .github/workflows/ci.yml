@@ -12,10 +12,11 @@ jobs:
   check:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
         with:
           node-version: 22
-      - run: npm install --ignore-scripts
+          package-manager-cache: false
+      - run: npm install --ignore-scripts --no-audit --no-fund
       - run: npm run check
       - run: npm run build
