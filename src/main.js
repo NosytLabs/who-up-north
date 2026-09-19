@@ -11,6 +11,7 @@ const DATA={
 const LIVE={
   weather:'https://api.weather.gc.ca/collections/weather-alerts/items?f=json&limit=12',
   open:'https://open.canada.ca/data/en/api/3/action/recently_changed_packages_activity_list?limit=8',
+  openCount:'https://open.canada.ca/data/en/api/3/action/package_search?rows=0&fq=metadata_modified%3A%5BNOW-1DAY%20TO%20NOW%5D',
   bank:'https://www.bankofcanada.ca/valet/observations/FXUSDCAD/json?recent=1',
   search:'https://open.canada.ca/data/en/api/3/action/package_search'
 };
@@ -250,26 +251,30 @@ function renderFact(){
 }
 
 function weather(j){const f=j?.features||[];return{live:true,checkedAt:new Date().toISOString(),numberMatched:j?.numberMatched??f.length,items:f.slice(0,8).map(q=>({name:q.properties?.alert_short_name_en||q.properties?.alert_name_en,feature:q.properties?.feature_name_en,province:q.properties?.province,published:q.properties?.publication_datetime}))}}
-function openGov(j){return{live:true,checkedAt:new Date().toISOString(),items:(j?.result||[]).slice(0,8).map(q=>({timestamp:q.timestamp,id:q.object_id,title:q.data?.package?.title_translated?.en||q.data?.package?.title||q.data?.package?.name||'Updated dataset',organization:q.data?.package?.organization?.title||'',url:`https://open.canada.ca/data/en/dataset/${q.object_id}`}))}}
+function openGov(j,count){return{live:true,checkedAt:new Date().toISOString(),changedLast24h:Number.isFinite(Number(count?.result?.count))?Number(count.result.count):null,items:(j?.result||[]).slice(0,8).map(q=>({timestamp:q.timestamp,id:q.object_id,title:q.data?.package?.title_translated?.en||q.data?.package?.title||q.data?.package?.name||'Updated dataset',organization:q.data?.package?.organization?.title||'',url:`https://open.canada.ca/data/en/dataset/${q.object_id}`}))}}
 function bank(j){const r=j?.observations?.at(-1),v=Number(r?.FXUSDCAD?.v);return{live:true,checkedAt:new Date().toISOString(),date:r?.d,value:Number.isFinite(v)?v:null,description:j?.seriesDetail?.FXUSDCAD?.description||'Daily average USD/CAD'}}
 
-async function loadLive(){
+async function loadLive(options={}){
+  const auto=options?.auto===true,includeBank=options?.includeBank!==false;
   if(!state.live){
     try{state.live=await json(DATA.live);renderLive();renderStatCan()}catch{}
   }
-  $('live-status').textContent='CHECKING PUBLIC SOURCES DIRECTLY…';
-  $('live-refresh').disabled=true;
-  const [w,o,b]=await Promise.allSettled([json(LIVE.weather),json(LIVE.open),json(LIVE.bank)]);
+  if(!auto){
+    $('live-status').textContent='CHECKING PUBLIC SOURCES DIRECTLY…';
+    $('live-refresh').disabled=true;
+  }
+  const bankRequest=includeBank?json(LIVE.bank):Promise.resolve(null);
+  const [w,o,oc,b]=await Promise.allSettled([json(LIVE.weather),json(LIVE.open),json(LIVE.openCount),bankRequest]);
   const previous=state.live||{weather:{items:[]},openGovernment:{items:[]},bank:{},statcan:{}};
   state.live={
     ...previous,
     weather:w.status==='fulfilled'?weather(w.value):previous.weather,
-    openGovernment:o.status==='fulfilled'?openGov(o.value):previous.openGovernment,
-    bank:b.status==='fulfilled'?bank(b.value):previous.bank
+    openGovernment:o.status==='fulfilled'?openGov(o.value,oc.status==='fulfilled'?oc.value:null):previous.openGovernment,
+    bank:includeBank&&b.status==='fulfilled'&&b.value?bank(b.value):previous.bank
   };
-  if([w,o,b].some(x=>x.status==='fulfilled'))state.liveCheckedAt=new Date();
+  if([w,o,oc,b].some(x=>x.status==='fulfilled'&&x.value))state.liveCheckedAt=new Date();
   renderLive();renderStatCan();
-  $('live-refresh').disabled=false;
+  if(!auto)$('live-refresh').disabled=false;
 }
 function renderFreshness(){
   if(!state.live)return;
@@ -289,14 +294,15 @@ function renderLive(){
   $('weather-count').textContent=Number.isFinite(w.numberMatched)?num(w.numberMatched):'—';
   $('weather-caption').textContent=Number.isFinite(w.numberMatched)?'active alert areas':'feed unavailable';
   $('weather-detail').textContent=wi?`${wi.name||'Weather alert'} · ${wi.feature||wi.province||'Canada'}`:'No current alert detail.';
-  $('weather-list').innerHTML=(w.items||[]).slice(0,4).map((q,i)=>`<button class="${i===state.w?'active':''}" data-w="${i}" type="button">${esc(q.province||'CA')} · ${esc(q.name||'alert')}</button>`).join('');
+  $('weather-list').innerHTML=(w.items||[]).slice(0,4).map((q,i)=>`<button class="${i===state.w?'active':''}" data-w="${i}" type="button" title="${esc((q.name||'Weather alert')+' · '+(q.feature||q.province||'Canada'))}">${esc(q.province||'CA')} · ${esc(q.name||'alert')}</button>`).join('');
   document.querySelectorAll('[data-w]').forEach(button=>button.onclick=()=>{state.w=+button.dataset.w;renderLive()});
   $('weather-card').classList.toggle('live',!!w.live);
 
+  $('open-updated-count').textContent=Number.isFinite(o.changedLast24h)?num(o.changedLast24h):'—';
   $('open-data-title').textContent=oi?.title||'Open Government feed unavailable';
   $('open-data-time').textContent=oi?.timestamp?new Date(oi.timestamp).toLocaleString('en-CA'):'—';
   $('open-data-link').href=oi?.url||'https://open.canada.ca/data/en/';
-  $('open-data-list').innerHTML=(o.items||[]).slice(0,4).map((q,i)=>`<button class="${i===state.o?'active':''}" data-o="${i}" type="button">${String(i+1).padStart(2,'0')} · ${esc((q.organization||'dataset').slice(0,22))}</button>`).join('');
+  $('open-data-list').innerHTML=(o.items||[]).slice(0,4).map((q,i)=>`<button class="${i===state.o?'active':''}" data-o="${i}" type="button" title="${esc((q.title||q.organization||'dataset'))}">${String(i+1).padStart(2,'0')} · ${esc(q.title||q.organization||'dataset')}</button>`).join('');
   document.querySelectorAll('[data-o]').forEach(button=>button.onclick=()=>{state.o=+button.dataset.o;renderLive()});
   $('open-card').classList.toggle('live',!!o.live);
 
@@ -336,6 +342,8 @@ function renderStatCan(){
   const changed=s.changed||{};
   $('statcan-updated-count').textContent=Number.isFinite(changed.count)?num(changed.count):'—';
   $('statcan-updated-date').textContent=changed.date?`${dateLabel(changed.date)} · WDS changed-table list`:'No recent release-day list available.';
+  const changedItems=(changed.items||[]).slice(0,4);
+  $('statcan-changed-list').innerHTML=changedItems.map(item=>`<a href="${esc(item.url||'https://www.statcan.gc.ca/en/subjects-start')}" target="_blank" rel="noreferrer"><span>${esc(String(item.productId))}</span><strong>${esc(item.title)}</strong></a>`).join('');
   const rows=(s.indicators||[]).slice(0,6);
   $('indicator-grid').innerHTML=rows.length?rows.map(i=>{
     const cls=i.direction==='2'?'down':i.direction==='1'?'':'flat';
@@ -374,7 +382,7 @@ $('share-button').onclick=async()=>{
     else{await navigator.clipboard.writeText(text+' '+location.href);toast('Snapshot link copied.')}
   }catch{}
 };
-$('live-refresh').onclick=loadLive;
+$('live-refresh').onclick=()=>loadLive();
 $('data-search-form').onsubmit=e=>{e.preventDefault();search($('data-search-input').value)};
 document.querySelectorAll('[data-search-query]').forEach(b=>b.onclick=()=>search(b.dataset.searchQuery));
 addEventListener('resize',()=>{cancelAnimationFrame(state.resizeFrame);state.resizeFrame=requestAnimationFrame(()=>state.snapshot&&renderMap())},{passive:true});
@@ -383,4 +391,6 @@ const sh=Number(new URL(location.href).searchParams.get('shift')||0);
 if(Number.isFinite(sh)&&Math.abs(sh)<=12)state.shift=sh;
 setInterval(renderTicker,1000);
 setInterval(()=>{if(state.shift===0&&state.profile)recompute()},60000);
+setInterval(()=>{if(document.visibilityState==='visible')loadLive({auto:true,includeBank:false})},300000);
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&(!state.liveCheckedAt||Date.now()-state.liveCheckedAt.getTime()>300000))loadLive({auto:true,includeBank:false})});
 init();
