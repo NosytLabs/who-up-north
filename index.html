@@ -1,45 +1,225 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#07090d"><title>Who Up North? — Canada right now</title><meta name="description" content="A live-to-the-clock statistical portrait of what Canada is doing right now, built from Statistics Canada and official Canadian public data."><meta property="og:title" content="Who Up North?"><meta property="og:description" content="What is Canada doing right now? Official public data, local clocks, zero fake numbers."><link rel="icon" href="./favicon.svg"><link rel="stylesheet" href="./src/styles.css"></head><body>
-<div class="aurora a"></div><div class="aurora b"></div>
-<header class="topbar"><a class="brand" href="#top" aria-label="Who Up North home"><b>WHO UP NORTH?</b><span>CANADA // NOW</span></a><nav><a href="#map">Map</a><a href="#live">Live wire</a><a href="#method">Method</a></nav><div class="actions"><button id="share-button" class="btn">SHARE</button><div id="source-chip" class="chip"><i></i><span>LOADING DATA</span></div></div></header>
-<main id="top">
-<section class="hero wrap">
-  <div class="hero-copy"><p class="eyebrow">CANADA, RIGHT NOW</p><h1>WHO<br><em>UP</em><br>NORTH?</h1><p class="dek">A live-to-the-clock statistical portrait of Canada. The clock is live. The behaviour comes from official time-use survey data. Nobody is being tracked.</p>
-  <div class="time-machine"><div><span>TIME MACHINE</span><strong id="time-shift-label">LIVE</strong></div><input id="time-shift" type="range" min="-12" max="12" value="0" step=".5" aria-label="Shift model time"><button id="now-button" class="btn small">NOW</button></div></div>
-  <article class="pulse-card"><div class="pulse-head"><span id="pulse-mode">LIVE CLOCK</span><span id="pulse-updated">STATCAN ENGINE</span></div><div id="awake-percent" class="pulse-number">—</div><p id="awake-count">Loading verified profile…</p><div class="pulse-line"><i></i></div><p class="fine">Estimated share of the modelled Canadian 15+ population awake at this instant, weighted by province and local time.</p></article>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#06090d">
+  <meta name="color-scheme" content="dark">
+  <title>Who Up North? — Canada right now</title>
+  <meta name="description" content="A live-to-the-clock statistical portrait of Canada built from Statistics Canada and current Canadian public-data signals.">
+  <meta property="og:title" content="Who Up North?">
+  <meta property="og:description" content="Canada right now: live clocks, official time-use statistics, and current public-data signals.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://nosytlabs.github.io/who-up-north/">
+  <link rel="canonical" href="https://nosytlabs.github.io/who-up-north/">
+  <link rel="icon" href="./favicon.svg">
+  <link rel="stylesheet" href="./src/styles.css">
+</head>
+<body>
+<a class="skip-link" href="#now">Skip to dashboard</a>
+<div class="aurora aurora-a"></div><div class="aurora aurora-b"></div>
+
+<header class="topbar">
+  <a class="brand" href="#now" aria-label="Who Up North home"><b>WHO UP NORTH?</b><span>CANADA // NOW</span></a>
+  <nav aria-label="Primary">
+    <a href="#now">Now</a>
+    <a href="#across">Across Canada</a>
+    <a href="#statcan">StatCan pulse</a>
+    <a href="#live">Live signals</a>
+    <a href="#method">Method</a>
+  </nav>
+  <div class="actions">
+    <div id="source-chip" class="chip" aria-live="polite"><i></i><span>LOADING VERIFIED DATA</span></div>
+    <button id="share-button" class="btn ghost" type="button">SHARE</button>
+  </div>
+</header>
+
+<main>
+<section id="now" class="hero wrap">
+  <div class="hero-copy">
+    <p class="eyebrow"><span class="live-dot"></span> LIVE-TO-THE-CLOCK // CANADA</p>
+    <h1><span>WHO UP</span><em>NORTH?</em></h1>
+    <p class="dek">A statistical snapshot of what Canada is doing at this instant. The clocks are live; behaviour comes from Statistics Canada’s 2022 Time Use Survey. No people are tracked.</p>
+
+    <div class="truth-strip" aria-label="Data scope">
+      <div><span>SURVEY</span><strong>2022–23</strong></div>
+      <div><span>SCOPE</span><strong>15+ // 10 PROVINCES</strong></div>
+      <div><span>OFFICIAL SIGNALS</span><strong id="hero-freshness">LOADING</strong></div>
+    </div>
+
+    <div class="time-machine">
+      <div><span>TIME MACHINE</span><strong id="time-shift-label">LIVE</strong></div>
+      <input id="time-shift" type="range" min="-12" max="12" value="0" step=".5" aria-label="Shift model time from 12 hours ago to 12 hours ahead">
+      <button id="now-button" class="btn small" type="button">NOW</button>
+    </div>
+  </div>
+
+  <article class="pulse-card" aria-labelledby="awake-label">
+    <div class="pulse-head"><span id="pulse-mode"><i></i> LIVE CLOCK</span><span id="pulse-updated">STATCAN ENGINE</span></div>
+    <div class="pulse-main">
+      <span id="awake-label" class="metric-label">MODELLED AWAKE</span>
+      <div id="awake-percent" class="pulse-number">—</div>
+      <p id="awake-count">Loading verified profile…</p>
+    </div>
+    <div class="pulse-stats">
+      <div><span>UTC NOW</span><strong id="pulse-instant">—</strong></div>
+      <div><span>LEADING AWAKE ACTIVITY</span><strong id="hero-leading">—</strong></div>
+    </div>
+    <div class="fact-inline">
+      <span id="fact-mode">VERIFIED DATA NOTE</span>
+      <strong id="fact-title">Waiting for the current slice…</strong>
+      <p id="fact-detail">Only source-backed aggregate statistics can appear here.</p>
+    </div>
+    <p class="fine">Estimate for the survey-aligned 15+ population in the ten provinces, weighted by each province’s current local time. Territories are shown for clock context only.</p>
+  </article>
 </section>
+
 <section class="ticker" aria-label="Canadian local times"><div id="clock-ticker" class="ticker-track"></div></section>
 
-<section id="map" class="section map-section wrap">
- <div class="section-head"><div><p class="eyebrow">COAST-TO-COAST SIGNAL</p><h2>Six clocks. One instant.</h2></div><p>Each province is evaluated against its own local five-minute StatCan slot before Canada is combined.</p></div>
- <div class="map-shell"><canvas id="canada-map"></canvas><div id="map-nodes" class="map-nodes"></div><div class="map-meta"><span id="map-clock">— UTC</span><span>SCHEMATIC MAP // NOT CARTOGRAPHIC</span></div></div>
- <div id="focus-card" class="focus"><div><span id="focus-kicker">SELECT A PROVINCE</span><h3 id="focus-name">Canada</h3></div><div><span>LOCAL</span><strong id="focus-time">—</strong></div><div><span>AWAKE</span><strong id="focus-awake">—</strong></div><div><span>LEADING</span><strong id="focus-dominant">—</strong></div><p id="focus-copy">Tap a province signal to inspect its local model slice.</p><button id="focus-reset" class="btn small">RESET</button></div>
+<section id="activity" class="section wrap activities">
+  <div class="section-head">
+    <div><p class="eyebrow">NATIONAL SLICE</p><h2>What Canada is doing now.</h2></div>
+    <p id="activity-note">Eight non-overlapping Statistics Canada activity groups, evaluated at local time and population-weighted.</p>
+  </div>
+  <div id="activity-list" class="activity-list"><div class="loading">LOADING VERIFIED PROFILE…</div></div>
 </section>
 
-<section class="section wrap activities">
- <div class="section-head"><div><p class="eyebrow">WHAT CANADA IS DOING</p><h2>Eight non-overlapping activities.</h2></div><p id="activity-note">Official Statistics Canada participation rates; population-scaled for the visualization.</p></div>
- <div id="activity-list" class="activity-list"><div class="loading">LOADING VERIFIED PROFILE…</div></div>
+<section id="across" class="section wrap map-section">
+  <div class="section-head">
+    <div><p class="eyebrow">ACROSS CANADA</p><h2>One instant. Six clocks.</h2></div>
+    <p>Every province gets the same Canada-level survey profile at its own local five-minute slot before the national result is combined.</p>
+  </div>
+
+  <div class="map-shell">
+    <canvas id="canada-map" aria-hidden="true"></canvas>
+    <div class="timezone-labels" aria-hidden="true"><span>PACIFIC</span><span>MOUNTAIN</span><span>CENTRAL</span><span>EASTERN</span><span>ATLANTIC</span><span>NEWFOUNDLAND</span></div>
+    <div id="map-nodes" class="map-nodes"></div>
+    <div class="map-meta"><span id="map-clock">— UTC</span><span>TIME-ZONE SIGNAL MAP // NOT TO SCALE</span></div>
+  </div>
+
+  <div id="focus-card" class="focus">
+    <div><span id="focus-kicker">SELECT A PROVINCE</span><h3 id="focus-name">Canada</h3></div>
+    <div><span>LOCAL</span><strong id="focus-time">—</strong></div>
+    <div><span>AWAKE</span><strong id="focus-awake">—</strong></div>
+    <div><span>LEADING</span><strong id="focus-dominant">—</strong></div>
+    <p id="focus-copy">Choose a province signal or card to inspect its local model slice.</p>
+    <button id="focus-reset" class="btn small" type="button">RESET</button>
+  </div>
+
+  <div class="province-head"><span>PROVINCE PULSE</span><span>SAME SURVEY // DIFFERENT LOCAL CLOCKS</span></div>
+  <div id="province-grid" class="province-grid"></div>
 </section>
 
-<section class="section wrap jev-section">
- <article class="jev-card"><div class="jev-label"><span>JEV // FACT SELECTOR</span><small id="jev-mode">DETERMINISTIC FALLBACK</small></div><p id="jev-kicker" class="eyebrow">SUPPORTED FACT</p><h2 id="jev-title">Waiting for the model…</h2><p id="jev-detail">Jev can only choose among already verified facts. It cannot change any statistic.</p><small id="jev-confidence"></small></article>
+<section id="statcan" class="section wrap statcan-section">
+  <div class="section-head">
+    <div><p class="eyebrow">STATCAN RELEASE WIRE</p><h2>The official data heartbeat.</h2></div>
+    <p>Statistics Canada publishes updated tables each business day and exposes major indicators plus future release dates through public developer services.</p>
+  </div>
+
+  <div class="statcan-grid">
+    <article class="release-card hero-release">
+      <div class="signal-top"><span>NEXT MAJOR RELEASE</span><i></i></div>
+      <span id="statcan-next-date" class="release-date">—</span>
+      <h3 id="statcan-next-title">Loading release schedule…</h3>
+      <p id="statcan-next-description">—</p>
+      <strong id="statcan-countdown" class="countdown">—</strong>
+      <a id="statcan-next-link" href="https://www150.statcan.gc.ca/n1/dai-quo/index-eng.html" target="_blank" rel="noreferrer">The Daily ↗</a>
+    </article>
+
+    <article class="release-card update-card">
+      <div class="signal-top"><span>MOST RECENT RELEASE DAY</span><i></i></div>
+      <strong id="statcan-updated-count" class="signal-number">—</strong>
+      <h3>tables updated</h3>
+      <p id="statcan-updated-date">Loading WDS change list…</p>
+      <a href="https://www.statcan.gc.ca/en/developers/wds" target="_blank" rel="noreferrer">Web Data Service ↗</a>
+    </article>
+
+    <div class="indicator-panel">
+      <div class="indicator-head"><span>MAJOR ECONOMIC INDICATORS</span><span id="indicator-freshness">STATCAN SNAPSHOT</span></div>
+      <div id="indicator-grid" class="indicator-grid"><div class="loading">LOADING INDICATORS…</div></div>
+    </div>
+  </div>
 </section>
 
-<section id="live" class="section wrap">
- <div class="section-head"><div><p class="eyebrow">LIVE WIRE</p><h2>Signals actually changing now.</h2></div><div class="live-actions"><p id="live-status">CACHED OFFICIAL SNAPSHOT</p><button id="live-refresh" class="btn small">REFRESH</button></div></div>
- <div class="live-grid">
-  <article id="weather-card" class="signal-card"><div class="signal-top"><span>01 // ECCC</span><i></i></div><strong id="weather-count" class="signal-number">—</strong><h3 id="weather-caption">active alert areas</h3><p id="weather-detail">Loading Environment Canada alerts…</p><div id="weather-list" class="pills"></div><a href="https://weather.gc.ca/" target="_blank" rel="noreferrer">Official weather ↗</a></article>
-  <article class="signal-card"><div class="signal-top"><span>02 // OPEN GOV</span><i></i></div><p class="eyebrow">RECENT DATASET CHANGE</p><h3 id="open-data-title">Loading Open Government activity…</h3><p id="open-data-time">—</p><div id="open-data-list" class="pills"></div><a id="open-data-link" href="https://open.canada.ca/data/en/" target="_blank" rel="noreferrer">Open dataset ↗</a></article>
-  <article id="bank-card" class="signal-card"><div class="signal-top"><span>03 // BANK OF CANADA</span><i></i></div><strong id="fx-rate" class="signal-number compact">—</strong><h3>USD / CAD daily average</h3><p id="fx-date">—</p><p id="fx-description">Latest published official daily average. Not a live tradable quote.</p><a href="https://www.bankofcanada.ca/rates/exchange/" target="_blank" rel="noreferrer">Bank of Canada ↗</a></article>
- </div>
- <div class="rabbit"><div><p class="eyebrow">OPEN DATA RABBIT HOLE</p><h3>Search Canada’s public-data catalogue.</h3><p>Try something Canadian. Housing. Wildfire. Ferries. Salmon. Moose.</p><div class="suggestions"><button data-search-query="housing">HOUSING</button><button data-search-query="wildfire">WILDFIRE</button><button data-search-query="ferries">FERRIES</button><button data-search-query="salmon">SALMON</button><button data-search-query="moose">MOOSE</button></div></div><form id="data-search-form"><input id="data-search-input" placeholder="Search open.canada.ca…" autocomplete="off"><button class="btn" type="submit">SEARCH</button></form><div id="data-search-results" class="search-results"><div class="search-empty">Pick a rabbit hole.</div></div></div>
+<section id="live" class="section wrap live-section">
+  <div class="section-head">
+    <div><p class="eyebrow">OFFICIAL SIGNAL WIRE</p><h2>Things actually changing now.</h2></div>
+    <div class="live-actions"><p id="live-status">LOADING SCHEDULED SNAPSHOT…</p><button id="live-refresh" class="btn small" type="button">CHECK NOW</button></div>
+  </div>
+
+  <div class="live-grid">
+    <article id="weather-card" class="signal-card">
+      <div class="signal-top"><span>01 // ECCC WEATHER ALERTS</span><i></i></div>
+      <div class="freshness"><span id="weather-source-state">SNAPSHOT</span><span id="weather-freshness">—</span></div>
+      <strong id="weather-count" class="signal-number">—</strong>
+      <h3 id="weather-caption">active alert areas</h3>
+      <p id="weather-detail">Loading Environment and Climate Change Canada alerts…</p>
+      <div id="weather-list" class="pills"></div>
+      <a href="https://weather.gc.ca/" target="_blank" rel="noreferrer">Official weather ↗</a>
+    </article>
+
+    <article id="open-card" class="signal-card">
+      <div class="signal-top"><span>02 // OPEN GOVERNMENT</span><i></i></div>
+      <div class="freshness"><span id="open-source-state">SNAPSHOT</span><span id="open-data-freshness">—</span></div>
+      <p class="eyebrow card-kicker">RECENT DATASET CHANGE</p>
+      <h3 id="open-data-title">Loading Open Government activity…</h3>
+      <p id="open-data-time">—</p>
+      <div id="open-data-list" class="pills"></div>
+      <a id="open-data-link" href="https://open.canada.ca/data/en/" target="_blank" rel="noreferrer">Open dataset ↗</a>
+    </article>
+
+    <article id="bank-card" class="signal-card">
+      <div class="signal-top"><span>03 // BANK OF CANADA</span><i></i></div>
+      <div class="freshness"><span id="bank-source-state">SNAPSHOT</span><span id="fx-freshness">—</span></div>
+      <strong id="fx-rate" class="signal-number compact">—</strong>
+      <h3>USD / CAD daily average</h3>
+      <p id="fx-date">—</p>
+      <p id="fx-description">Latest published official daily average. Not a live tradable quote.</p>
+      <a href="https://www.bankofcanada.ca/rates/exchange/" target="_blank" rel="noreferrer">Bank of Canada ↗</a>
+    </article>
+  </div>
+
+  <details class="explorer">
+    <summary><span>OPEN DATA EXPLORER</span><strong>Search Canada’s public-data catalogue</strong><i>+</i></summary>
+    <div class="explorer-body">
+      <div>
+        <p>Query the Open Government catalogue directly. Try housing, wildfire, ferries, salmon, or moose.</p>
+        <div class="suggestions"><button data-search-query="housing">HOUSING</button><button data-search-query="wildfire">WILDFIRE</button><button data-search-query="ferries">FERRIES</button><button data-search-query="salmon">SALMON</button><button data-search-query="moose">MOOSE</button></div>
+      </div>
+      <form id="data-search-form"><label class="sr-only" for="data-search-input">Search Open Government data</label><input id="data-search-input" placeholder="Search open.canada.ca…" autocomplete="off"><button class="btn" type="submit">SEARCH</button></form>
+      <div id="data-search-results" class="search-results"><div class="search-empty">Pick a rabbit hole.</div></div>
+    </div>
+  </details>
 </section>
 
-<section class="section wrap">
- <div class="section-head"><div><p class="eyebrow">PROVINCE PULSE</p><h2>Same survey. Different clocks.</h2></div><p>Province cards are Canada-level time-use rates evaluated at local time—not province-specific diary estimates.</p></div><div id="province-grid" class="province-grid"></div>
+<section id="method" class="section method wrap">
+  <div>
+    <p class="eyebrow">HOW IT WORKS</p>
+    <h2>Live clock.<br>Official distributions.<br>Clear limits.</h2>
+    <p>The browser advances the current five-minute survey slice using Canadian local time. GitHub Actions is scheduled every 15 minutes to refresh official population and signal snapshots; GitHub may delay scheduled jobs. On page load, the site also attempts direct read-only checks of the public weather, Open Government and Bank of Canada APIs.</p>
+  </div>
+  <div class="steps">
+    <article><b>01</b><h3>Resolve clocks</h3><p>Convert one instant into each province’s local time.</p></article>
+    <article><b>02</b><h3>Select survey slot</h3><p>Use the official weekday/weekend five-minute participation vector.</p></article>
+    <article><b>03</b><h3>Weight population</h3><p>Apply current quarterly province estimates and the latest national 15+ share.</p></article>
+    <article><b>04</b><h3>Combine transparently</h3><p>Sum the ten survey-covered provinces and label every limitation.</p></article>
+  </div>
 </section>
 
-<section id="method" class="section method wrap"><div><p class="eyebrow">HOW IT WORKS</p><h2>Live clock.<br>Official distributions.<br>No fake precision.</h2><p>The static Pages build downloads all 576 weekday/weekend five-minute slices from Statistics Canada. Your browser applies them to Canadian local time zones. Population weights and public live signals refresh on a scheduled GitHub Action.</p></div><div class="steps"><article><b>01</b><h3>Clock</h3><p>Resolve local time for every province.</p></article><article><b>02</b><h3>Survey slot</h3><p>Select the official 5-minute weekday/weekend participation vector.</p></article><article><b>03</b><h3>Weight</h3><p>Scale by the latest official population and 15+ share.</p></article><article><b>04</b><h3>Combine</h3><p>Sum the ten provinces into one Canadian snapshot.</p></article></div></section>
-
-<section class="sources wrap"><article><span>STATCAN</span><h3>Time Use Survey</h3><p>Table 45-10-0105-01. Five-minute activity participation rates.</p><a href="https://www150.statcan.gc.ca/t1/tbl1/en/tv.action?pid=4510010501" target="_blank" rel="noreferrer">Source ↗</a></article><article><span>OPEN CANADA</span><h3>CKAN catalogue</h3><p>Read-only public API powering the data explorer and change wire.</p><a href="https://open.canada.ca/data/en/" target="_blank" rel="noreferrer">Portal ↗</a></article><article><span>ECCC</span><h3>GeoMet</h3><p>Current official weather-alert records, displayed without rewriting warning meaning.</p><a href="https://api.weather.gc.ca/" target="_blank" rel="noreferrer">API ↗</a></article><article class="accent"><span>METHOD</span><h3>Show your work.</h3><p>Every visible number is source-backed or explicitly described as a modelled estimate.</p><a href="./docs/SOURCES_AND_COMPLIANCE.md">Compliance notes ↗</a></article></section>
+<section class="sources wrap" aria-label="Primary sources">
+  <article><span>STATISTICS CANADA</span><h3>Time Use + WDS</h3><p>Five-minute time-use rates, population weights, daily table changes, economic indicators and the release schedule.</p><a href="https://www.statcan.gc.ca/en/developers" target="_blank" rel="noreferrer">Developer services ↗</a></article>
+  <article><span>ECCC / MSC</span><h3>Weather alerts</h3><p>Current alert records from the GeoMet OGC API, shown without rewriting warning meaning.</p><a href="https://api.weather.gc.ca/collections/weather-alerts?f=html" target="_blank" rel="noreferrer">GeoMet ↗</a></article>
+  <article><span>OPEN GOVERNMENT</span><h3>CKAN catalogue</h3><p>Recent dataset changes and direct catalogue search from open.canada.ca.</p><a href="https://open.canada.ca/en/access-our-application-programming-interface-api" target="_blank" rel="noreferrer">API ↗</a></article>
+  <article><span>BANK OF CANADA</span><h3>Valet API</h3><p>Latest official USD/CAD daily average, clearly separated from real-time market quotes.</p><a href="https://www.bankofcanada.ca/valet/docs/" target="_blank" rel="noreferrer">Valet ↗</a></article>
+</section>
 </main>
-<footer class="wrap"><strong>WHO UP NORTH?</strong><span>Independent data art by Nosyt Labs.</span><a href="https://github.com/NosytLabs/who-up-north">GitHub ↗</a></footer><div id="toast" class="toast" role="status"></div><script type="module" src="./src/main.js"></script></body></html>
+
+<footer class="wrap">
+  <div><strong>WHO UP NORTH?</strong><span>Independent public-data project by Nosyt Labs.</span></div>
+  <div><a href="./docs/SOURCES_AND_COMPLIANCE.md">Sources & methodology ↗</a><a href="https://github.com/NosytLabs/who-up-north" target="_blank" rel="noreferrer">GitHub ↗</a></div>
+</footer>
+
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+<script type="module" src="./src/main.js"></script>
+</body>
+</html>
