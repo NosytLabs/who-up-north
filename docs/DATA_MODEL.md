@@ -42,8 +42,13 @@ The selected Time Use Survey table covers the ten provinces. Territories are sho
 
 ## Population age alignment
 
-Quarterly population estimates are total population. To align approximately with the survey's 15+ scope, the build calculates the latest national 15+ share from StatCan population-by-age data and applies it to provincial totals.
+Quarterly population estimates are total population. The build reads Table 17-10-0009-01 through the coordinate-based WDS endpoint (`getDataFromCubePidCoordAndLatestNPeriods`), using the geography member code in the first coordinate position. It then reconciles all 13 province/territory values to Canada and checks them against the last verified snapshot. To align approximately with the survey's 15+ scope, the build calculates the latest national 15+ share from StatCan population-by-age data and applies it to provincial totals.
 
 ## Suppressed five-minute cells
 
 Some StatCan five-minute cells are unavailable/suppressed. The build does not synthesize a missing component. Instead, it replaces an incomplete slot with the nearest **complete official five-minute vector** from the same weekday/weekend series and records each mapping under `gapFill` in the generated profile. On the current source release, this affects 21 weekend slots and no weekday slots.
+
+
+## Map geometry
+
+The interactive map uses Statistics Canada's 2021 province/territory Digital Boundary Files requested as GeoJSON. The build simplifies coordinate rings only for display performance; it does not change which region a feature represents. The fill colour is not an official StatCan map variable: it represents the leading activity from this project's current time-use model slice.
