@@ -7,7 +7,8 @@
   "scripts": {
     "refresh": "node scripts/refresh-data.mjs",
     "jev": "node scripts/generate-jev-fact.mjs",
-    "check": "node scripts/check.mjs",
+    "test": "node --test scripts/tests/*.test.mjs",
+    "check": "node scripts/check.mjs && npm test",
     "build": "node scripts/build.mjs",
     "preview": "python3 -m http.server 4173 -d dist"
   },

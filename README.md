@@ -28,7 +28,7 @@ The browser then:
 3. scales it by the latest official population snapshot and national 15+ share;
 4. population-weights the ten provincial estimates into a Canadian snapshot.
 
-The core model therefore advances locally without a server. The scheduled Pages workflow refreshes source data twice an hour so population/live-feed snapshots stay fresh. The Time Use Survey itself is a survey profile, not a live sensor feed.
+The core model therefore advances locally without a server. The scheduled Pages workflow refreshes population and live-feed snapshots at the interval configured in `.github/workflows/pages.yml`. The Time Use Survey itself is a survey profile, not a live sensor feed.
 
 ## Jev / TypeSafe System One
 
@@ -48,31 +48,35 @@ Without the secret, the build writes a deterministic fact card and the rest of t
 
 The repository includes `.github/workflows/pages.yml`.
 
-On push to `main`, manual dispatch, and twice-hourly schedule it:
+On push to `main`, manual dispatch, and its configured schedule it:
 
 ```text
 refresh official data
 → optionally run Jev
-→ run integrity checks
+→ run integrity and workflow regression checks
 → build dist/
-→ verify Pages is enabled
-→ upload the artifact
-→ deploy
+→ retain the github-pages artifact
+→ verify the Pages deployment configuration
+→ configure and deploy
 ```
 
 ### One-time Pages setup
 
-GitHub does not allow the normal workflow `GITHUB_TOKEN` to create/enable a Pages site. For first-time setup, open:
+The normal workflow `GITHUB_TOKEN` cannot create/enable a Pages site. An administrator must select:
 
 **Repository → Settings → Pages → Build and deployment → Source → GitHub Actions**
 
-After that one-time switch, the existing workflow deploys automatically. If Pages is not enabled, the workflow now finishes the verified build successfully and emits a clear warning instead of failing at `configure-pages`.
+Then open **Actions → refresh-and-deploy-pages → Run workflow** on `main`, or rerun the failed deployment workflow. Do not change repository visibility merely to silence a deployment error. For a private repository, the administrator must also confirm that its GitHub plan supports Pages.
 
-GitHub Pages supports private repositories only on plans that include private Pages. If the repository remains private and the Pages option is unavailable, use a plan that supports private Pages or make the repository public before enabling it.
+A successful `verify` CI run proves the checks and static build passed, **not that the website was published**. Publication requires a successful **deploy** job and its deployment URL.
+
+The Pages workflow now fails explicitly when deployment cannot proceed. It distinguishes a missing Pages site (404), access/authentication errors (401/403), other API errors, and an invalid or legacy branch-based Pages configuration. HTTP requests have connection, request and retry limits. A verified `github-pages` artifact is uploaded before the configuration check, so the built site remains downloadable even when repository settings block publication.
+
+The regression suite executes the actual workflow Bash against controlled HTTP fixtures. It never calls GitHub or uses real credentials.
 
 ## Local development
 
-The project is intentionally dependency-light. The browser app itself has no framework runtime.
+The project is intentionally dependency-light. The browser app itself has no framework runtime. Node.js 22 or newer and Bash are required for the checks; Python 3 serves the local preview.
 
 ```bash
 npm run check
@@ -88,7 +92,7 @@ npm run jev
 npm run build
 ```
 
-Those refresh commands require network access to the official endpoints.
+Those refresh commands require network access to the official endpoints. Run `npm install --ignore-scripts` before using the optional Jev integration; keep its API key outside browser code.
 
 ## Project layout
 
@@ -107,7 +111,9 @@ Those refresh commands require network access to the official endpoints.
 │   ├── build.mjs
 │   ├── check.mjs
 │   ├── generate-jev-fact.mjs
-│   └── refresh-data.mjs
+│   ├── refresh-data.mjs
+│   └── tests/
+│       └── pages-workflow.test.mjs
 ├── src/
 │   ├── main.js
 │   ├── model.js
