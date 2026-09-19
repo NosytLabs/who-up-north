@@ -43,3 +43,7 @@ The selected Time Use Survey table covers the ten provinces. Territories are sho
 ## Population age alignment
 
 Quarterly population estimates are total population. To align approximately with the survey's 15+ scope, the build calculates the latest national 15+ share from StatCan population-by-age data and applies it to provincial totals.
+
+## Suppressed five-minute cells
+
+Some StatCan five-minute cells are unavailable/suppressed. The build does not synthesize a missing component. Instead, it replaces an incomplete slot with the nearest **complete official five-minute vector** from the same weekday/weekend series and records each mapping under `gapFill` in the generated profile. On the current source release, this affects 21 weekend slots and no weekday slots.

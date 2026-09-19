@@ -93,7 +93,6 @@ Those refresh commands require network access to the official endpoints.
 │   └── SOURCES_AND_COMPLIANCE.md
 ├── public/
 │   ├── favicon.svg
-│   ├── og.png
 │   └── data/                 # generated during Pages build
 ├── scripts/
 │   ├── build.mjs
@@ -113,6 +112,7 @@ Those refresh commands require network access to the official endpoints.
 - Table 45-10-0105-01 is **Canada-level**, not province-specific diary data. Province cards apply the Canadian profile at the province’s local time and population scale.
 - The Time Use Survey used here covers the **ten provinces**. Yukon, Northwest Territories and Nunavut are displayed only for time-zone context and are excluded from activity estimates.
 - Survey participation rates are estimates and include sampling uncertainty. The source table provides confidence intervals; this visualization currently displays the point estimates.
+- Some five-minute cells are suppressed by StatCan. The build never invents the missing component: it substitutes the nearest complete official five-minute vector from the same weekday/weekend series and records that mapping in the generated profile.
 - The 15+ proportion is a national share used to align total population estimates with survey scope. It is not a province-specific age adjustment.
 - Weather alerts must retain their content/intent; the UI shows short official alert labels and links to the source rather than rewriting warnings.
 - Bank of Canada exchange rates are daily indicative averages, **not live market prices**.

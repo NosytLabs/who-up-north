@@ -28,7 +28,7 @@ The table contains participation rates for five-minute time-of-day intervals. Th
 
 Parent and child activity groups are never summed together. This prevents double-counting.
 
-The data refresh script requests both weekday and weekend series and validates all 288 five-minute slots before publication.
+The data refresh script requests both weekday and weekend series and validates all 288 five-minute slots before publication. If StatCan suppresses any component within a slot, the build copies the nearest complete official five-minute vector from the same weekday/weekend series and records the substitution in the generated profile; it does not fabricate the missing component. On the current source release, 21 weekend slots require this treatment and no weekday slots do.
 
 ## 2. Statistics Canada — population weights
 
