@@ -1,0 +1,30 @@
+{
+  "name": "who-up-north",
+  "version": "0.3.0",
+  "private": true,
+  "type": "module",
+  "description": "Who Up North? — a static GitHub Pages data-art site showing what Canada is doing right now from official public data.",
+  "scripts": {
+    "refresh": "node scripts/refresh-data.mjs",
+    "jev": "node scripts/generate-jev-fact.mjs",
+    "check": "node scripts/check.mjs",
+    "build": "node scripts/build.mjs",
+    "preview": "python3 -m http.server 4173 -d dist"
+  },
+  "dependencies": {
+    "ai": "7.0.105"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "keywords": [
+    "statistics-canada",
+    "open-government-canada",
+    "github-pages",
+    "time-use",
+    "canada",
+    "data-visualization",
+    "jev",
+    "weather"
+  ]
+}

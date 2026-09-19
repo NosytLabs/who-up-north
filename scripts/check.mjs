@@ -1,0 +1,7 @@
+import{readFile}from'node:fs/promises';import{existsSync}from'node:fs';import{ACTIVITIES,PROVINCES,TERRITORIES,VERIFIED_POPULATION,timeCodeForMinute,labelForTimeCode,buildCanadaSnapshot}from'../src/model.js';
+for(const f of['index.html','src/main.js','src/model.js','src/styles.css','scripts/refresh-data.mjs','.github/workflows/pages.yml'])if(!existsSync(f)||(await readFile(f,'utf8')).trim()==='')throw new Error(f+' missing');
+const eq=(a,b,n)=>{if(a!==b)throw new Error(`${n}: ${a} != ${b}`)};eq(timeCodeForMinute(240),1,'04:00');eq(timeCodeForMinute(720),97,'12:00');eq(timeCodeForMinute(0),241,'midnight');eq(labelForTimeCode(288),'03:55','code 288');eq(ACTIVITIES.length,8,'activity count');eq([...PROVINCES,...TERRITORIES].reduce((s,r)=>s+r.population,0),VERIFIED_POPULATION.canada,'population');
+const profile={source:{table:'fixture'},weekdays:{},weekends:{}};for(const b of['weekdays','weekends'])for(let i=1;i<=288;i++)profile[b][i]={sleep:40,personal:5,eating:10,travel:5,work:15,care:10,leisure:12,other:3};
+const s=buildCanadaSnapshot(profile,VERIFIED_POPULATION,new Date('2026-09-19T16:00:00Z'));eq(s.national.awakePercent,60,'awake');eq(s.regions.length,10,'provinces');eq(s.territories.length,3,'territories');
+const workflow=await readFile('.github/workflows/pages.yml','utf8');for(const x of['configure-pages@v5','upload-pages-artifact@v5','deploy-pages@v5','refresh-data.mjs'])if(!workflow.includes(x))throw new Error('workflow missing '+x);
+console.log('Checks passed.');
