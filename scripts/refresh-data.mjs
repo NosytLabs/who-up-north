@@ -13,7 +13,7 @@ const BANK='https://www.bankofcanada.ca/valet/observations/FXUSDCAD/json?recent=
 const STATCAN_IND='https://www150.statcan.gc.ca/n1/dai-quo/ssi/homepage/ind-econ.json';
 const STATCAN_SCHEDULE='https://www150.statcan.gc.ca/n1/dai-quo/ssi/homepage/schedule-key_indicators-eng.json';
 const STATCAN_CHANGED='https://www150.statcan.gc.ca/t1/wds/rest/getChangedCubeList';
-const STATCAN_BOUNDARIES='https://geo.statcan.gc.ca/geo_wa/rest/services/2021/Digital_boundary_files/MapServer/0/query?where=1%3D1&outFields=PRUID%2CPRNAME%2CPREABBR&returnGeometry=true&outSR=4326&maxAllowableOffset=0.025&geometryPrecision=4&f=geojson';
+const STATCAN_BOUNDARIES='https://geo.statcan.gc.ca/geo_wa/rest/services/2021/Digital_boundary_files/MapServer/0/query?where=1%3D1&outFields=PRUID%2CPRNAME%2CPREABBR&returnGeometry=true&outSR=4326&f=geojson';
 
 const POP_PRODUCT_ID=17100009;
 const V={canada:1,nl:2,pe:3,ns:4,nb:5,qc:6,on:7,mb:8,sk:9,ab:10,bc:11,yt:12,nt:14,nu:15};
@@ -276,16 +276,45 @@ async function live(){
 }
 
 
+function sqSegDist(p,a,b){
+  let x=a[0],y=a[1],dx=b[0]-x,dy=b[1]-y;
+  if(dx!==0||dy!==0){
+    const t=((p[0]-x)*dx+(p[1]-y)*dy)/(dx*dx+dy*dy);
+    if(t>1){x=b[0];y=b[1]}else if(t>0){x+=dx*t;y+=dy*t}
+  }
+  dx=p[0]-x;dy=p[1]-y;return dx*dx+dy*dy;
+}
+function simplifyRing(points,tolerance=.035){
+  if(!Array.isArray(points)||points.length<=5)return points;
+  const closed=points[0][0]===points.at(-1)[0]&&points[0][1]===points.at(-1)[1],core=closed?points.slice(0,-1):points.slice(),sq=tolerance*tolerance;
+  const markers=new Uint8Array(core.length);markers[0]=markers[core.length-1]=1;
+  const stack=[[0,core.length-1]];
+  while(stack.length){
+    const [first,last]=stack.pop();let max=sq,index=-1;
+    for(let i=first+1;i<last;i++){const d=sqSegDist(core[i],core[first],core[last]);if(d>max){index=i;max=d}}
+    if(index>0){markers[index]=1;stack.push([first,index],[index,last])}
+  }
+  const out=core.filter((_,i)=>markers[i]);
+  if(out.length<3)return points;
+  if(closed)out.push([...out[0]]);
+  return out;
+}
+function simplifyGeometry(geometry){
+  if(geometry?.type==='Polygon')return{...geometry,coordinates:geometry.coordinates.map(r=>simplifyRing(r))};
+  if(geometry?.type==='MultiPolygon')return{...geometry,coordinates:geometry.coordinates.map(poly=>poly.map(r=>simplifyRing(r)))};
+  return geometry;
+}
 async function boundaries(){
   const geo=await(await get(STATCAN_BOUNDARIES,{headers:{accept:'application/geo+json, application/json'}})).json();
   if(geo?.type!=='FeatureCollection'||!Array.isArray(geo.features)||geo.features.length!==13)throw new Error('Unexpected Statistics Canada province boundary response');
   const allowed=new Set(['10','11','12','13','24','35','46','47','48','59','60','61','62']);
-  for(const feature of geo.features){
+  const features=geo.features.map(feature=>{
     const id=String(feature?.properties?.PRUID||'');
     if(!allowed.has(id)||!feature.geometry)throw new Error('Invalid province/territory boundary feature');
-  }
+    return{...feature,geometry:simplifyGeometry(feature.geometry)};
+  });
   await writeFile(new URL('canada-provinces.geojson',OUT),JSON.stringify({
-    ...geo,
+    ...geo,features,
     source:{
       agency:'Statistics Canada',
       layer:'2021 Digital boundary files — provinces and territories',
@@ -296,4 +325,4 @@ async function boundaries(){
   console.log('boundaries: ok');
 }
 
-await Promise.all([timeUse(),population(),live(),boundaries()]);
+await Promise.all([timeUse(),population(),live(),boundaries().catch(e=>console.warn('boundaries fallback:',e.message))]);
