@@ -5,7 +5,8 @@ const DATA={
   profile:new URL('../data/time-use-profile.json',import.meta.url),
   population:new URL('../data/population.json',import.meta.url),
   jev:new URL('../data/jev-fact.json',import.meta.url),
-  live:new URL('../data/live-signals.json',import.meta.url)
+  live:new URL('../data/live-signals.json',import.meta.url),
+  boundaries:new URL('../data/canada-provinces.geojson',import.meta.url)
 };
 const LIVE={
   weather:'https://api.weather.gc.ca/collections/weather-alerts/items?f=json&limit=12',
@@ -17,8 +18,13 @@ const CLOCKS=[
   ['VANCOUVER','America/Vancouver'],['CALGARY','America/Edmonton'],['WINNIPEG','America/Winnipeg'],
   ['TORONTO','America/Toronto'],['HALIFAX','America/Halifax'],["ST. JOHN'S",'America/St_Johns']
 ];
-const state={profile:null,pop:null,snapshot:null,fact:null,focus:null,shift:0,live:null,liveCheckedAt:null,w:0,o:0,toast:null,resizeFrame:null};
+const state={profile:null,pop:null,geo:null,snapshot:null,fact:null,focus:null,shift:0,live:null,liveCheckedAt:null,w:0,o:0,toast:null,resizeFrame:null};
 const colours=Object.fromEntries(ACTIVITIES.map(a=>[a.key,a.colour]));
+const GEO_ID={'10':'nl','11':'pe','12':'ns','13':'nb','24':'qc','35':'on','46':'mb','47':'sk','48':'ab','59':'bc','60':'yt','61':'nt','62':'nu'};
+const LABEL_COORDS={
+  bc:[-124.5,54.4],ab:[-114.5,54.9],sk:[-106.1,54.8],mb:[-98.8,54.7],on:[-84.2,50.6],qc:[-71.5,52.5],
+  nb:[-66.5,46.6],ns:[-63.0,45.0],pe:[-63.35,46.35],nl:[-58.7,53.2],yt:[-135.2,64.3],nt:[-121.5,66.2],nu:[-96.0,67.4]
+};
 
 const num=n=>Number.isFinite(n)?Math.round(n).toLocaleString('en-CA'):'—';
 const pct=n=>Number.isFinite(n)?Number(n).toFixed(1)+'%':'—';
@@ -92,6 +98,11 @@ async function init(){
   }
 
   try{
+    state.geo=await json(DATA.boundaries);
+    renderMap();
+  }catch{toast('Official map boundaries unavailable; the data dashboard still works.',true)}
+
+  try{
     state.live=await json(DATA.live);
     renderLive();
     renderStatCan();
@@ -113,7 +124,7 @@ function renderCore(){
   const leading=ACTIVITIES.filter(a=>a.key!=='sleep').map(a=>({...a,value:s.national.activities[a.key]})).sort((a,b)=>b.value-a.value)[0];
   $('awake-percent').textContent=pct(s.national.awakePercent);
   $('awake-count').textContent=`~${num(s.national.awakeCount)} people in the modelled survey scope`;
-  $('pulse-updated').textContent=state.pop.strategy==='live-wds'?'LIVE WDS POPULATION':'VERIFIED POP SNAPSHOT';
+  $('pulse-updated').textContent=String(state.pop.strategy||'').startsWith('live-wds')?'LIVE WDS POPULATION':'VERIFIED POP SNAPSHOT';
   $('hero-leading').textContent=leading?`${leading.short.toUpperCase()} // ${pct(leading.value)}`:'—';
   $('activity-note').textContent=`Official five-minute participation rates · population snapshot ${state.pop.asOf||'verified'} · survey scope 15+.`;
   renderTicker();
@@ -137,7 +148,7 @@ function renderActivities(){
   $('activity-list').innerHTML=rows.map(({a,value,count},i)=>`<div class="activity-row" style="--activity:${a.colour};--w:${Math.min(100,Math.max(0,value))}%"><i></i><div class="activity-name">${String(i+1).padStart(2,'0')} · ${esc(a.label)}</div><div class="activity-track"><span></span></div><div class="activity-pct">${pct(value)}</div><div class="activity-count">~${num(count)} people</div></div>`).join('');
 }
 function renderProvinces(){
-  $('province-grid').innerHTML=state.snapshot.regions.map(r=>`<button class="province-card ${state.focus===r.id?'active':''}" data-r="${r.id}" type="button"><div class="top"><span>${esc(r.abbr)}</span><span>${esc(r.weekday)} // ${esc(r.timeSlot)}</span></div><div class="time">${esc(r.localTime)}</div><div class="awake">${pct(r.awakePercent)} awake · ~${num(r.awakeCount)}</div><div class="dom" style="color:${colours[r.dominant]}">● ${esc(ACTIVITIES.find(a=>a.key===r.dominant)?.short||r.dominant)}</div></button>`).join('');
+  $('province-grid').innerHTML=state.snapshot.regions.map(r=>`<button class="province-card ${state.focus===r.id?'active':''}" data-r="${r.id}" type="button"><div class="top"><span>${esc(r.abbr)}</span><span>${esc(r.weekday)} // ${esc(r.timeSlot)}</span></div><div class="province-name">${esc(r.name)}</div><div class="time">${esc(r.localTime)}</div><div class="awake">${pct(r.awakePercent)} awake · ~${num(r.awakeCount)}</div><div class="dom" style="color:${colours[r.dominant]}">● ${esc(ACTIVITIES.find(a=>a.key===r.dominant)?.short||r.dominant)}</div></button>`).join('');
   document.querySelectorAll('[data-r]').forEach(b=>b.onclick=()=>focus(b.dataset.r));
 }
 function focus(id){
@@ -167,43 +178,48 @@ function renderFocus(){
     $('focus-copy').textContent=`Canada-level survey profile evaluated at ${r.localTime} local time and population-scaled to ${r.name}. This is not a province-specific diary estimate.`;
   }
 }
+function projectCanada(lon,lat){
+  const rad=Math.PI/180,phi=lat*rad,lambda=lon*rad,phi1=50*rad,phi2=70*rad,phi0=40*rad,lambda0=-96*rad;
+  const n=.5*(Math.sin(phi1)+Math.sin(phi2)),C=Math.cos(phi1)**2+2*n*Math.sin(phi1);
+  const rho=Math.sqrt(Math.max(0,C-2*n*Math.sin(phi)))/n,rho0=Math.sqrt(C-2*n*Math.sin(phi0))/n,theta=n*(lambda-lambda0);
+  return[rho*Math.sin(theta),rho0-rho*Math.cos(theta)];
+}
+function geoRings(geometry){
+  if(!geometry)return[];
+  if(geometry.type==='Polygon')return geometry.coordinates;
+  if(geometry.type==='MultiPolygon')return geometry.coordinates.flat();
+  return[];
+}
 function renderMap(){
   if(!state.snapshot)return;
-  const c=$('canada-map'),x=c.getContext('2d'),dpr=Math.min(2,window.devicePixelRatio||1),box=c.getBoundingClientRect();
-  const w=Math.max(680,Math.floor(box.width*dpr)),h=Math.max(480,Math.floor(box.height*dpr));
-  if(c.width!==w||c.height!==h){c.width=w;c.height=h}
-  x.clearRect(0,0,w,h);x.save();x.scale(w/1500,h/820);
-
-  const bands=[90,320,550,790,1030,1260,1450];
-  for(let i=0;i<bands.length-1;i++){
-    x.fillStyle=i%2?'rgba(112,229,255,.013)':'rgba(255,255,255,.008)';
-    x.fillRect(bands[i],0,bands[i+1]-bands[i],820);
-    x.strokeStyle='rgba(210,232,222,.07)';x.beginPath();x.moveTo(bands[i],0);x.lineTo(bands[i],820);x.stroke();
+  const shapeLayer=$('map-shapes'),labelLayer=$('map-labels'),grid=$('map-grid');
+  if(!state.geo?.features?.length){
+    shapeLayer.innerHTML='<text x="600" y="360" text-anchor="middle" fill="#60706a" font-family="ui-monospace,monospace" font-size="14">LOADING OFFICIAL STATISTICS CANADA BOUNDARIES…</text>';
+    labelLayer.innerHTML='';return;
   }
-  x.strokeStyle='rgba(150,177,166,.075)';
-  for(let yy=130;yy<820;yy+=110){x.beginPath();x.moveTo(0,yy);x.lineTo(1500,yy);x.stroke()}
+  const projected=[];
+  for(const feature of state.geo.features)for(const ring of geoRings(feature.geometry))for(const [lon,lat] of ring)projected.push(projectCanada(lon,lat));
+  const xs=projected.map(p=>p[0]),ys=projected.map(p=>p[1]),minX=Math.min(...xs),maxX=Math.max(...xs),minY=Math.min(...ys),maxY=Math.max(...ys);
+  const pad=42,W=1200,H=720,scale=Math.min((W-pad*2)/(maxX-minX),(H-pad*2)/(maxY-minY));
+  const tx=x=>pad+(x-minX)*scale,ty=y=>H-pad-(y-minY)*scale;
+  const pt=(lon,lat)=>{const [x,y]=projectCanada(lon,lat);return[tx(x),ty(y)]};
+  const pathFor=geometry=>geoRings(geometry).map(ring=>ring.map(([lon,lat],i)=>{const [x,y]=pt(lon,lat);return(i?'L':'M')+x.toFixed(1)+' '+y.toFixed(1)}).join(' ')+' Z').join(' ');
+  grid.innerHTML=Array.from({length:7},(_,i)=>`<line class="map-grid-line" x1="${80+i*170}" y1="30" x2="${80+i*170}" y2="690"/>`).join('')+Array.from({length:5},(_,i)=>`<line class="map-grid-line" x1="30" y1="${100+i*125}" x2="1170" y2="${100+i*125}"/>`).join('');
 
-  const outline=[[72,535],[122,472],[145,390],[220,345],[310,360],[365,420],[455,375],[540,405],[620,330],[680,260],[765,280],[825,340],[905,310],[980,330],[1050,380],[1112,368],[1180,405],[1240,392],[1300,448],[1380,455],[1430,520],[1388,575],[1320,604],[1240,590],[1170,636],[1090,623],[1020,655],[940,690],[850,660],[770,706],[675,671],[585,704],[500,670],[410,695],[330,655],[250,684],[175,641],[105,615]];
-  x.beginPath();outline.forEach((p,i)=>i?x.lineTo(...p):x.moveTo(...p));x.closePath();
-  const g=x.createLinearGradient(80,250,1420,710);g.addColorStop(0,'rgba(112,229,255,.08)');g.addColorStop(.45,'rgba(255,83,100,.04)');g.addColorStop(1,'rgba(201,152,255,.075)');
-  x.fillStyle=g;x.fill();x.strokeStyle='rgba(220,238,231,.3)';x.lineWidth=2;x.stroke();
+  const all=[...state.snapshot.regions,...state.snapshot.territories],byId=Object.fromEntries(all.map(r=>[r.id,r]));
+  shapeLayer.innerHTML=state.geo.features.map(feature=>{
+    const id=GEO_ID[String(feature.properties?.PRUID||'')],region=byId[id];
+    if(!id||!region)return'';
+    const territory=region.surveyIncluded===false,fill=territory?'#53645d':colours[region.dominant]||'#70e5ff';
+    return`<path class="province-shape ${territory?'territory':''} ${state.focus===id?'active':''}" data-m="${id}" d="${pathFor(feature.geometry)}" fill="${fill}" aria-label="${esc(region.name)}"><title>${esc(region.name)} · ${esc(region.localTime)}${territory?' · time-zone context':` · ${pct(region.awakePercent)} awake`}</title></path>`;
+  }).join('');
 
-  const north=[[190,345],[230,250],[300,190],[390,170],[470,205],[560,140],[650,160],[720,115],[800,145],[875,118],[945,160],[1025,150],[1110,205],[1165,260],[1110,330],[1010,300],[920,310],[825,285],[730,270],[630,330],[545,405],[455,375],[365,420],[310,360]];
-  x.beginPath();north.forEach((p,i)=>i?x.lineTo(...p):x.moveTo(...p));x.closePath();x.fillStyle='rgba(112,229,255,.018)';x.fill();x.strokeStyle='rgba(220,238,231,.09)';x.stroke();
-
-  const hub=state.snapshot.regions.find(r=>r.id==='on');
-  if(hub){
-    for(const q of state.snapshot.regions){
-      if(q.id==='on')continue;
-      x.beginPath();x.moveTo(hub.x*1500,hub.y*820);x.quadraticCurveTo((hub.x+q.x)*750,Math.min(hub.y,q.y)*820-55,q.x*1500,q.y*820);
-      x.strokeStyle='rgba(99,232,165,.075)';x.lineWidth=1;x.stroke();
-    }
-  }
-  x.restore();
-
-  const all=[...state.snapshot.regions,...state.snapshot.territories];
-  $('map-nodes').innerHTML=all.map(q=>`<button class="map-node ${q.surveyIncluded===false?'territory':''} ${state.focus===q.id?'active':''}" data-m="${q.id}" data-abbr="${esc(q.abbr)}" aria-label="${esc(q.name)}" type="button" style="left:${q.x*100}%;top:${q.y*100}%;color:${q.surveyIncluded===false?'#73807a':colours[q.dominant]}"></button>`).join('');
-  document.querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>focus(b.dataset.m));
+  labelLayer.innerHTML=all.map(region=>{
+    const coord=LABEL_COORDS[region.id];if(!coord)return'';
+    const [x,y]=pt(...coord),territory=region.surveyIncluded===false;
+    return`<g><text class="map-label ${territory?'territory':''}" x="${x.toFixed(1)}" y="${y.toFixed(1)}">${esc(region.abbr)}</text><text class="map-sub-label" x="${x.toFixed(1)}" y="${(y+14).toFixed(1)}">${esc(region.localTime)}</text></g>`;
+  }).join('');
+  shapeLayer.querySelectorAll('[data-m]').forEach(path=>{path.addEventListener('click',()=>focus(path.dataset.m));path.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();focus(path.dataset.m)}});path.setAttribute('tabindex','0');path.setAttribute('role','button')});
 }
 
 async function loadFact(){
