@@ -9,10 +9,12 @@ const POP='https://www150.statcan.gc.ca/t1/wds/rest/getDataFromCubePidCoordAndLa
 const AGE='https://www150.statcan.gc.ca/t1/wds/sdmx/statcan/rest/data/DF_17100005/1.1.1+7+13+19?lastNObservations=1';
 const WEATHER='https://api.weather.gc.ca/collections/weather-alerts/items?f=json&limit=16';
 const OG='https://open.canada.ca/data/en/api/3/action/recently_changed_packages_activity_list?limit=10';
+const OG_RECENT_COUNT='https://open.canada.ca/data/en/api/3/action/package_search?rows=0&fq=metadata_modified%3A%5BNOW-1DAY%20TO%20NOW%5D';
 const BANK='https://www.bankofcanada.ca/valet/observations/FXUSDCAD/json?recent=1';
 const STATCAN_IND='https://www150.statcan.gc.ca/n1/dai-quo/ssi/homepage/ind-econ.json';
 const STATCAN_SCHEDULE='https://www150.statcan.gc.ca/n1/dai-quo/ssi/homepage/schedule-key_indicators-eng.json';
 const STATCAN_CHANGED='https://www150.statcan.gc.ca/t1/wds/rest/getChangedCubeList';
+const STATCAN_META='https://www150.statcan.gc.ca/t1/wds/rest/getCubeMetadata';
 const STATCAN_BOUNDARIES='https://geo.statcan.gc.ca/geo_wa/rest/services/2021/Digital_boundary_files/MapServer/0/query?where=1%3D1&outFields=PRUID%2CPRNAME%2CPREABBR&returnGeometry=true&outSR=4326&f=geojson';
 
 const POP_PRODUCT_ID=17100009;
@@ -170,9 +172,10 @@ function weatherSnapshot(w){
     }))
   };
 }
-function openSnapshot(o){
+function openSnapshot(o,recent){
   return{
     status:o?.success?'ready':'error',
+    changedLast24h:Number.isFinite(Number(recent?.result?.count))?Number(recent.result.count):null,
     items:(o?.result||[]).slice(0,10).map(r=>({
       timestamp:r.timestamp,
       id:r.object_id,
@@ -222,6 +225,21 @@ function statcanSchedule(data){
       url:x.url?new URL(x.url,'https://www150.statcan.gc.ca/n1').href:null
     }));
 }
+async function cubeMetadata(productIds){
+  if(!productIds.length)return[];
+  const response=await get(STATCAN_META,{
+    method:'POST',
+    headers:{accept:'application/json','content-type':'application/json'},
+    body:JSON.stringify(productIds.map(productId=>({productId})))
+  });
+  const rows=await response.json();
+  return(rows||[]).map(row=>row?.object).filter(Boolean).map(meta=>({
+    productId:Number(meta.productId),
+    title:meta.cubeTitleEn||`Statistics Canada table ${meta.productId}`,
+    releaseTime:meta.releaseTime||null,
+    url:`https://www150.statcan.gc.ca/t1/tbl1/en/tv.action?pid=${String(meta.productId).length===8?String(meta.productId)+'01':String(meta.productId)}`
+  }));
+}
 async function changedTables(){
   let day=easternDate();
   for(let i=0;i<8;i++,day=addDays(day,-1)){
@@ -230,39 +248,43 @@ async function changedTables(){
     if(!r.ok)throw new Error(`StatCan changed cube list ${day} -> ${r.status}`);
     const j=await r.json();
     const rows=Array.isArray(j?.object)?j.object.flat(Infinity).filter(x=>x&&Number.isFinite(Number(x.productId))):[];
+    const productIds=rows.slice(0,40).map(x=>Number(x.productId));
+    const items=await cubeMetadata(productIds.slice(0,6)).catch(()=>[]);
     return{
       status:'ready',
       date:day,
       count:rows.length,
       releaseTime:rows[0]?.releaseTime||null,
-      productIds:rows.slice(0,40).map(x=>Number(x.productId))
+      productIds,
+      items
     };
   }
-  return{status:'empty',date:null,count:0,productIds:[]};
+  return{status:'empty',date:null,count:0,productIds:[],items:[]};
 }
 
 async function live(){
   const all=await Promise.allSettled([
     fetch(WEATHER).then(r=>{if(!r.ok)throw new Error(r.status);return r.json()}),
     fetch(OG).then(r=>{if(!r.ok)throw new Error(r.status);return r.json()}),
+    fetch(OG_RECENT_COUNT).then(r=>{if(!r.ok)throw new Error(r.status);return r.json()}),
     fetch(BANK).then(r=>{if(!r.ok)throw new Error(r.status);return r.json()}),
     fetch(STATCAN_IND).then(r=>{if(!r.ok)throw new Error(r.status);return r.json()}),
     fetch(STATCAN_SCHEDULE).then(r=>{if(!r.ok)throw new Error(r.status);return r.json()}),
     changedTables()
   ]);
   const val=i=>all[i].status==='fulfilled'?all[i].value:null;
-  const w=val(0),o=val(1),b=val(2),ind=val(3),sched=val(4),changed=val(5);
+  const w=val(0),o=val(1),recentOpen=val(2),b=val(3),ind=val(4),sched=val(5),changed=val(6);
 
   const out={
     generatedAt:new Date().toISOString(),
     weather:weatherSnapshot(w),
-    openGovernment:openSnapshot(o),
+    openGovernment:openSnapshot(o,recentOpen),
     bank:bankSnapshot(b),
     statcan:{
       status:ind||sched||changed?'ready':'error',
       indicators:statcanIndicators(ind),
       schedule:statcanSchedule(sched),
-      changed:changed||{status:'error',date:null,count:0,productIds:[]},
+      changed:changed||{status:'error',date:null,count:0,productIds:[],items:[]},
       source:{
         indicators:STATCAN_IND,
         schedule:STATCAN_SCHEDULE,
