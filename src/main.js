@@ -1,4 +1,4 @@
-import{ACTIVITIES,buildCanadaSnapshot,deterministicFact}from'./model.js';
+import{ACTIVITIES,buildCanadaSnapshot,deterministicFact,factCandidates}from'./model.js';
 
 const $=id=>document.getElementById(id);
 const DATA={
@@ -236,15 +236,15 @@ function renderMap(){
 
 async function loadFact(){
   try{
-    const f=await json(DATA.jev),age=Math.abs(new Date(state.snapshot.instant)-new Date(f.snapshotInstant||f.generatedAt||0));
-    state.fact=age<72e5?f:deterministicFact(state.snapshot);
+    const f=await json(DATA.jev),candidates=factCandidates(state.snapshot),selected=candidates.find(x=>x.id===f?.selected?.id)||candidates[1]||candidates[0];
+    state.fact={...f,snapshotInstant:state.snapshot.instant,selected,clientRefreshed:true};
   }catch{state.fact=deterministicFact(state.snapshot)}
   renderFact();
 }
 function renderFact(){
   const f=state.fact;
   if(!f?.selected)return;
-  $('fact-mode').textContent=f.mode==='jev'?'JEV // VERIFIED FACT SELECTOR':'VERIFIED DATA NOTE';
+  $('fact-mode').textContent=f.mode==='jev'?'JEV // FACT TYPE SELECTOR':'VERIFIED DATA NOTE';
   $('fact-title').textContent=f.selected.title;
   $('fact-detail').textContent=f.selected.detail;
 }
