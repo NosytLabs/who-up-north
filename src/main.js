@@ -129,6 +129,7 @@ function renderCore(){
   $('activity-note').textContent=`Official five-minute participation rates · population snapshot ${state.pop.asOf||'verified'} · survey scope 15+.`;
   renderTicker();
   renderActivities();
+  renderModelPath();
   renderProvinces();
   renderMap();
   renderFocus();
@@ -147,6 +148,16 @@ function renderActivities(){
   const rows=ACTIVITIES.map(a=>({a,value:s.national.activities[a.key],count:s.national.counts[a.key]})).sort((x,y)=>y.value-x.value);
   $('activity-list').innerHTML=rows.map(({a,value,count},i)=>`<div class="activity-row" style="--activity:${a.colour};--w:${Math.min(100,Math.max(0,value))}%"><i></i><div class="activity-name">${String(i+1).padStart(2,'0')} · ${esc(a.label)}</div><div class="activity-track"><span></span></div><div class="activity-pct">${pct(value)}</div><div class="activity-count">~${num(count)} people</div></div>`).join('');
 }
+function renderModelPath(){
+  if(!state.profile||!state.pop)return;
+  const base=instant(),steps=[0,3,6,9].map(hours=>{
+    const at=new Date(base.getTime()+hours*36e5),snapshot=buildCanadaSnapshot(state.profile,state.pop,at);
+    const lead=ACTIVITIES.filter(a=>a.key!=='sleep').map(a=>({...a,value:snapshot.national.activities[a.key]})).sort((a,b)=>b.value-a.value)[0];
+    return{hours,at,snapshot,lead};
+  });
+  $('model-path').innerHTML=steps.map(({hours,at,snapshot,lead})=>`<article class="model-step"><small>${hours===0?(state.shift===0?'NOW':'SHIFTED BASE'):'+'+hours+'H'} // TORONTO ${local('America/Toronto',at)}</small><strong>${pct(snapshot.national.awakePercent)}</strong><span>modelled awake</span><em style="color:${colours[lead.key]}">● ${esc(lead.short)} · ${pct(lead.value)}</em></article>`).join('');
+}
+
 function renderProvinces(){
   $('province-grid').innerHTML=state.snapshot.regions.map(r=>`<button class="province-card ${state.focus===r.id?'active':''}" data-r="${r.id}" type="button"><div class="top"><span>${esc(r.abbr)}</span><span>${esc(r.weekday)} // ${esc(r.timeSlot)}</span></div><div class="province-name">${esc(r.name)}</div><div class="time">${esc(r.localTime)}</div><div class="awake">${pct(r.awakePercent)} awake · ~${num(r.awakeCount)}</div><div class="dom" style="color:${colours[r.dominant]}">● ${esc(ACTIVITIES.find(a=>a.key===r.dominant)?.short||r.dominant)}</div></button>`).join('');
   document.querySelectorAll('[data-r]').forEach(b=>b.onclick=()=>focus(b.dataset.r));
@@ -220,6 +231,7 @@ function renderMap(){
     return`<g><text class="map-label ${territory?'territory':''}" x="${x.toFixed(1)}" y="${y.toFixed(1)}">${esc(region.abbr)}</text><text class="map-sub-label" x="${x.toFixed(1)}" y="${(y+14).toFixed(1)}">${esc(region.localTime)}</text></g>`;
   }).join('');
   shapeLayer.querySelectorAll('[data-m]').forEach(path=>{path.addEventListener('click',()=>focus(path.dataset.m));path.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();focus(path.dataset.m)}});path.setAttribute('tabindex','0');path.setAttribute('role','button')});
+  $('map-legend').innerHTML=ACTIVITIES.map(a=>`<span><i style="--legend:${a.colour}"></i>${esc(a.label)}</span>`).join('');
 }
 
 async function loadFact(){
