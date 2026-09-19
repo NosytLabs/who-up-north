@@ -5,7 +5,7 @@ const OUT=new URL('../public/data/',import.meta.url);
 await mkdir(OUT,{recursive:true});
 
 const TF='https://www150.statcan.gc.ca/t1/wds/sdmx/statcan/rest/data/DF_45100105';
-const POP='https://www150.statcan.gc.ca/t1/wds/rest/getDataFromVectorsAndLatestNPeriods';
+const POP='https://www150.statcan.gc.ca/t1/wds/rest/getDataFromCubePidCoordAndLatestNPeriods';
 const AGE='https://www150.statcan.gc.ca/t1/wds/sdmx/statcan/rest/data/DF_17100005/1.1.1+7+13+19?lastNObservations=1';
 const WEATHER='https://api.weather.gc.ca/collections/weather-alerts/items?f=json&limit=16';
 const OG='https://open.canada.ca/data/en/api/3/action/recently_changed_packages_activity_list?limit=10';
@@ -108,14 +108,20 @@ async function ageShare(){
 
 async function population(){
   try{
-    const body=JSON.stringify(Object.values(V).map(vectorId=>({vectorId,latestN:1})));
+    const geographyCodes=Object.values(V);
+    const body=JSON.stringify(geographyCodes.map(code=>({
+      productId:POP_PRODUCT_ID,
+      coordinate:`${code}.0.0.0.0.0.0.0.0.0`,
+      latestN:1
+    })));
     const rows=await(await get(POP,{method:'POST',headers:{accept:'application/json','content-type':'application/json'},body})).json();
-    const rev=new Map(Object.entries(V).map(([k,v])=>[Number(v),k])),values={},periods=new Set;
+    const byGeo=new Map(Object.entries(V).map(([id,code])=>[Number(code),id])),values={},periods=new Set;
 
     for(const row of rows){
       const obj=row?.object;
-      if(obj&&Number(obj.productId)!==POP_PRODUCT_ID)throw new Error(`population vector ${obj.vectorId} resolved to unexpected product ${obj.productId}`);
-      const id=rev.get(Number(obj?.vectorId));
+      if(obj&&Number(obj.productId)!==POP_PRODUCT_ID)throw new Error(`population coordinate resolved to unexpected product ${obj.productId}`);
+      const geoCode=Number(String(obj?.coordinate||'').split('.')[0]);
+      const id=byGeo.get(geoCode);
       const p=obj?.vectorDataPoint?.filter(x=>Number.isFinite(Number(x?.value)))?.sort((a,b)=>String(b.refPer).localeCompare(String(a.refPer)))?.[0];
       if(id&&p){values[id]=Number(p.value);periods.add(String(p.refPer))}
     }
@@ -124,8 +130,11 @@ async function population(){
     const age=await ageShare(),canada=values.canada;
     delete values.canada;
 
+    const sumRegions=Object.values(values).reduce((sum,value)=>sum+value,0);
+    if(sumRegions<canada*.98||sumRegions>canada*1.02)throw new Error(`province/territory sum ${sumRegions} does not reconcile with Canada ${canada}`);
+
     const out={
-      strategy:'live-wds',
+      strategy:'live-wds-coordinate',
       generatedAt:new Date().toISOString(),
       asOf:[...periods].sort().at(-1),
       canada,values,
@@ -135,7 +144,8 @@ async function population(){
         agency:'Statistics Canada',
         populationTable:'17-10-0009-01',
         populationProductId:POP_PRODUCT_ID,
-        ageTable:'17-10-0005-01'
+        ageTable:'17-10-0005-01',
+        method:'getDataFromCubePidCoordAndLatestNPeriods'
       }
     };
     await writeFile(new URL('population.json',OUT),JSON.stringify(out));
@@ -145,7 +155,6 @@ async function population(){
     console.warn('population fallback:',e.message);
   }
 }
-
 function weatherSnapshot(w){
   return{
     status:w?'ready':'error',
