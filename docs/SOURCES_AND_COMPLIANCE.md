@@ -35,7 +35,7 @@ The data refresh script requests both weekday and weekend series and validates a
 Population source:
 
 - Table 17-10-0009-01: **Population estimates, quarterly**
-- WDS vectors 1–15 for Canada/provinces/territories, with the historical combined NWT/Nunavut vector omitted.
+- WDS method `getDataFromCubePidCoordAndLatestNPeriods` with product ID `17100009` and the table's geography member code in the first coordinate position. The build validates the returned product ID, requires all 13 province/territory values, reconciles their sum to Canada, and compares each generated value with the last verified snapshot to catch member-order mistakes.
 
 Survey-denominator alignment:
 
@@ -45,9 +45,20 @@ Survey-denominator alignment:
 
 The scheduled build refreshes both sources. If that refresh fails, the application may use the last explicitly verified Statistics Canada snapshot embedded in source control metadata; the strategy and reference date are carried in `population.json`.
 
-Statistics Canada WDS documentation notes that WDS is intended for discrete data requests, operates continuously with some overnight table locking, and documents rate limits. The static architecture avoids per-visitor WDS calls: GitHub Actions performs one compact refresh and the result is reused by all visitors.
+Statistics Canada WDS documentation notes that WDS is intended for discrete data requests, operates continuously with some overnight table locking, and documents rate limits. The static architecture avoids per-visitor WDS population calls: GitHub Actions performs one compact coordinate-based refresh and the result is reused by all visitors.
 
-## 3. Open Government Portal CKAN API
+## 3. Statistics Canada — release wire and map
+
+Additional official Statistics Canada services used by the dashboard:
+
+- Major economic indicators JSON: `ind-econ.json`.
+- Major-release schedule JSON: `schedule-key_indicators-eng.json`.
+- WDS `getChangedCubeList` for the most recent business-day table-release count.
+- 2021 Digital Boundary Files province/territory ArcGIS layer, requested as GeoJSON and simplified during the build for browser rendering.
+
+These feeds are informational context around the core time-use model. The release schedule is shown as a countdown to the published release date/time; it is not a prediction. The map geometry is official geography, while activity colours layered onto it are this project's statistical visualization.
+
+## 4. Open Government Portal CKAN API
 
 Endpoint used:
 
@@ -57,7 +68,7 @@ The Open Government API documentation describes the Portal API as live CKAN acce
 
 The site uses the feed only for a small “recently changed dataset” signal. It does not publish or modify Open Government records.
 
-## 4. Environment and Climate Change Canada / MSC GeoMet
+## 5. Environment and Climate Change Canada / MSC GeoMet
 
 Endpoint family:
 
@@ -73,7 +84,7 @@ Attribution used by this project:
 
 The visualization does not rewrite warning meaning or use an LLM to summarize alert instructions.
 
-## 5. Bank of Canada Valet API
+## 6. Bank of Canada Valet API
 
 Endpoint used:
 
@@ -91,13 +102,13 @@ Attribution used by this project:
 
 No Bank of Canada logo or wordmark is reproduced.
 
-## 6. Open Government Licence — Canada
+## 7. Open Government Licence — Canada
 
 Where applicable, information is reused under the Open Government Licence – Canada. The project provides source attribution and does not imply official status or endorsement.
 
 Government symbols, departmental signatures and official logos are not used as project branding.
 
-## 7. Jev / TypeSafe System One
+## 8. Jev / TypeSafe System One
 
 Jev is not a statistical source.
 
@@ -107,7 +118,7 @@ The model receives only aggregate public statistics already computed by this pro
 
 If the model is unavailable or no API key is configured, the build writes a deterministic candidate instead.
 
-## 8. Privacy
+## 9. Privacy
 
 The site does not request:
 
@@ -119,7 +130,7 @@ The site does not request:
 
 The browser does make ordinary HTTPS requests to public official APIs for live-signal cards when available. Those services can necessarily observe normal network metadata such as the visitor IP address. The core time-use model does not require those live requests and can run entirely from the static Pages artifact.
 
-## 9. Accuracy labels
+## 10. Accuracy labels
 
 The UI intentionally separates three concepts:
 
@@ -129,7 +140,7 @@ The UI intentionally separates three concepts:
 
 “Live” never means individual people are being observed.
 
-## 10. Operational safeguards
+## 11. Operational safeguards
 
 Before publishing a Pages artifact, the workflow:
 
@@ -138,9 +149,11 @@ Before publishing a Pages artifact, the workflow:
 3. verifies every displayed activity exists in each slot;
 4. checks the non-overlapping activity partition;
 5. refreshes population and 15+ denominator data;
-6. snapshots live official feeds;
-7. generates the optional Jev card;
-8. runs local integrity tests;
-9. deploys only if the build succeeds.
+6. snapshots live official feeds plus StatCan release-wire data;
+7. fetches and validates all 13 official province/territory boundary features;
+8. validates generated population geography mappings against the verified snapshot;
+9. generates the optional Jev fact selection;
+10. runs local integrity and Pages workflow tests;
+11. deploys only if the build succeeds.
 
 If core time-use data is missing, the client fails closed and shows no substitute activity statistics.
