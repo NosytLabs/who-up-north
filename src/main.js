@@ -1,26 +1,358 @@
 import{ACTIVITIES,buildCanadaSnapshot,deterministicFact}from'./model.js';
-const $=id=>document.getElementById(id),DATA={profile:new URL('../data/time-use-profile.json',import.meta.url),population:new URL('../data/population.json',import.meta.url),jev:new URL('../data/jev-fact.json',import.meta.url),live:new URL('../data/live-signals.json',import.meta.url)},LIVE={weather:'https://api.weather.gc.ca/collections/weather-alerts/items?f=json&limit=8',open:'https://open.canada.ca/data/en/api/3/action/recently_changed_packages_activity_list?limit=8',bank:'https://www.bankofcanada.ca/valet/observations/FXUSDCAD/json?recent=1',search:'https://open.canada.ca/data/en/api/3/action/package_search'},state={profile:null,pop:null,snapshot:null,fact:null,focus:null,shift:0,live:null,w:0,o:0,toast:null},col=Object.fromEntries(ACTIVITIES.map(a=>[a.key,a.colour]));
-const num=n=>Number.isFinite(n)?Math.round(n).toLocaleString('en-CA'):'—',pct=n=>Number.isFinite(n)?Number(n).toFixed(1)+'%':'—',esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])),instant=()=>new Date(Date.now()+state.shift*36e5);
-async function json(url){const c=new AbortController(),t=setTimeout(()=>c.abort(),8000);try{const r=await fetch(url,{cache:'no-store',signal:c.signal});if(!r.ok)throw new Error(r.status);return await r.json()}finally{clearTimeout(t)}}
-function toast(m,e=false){const el=$('toast');el.textContent=m;el.className='toast show'+(e?' error':'');clearTimeout(state.toast);state.toast=setTimeout(()=>el.className='toast',3500)}
-function chip(s,m){const el=$('source-chip');el.className='chip '+s;el.querySelector('span').textContent=m}
-function local(tz,d=instant()){return new Intl.DateTimeFormat('en-CA',{timeZone:tz,hour:'2-digit',minute:'2-digit',hour12:false}).format(d)}
-async function init(){chip('','LOADING VERIFIED PROFILE');try{[state.profile,state.pop]=await Promise.all([json(DATA.profile),json(DATA.population)]);if(Object.keys(state.profile.weekdays||{}).length!==288)throw new Error('profile incomplete');chip('ready','STATCAN // VERIFIED');recompute();loadLive()}catch(e){chip('error','DATA UNAVAILABLE');$('awake-percent').textContent='—';$('awake-count').textContent='No substitute numbers shown.';$('activity-list').innerHTML='<div class="loading">VERIFIED DATA UNAVAILABLE</div>';toast('Verified data bundle unavailable.',true)}}
-function recompute(){if(!state.profile||!state.pop)return;try{state.snapshot=buildCanadaSnapshot(state.profile,state.pop,instant());render();if(state.shift===0)loadFact();else{state.fact=deterministicFact(state.snapshot);renderFact()}}catch(e){toast(e.message||String(e),true)}}
-function render(){const s=state.snapshot;$('awake-percent').textContent=pct(s.national.awakePercent);$('awake-count').textContent=`~${num(s.national.awakeCount)} people modelled awake`;$('pulse-updated').textContent=(state.pop.strategy||'official population').toUpperCase();renderTicker();renderActivities();renderProvinces();renderMap();renderFocus()}
-function renderTicker(){const d=instant(),xs=[['VANCOUVER','America/Vancouver'],['CALGARY','America/Edmonton'],['WINNIPEG','America/Winnipeg'],['TORONTO','America/Toronto'],['HALIFAX','America/Halifax'],["ST. JOHN'S",'America/St_Johns']],set=xs.map(([n,t])=>`<span>${n} ${local(t,d)}</span>`).join('');$('clock-ticker').innerHTML=set+set;$('map-clock').textContent=d.toLocaleTimeString('en-CA',{timeZone:'UTC',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false})+' UTC'}
-function renderActivities(){const s=state.snapshot;$('activity-list').innerHTML=ACTIVITIES.map(a=>{const v=s.national.activities[a.key],n=s.national.counts[a.key];return`<div class="activity-row"><i style="color:${a.colour};background:${a.colour}"></i><div class="activity-name">${esc(a.label)}</div><div class="activity-track" style="color:${a.colour}"><span style="width:${Math.min(100,v)}%"></span></div><div class="activity-pct">${pct(v)}</div><div class="activity-count">${num(n)} people</div></div>`}).join('')}
-function renderProvinces(){$('province-grid').innerHTML=state.snapshot.regions.map(r=>`<button class="province-card" data-r="${r.id}"><div class="top"><span>${esc(r.abbr)}</span><span>${esc(r.weekday)} // ${esc(r.timeSlot)}</span></div><div class="time">${esc(r.localTime)}</div><div class="awake">${pct(r.awakePercent)} awake · ~${num(r.awakeCount)}</div><div class="dom" style="color:${col[r.dominant]}">● ${esc(ACTIVITIES.find(a=>a.key===r.dominant)?.short||r.dominant)}</div></button>`).join('');document.querySelectorAll('[data-r]').forEach(b=>b.onclick=()=>focus(b.dataset.r))}
-function focus(id){state.focus=id;renderMap();renderFocus();if(id)$('focus-card').scrollIntoView({block:'nearest',behavior:'smooth'})}
-function renderFocus(){const all=[...state.snapshot.regions,...state.snapshot.territories],r=all.find(x=>x.id===state.focus);if(!r){$('focus-kicker').textContent='SELECT A PROVINCE';$('focus-name').textContent='Canada';$('focus-time').textContent='—';$('focus-awake').textContent=pct(state.snapshot.national.awakePercent);$('focus-dominant').textContent='—';$('focus-copy').textContent='Tap a province signal to inspect its local model slice.';return}$('focus-kicker').textContent=r.surveyIncluded===false?'TIME ZONE CONTEXT':'LOCAL MODEL SLICE';$('focus-name').textContent=r.name;$('focus-time').textContent=r.localTime;if(r.surveyIncluded===false){$('focus-awake').textContent='NOT MODELLED';$('focus-dominant').textContent='—';$('focus-copy').textContent='Local time only. The selected Time Use Survey covers the ten provinces.'}else{$('focus-awake').textContent=pct(r.awakePercent);$('focus-dominant').textContent=ACTIVITIES.find(a=>a.key===r.dominant)?.short||r.dominant;$('focus-copy').textContent=`Canada-level survey profile evaluated at ${r.localTime} local time and population-scaled to ${r.name}. Not a province-specific diary estimate.`}}
-function renderMap(){const c=$('canada-map'),x=c.getContext('2d'),dpr=Math.min(2,devicePixelRatio||1),r=c.getBoundingClientRect(),w=Math.max(700,Math.floor(r.width*dpr)),h=Math.max(500,Math.floor(r.height*dpr));if(c.width!==w||c.height!==h){c.width=w;c.height=h}x.clearRect(0,0,w,h);x.save();x.scale(w/1500,h/820);x.strokeStyle='rgba(130,151,160,.12)';for(let i=0;i<1500;i+=95){x.beginPath();x.moveTo(i,0);x.lineTo(i,820);x.stroke()}for(let i=0;i<820;i+=82){x.beginPath();x.moveTo(0,i);x.lineTo(1500,i);x.stroke()}const outline=[[110,530],[170,390],[250,350],[330,405],[430,365],[530,395],[610,285],[710,300],[800,345],[900,310],[1000,340],[1080,400],[1170,365],[1260,445],[1360,455],[1405,525],[1330,615],[1220,600],[1140,650],[1030,625],[920,700],[820,660],[710,710],[620,670],[510,705],[400,660],[300,690],[210,640],[130,610]];x.beginPath();outline.forEach((p,i)=>i?x.lineTo(...p):x.moveTo(...p));x.closePath();const g=x.createLinearGradient(100,250,1400,700);g.addColorStop(0,'rgba(125,232,255,.08)');g.addColorStop(.5,'rgba(255,77,95,.045)');g.addColorStop(1,'rgba(201,140,255,.08)');x.fillStyle=g;x.fill();x.strokeStyle='rgba(220,238,231,.28)';x.lineWidth=2;x.stroke();const pts=(state.snapshot?.regions||[]).map(q=>[q.x*1500,q.y*820]);if(pts.length){x.beginPath();pts.forEach((p,i)=>i?x.lineTo(...p):x.moveTo(...p));x.setLineDash([7,10]);x.strokeStyle='rgba(200,255,61,.32)';x.stroke();x.setLineDash([])}x.restore();const all=state.snapshot?[...state.snapshot.regions,...state.snapshot.territories]:[];$('map-nodes').innerHTML=all.map(q=>`<button class="map-node ${q.surveyIncluded===false?'territory':''} ${state.focus===q.id?'active':''}" data-m="${q.id}" data-abbr="${esc(q.abbr)}" aria-label="${esc(q.name)}" style="left:${q.x*100}%;top:${q.y*100}%;color:${q.surveyIncluded===false?'#73807a':col[q.dominant]}"></button>`).join('');document.querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>focus(b.dataset.m)}
-async function loadFact(){try{const f=await json(DATA.jev),age=Math.abs(new Date(state.snapshot.instant)-new Date(f.snapshotInstant||f.generatedAt||0));state.fact=age<72e5?f:deterministicFact(state.snapshot)}catch{state.fact=deterministicFact(state.snapshot)}renderFact()}
-function renderFact(){const f=state.fact;if(!f?.selected)return;$('jev-kicker').textContent=f.selected.kicker||'SUPPORTED FACT';$('jev-title').textContent=f.selected.title;$('jev-detail').textContent=f.selected.detail;$('jev-mode').textContent=f.mode==='jev'?'JEV // TYPESAFE SYSTEM ONE':'DETERMINISTIC FALLBACK';$('jev-confidence').textContent=f.mode==='jev'&&Number.isFinite(f.probability)?`SELECTED PROBABILITY ${Math.round(f.probability*100)}%`:''}
-function weather(j){const f=j?.features||[];return{live:true,numberMatched:j?.numberMatched??f.length,items:f.slice(0,5).map(q=>({name:q.properties?.alert_short_name_en||q.properties?.alert_name_en,feature:q.properties?.feature_name_en,province:q.properties?.province}))}}
-function openGov(j){return{live:true,items:(j?.result||[]).slice(0,6).map(q=>({timestamp:q.timestamp,id:q.object_id,title:q.data?.package?.title_translated?.en||q.data?.package?.title||q.data?.package?.name||'Updated dataset',organization:q.data?.package?.organization?.title||'',url:`https://open.canada.ca/data/en/dataset/${q.object_id}`}))}}
-function bank(j){const r=j?.observations?.at(-1),v=Number(r?.FXUSDCAD?.v);return{live:true,date:r?.d,value:Number.isFinite(v)?v:null,description:j?.seriesDetail?.FXUSDCAD?.description||'Daily average USD/CAD'}}
-async function loadLive(){let fallback={weather:{items:[]},openGovernment:{items:[]},bank:{}};try{fallback=await json(DATA.live);state.live=fallback;renderLive()}catch{}$('live-status').textContent='CHECKING LIVE OFFICIAL FEEDS…';$('live-refresh').disabled=true;const [w,o,b]=await Promise.allSettled([json(LIVE.weather),json(LIVE.open),json(LIVE.bank)]);state.live={weather:w.status==='fulfilled'?weather(w.value):fallback.weather,openGovernment:o.status==='fulfilled'?openGov(o.value):fallback.openGovernment,bank:b.status==='fulfilled'?bank(b.value):fallback.bank};renderLive();$('live-refresh').disabled=false}
-function renderLive(){const w=state.live?.weather||{},o=state.live?.openGovernment||{},b=state.live?.bank||{},wi=(w.items||[])[state.w],oi=(o.items||[])[state.o];$('weather-count').textContent=Number.isFinite(w.numberMatched)?num(w.numberMatched):'—';$('weather-caption').textContent=Number.isFinite(w.numberMatched)?'active alert areas':'feed unavailable';$('weather-detail').textContent=wi?`${wi.name||'Weather alert'} · ${wi.feature||wi.province||'Canada'}`:'No current alert detail.';$('weather-list').innerHTML=(w.items||[]).slice(0,4).map((q,i)=>`<button class="${i===state.w?'active':''}" data-w="${i}">${esc(q.province||'CA')} · ${esc(q.name||'alert')}</button>`).join('');document.querySelectorAll('[data-w]').forEach(b=>b.onclick=()=>{state.w=+b.dataset.w;renderLive()});$('weather-card').classList.toggle('live',!!w.live);$('open-data-title').textContent=oi?.title||'Open Government feed unavailable';$('open-data-time').textContent=oi?.timestamp?new Date(oi.timestamp).toLocaleString('en-CA'):'—';$('open-data-link').href=oi?.url||'https://open.canada.ca/data/en/';$('open-data-list').innerHTML=(o.items||[]).slice(0,4).map((q,i)=>`<button class="${i===state.o?'active':''}" data-o="${i}">${String(i+1).padStart(2,'0')} · ${esc((q.organization||'dataset').slice(0,24))}</button>`).join('');document.querySelectorAll('[data-o]').forEach(b=>b.onclick=()=>{state.o=+b.dataset.o;renderLive()});$('fx-rate').textContent=Number.isFinite(b.value)?b.value.toFixed(4):'—';$('fx-date').textContent=b.date?'Published '+b.date:'—';$('fx-description').textContent=b.description||'Official daily USD/CAD average.';$('bank-card').classList.toggle('live',!!b.live);$('live-status').textContent=`${w.live?'LIVE GEOMET':'CACHED GEOMET'} // ${o.live?'LIVE CKAN':'CACHED CKAN'} // ${b.live?'LIVE BOC':'CACHED BOC'}`}
-async function search(q){q=String(q||'').trim();if(!q)return;$('data-search-input').value=q;$('data-search-results').innerHTML='<div class="search-empty">SEARCHING…</div>';try{const j=await json(`${LIVE.search}?rows=6&q=${encodeURIComponent(q)}`),rows=j?.result?.results||[];$('data-search-results').innerHTML=rows.length?rows.map(r=>`<a class="result" target="_blank" rel="noreferrer" href="https://open.canada.ca/data/en/dataset/${r.id}"><small>${esc(r.organization?.title||'Open Government')}</small><strong>${esc(r.title_translated?.en||r.title||r.name)}</strong></a>`).join(''):'<div class="search-empty">NO MATCHES.</div>'}catch{$('data-search-results').innerHTML='<div class="search-empty">SEARCH UNAVAILABLE.</div>'}}
-function setShift(v,commit=false){state.shift=Number(v);$('time-shift').value=state.shift;$('time-shift-label').textContent=state.shift===0?'LIVE':(state.shift>0?'+':'−')+Math.abs(state.shift)+'H';$('pulse-mode').textContent=state.shift===0?'LIVE CLOCK':'TIME MACHINE';if(commit){const u=new URL(location.href);state.shift?u.searchParams.set('shift',state.shift):u.searchParams.delete('shift');history.replaceState(null,'',u)}recompute()}
-$('focus-reset').onclick=()=>focus(null);$('time-shift').onchange=e=>setShift(e.target.value,true);$('time-shift').oninput=e=>{$('time-shift-label').textContent=e.target.value==0?'LIVE':(e.target.value>0?'+':'−')+Math.abs(e.target.value)+'H'};$('now-button').onclick=()=>setShift(0,true);$('share-button').onclick=async()=>{const text=state.snapshot?`Who Up North? ${pct(state.snapshot.national.awakePercent)} of the modelled Canadian 15+ population is awake right now.`:'Who Up North? Canada, right now.';try{if(navigator.share)await navigator.share({title:'Who Up North?',text,url:location.href});else{await navigator.clipboard.writeText(text+' '+location.href);toast('Snapshot copied.')}}catch{}};$('live-refresh').onclick=loadLive;$('data-search-form').onsubmit=e=>{e.preventDefault();search($('data-search-input').value)};document.querySelectorAll('[data-search-query]').forEach(b=>b.onclick=()=>search(b.dataset.searchQuery));addEventListener('resize',renderMap,{passive:true});const sh=Number(new URL(location.href).searchParams.get('shift')||0);if(Number.isFinite(sh)&&Math.abs(sh)<=12)state.shift=sh;setInterval(()=>{renderTicker();if(state.shift===0&&state.profile)recompute()},60000);init();
+
+const $=id=>document.getElementById(id);
+const DATA={
+  profile:new URL('../data/time-use-profile.json',import.meta.url),
+  population:new URL('../data/population.json',import.meta.url),
+  jev:new URL('../data/jev-fact.json',import.meta.url),
+  live:new URL('../data/live-signals.json',import.meta.url)
+};
+const LIVE={
+  weather:'https://api.weather.gc.ca/collections/weather-alerts/items?f=json&limit=12',
+  open:'https://open.canada.ca/data/en/api/3/action/recently_changed_packages_activity_list?limit=8',
+  bank:'https://www.bankofcanada.ca/valet/observations/FXUSDCAD/json?recent=1',
+  search:'https://open.canada.ca/data/en/api/3/action/package_search'
+};
+const CLOCKS=[
+  ['VANCOUVER','America/Vancouver'],['CALGARY','America/Edmonton'],['WINNIPEG','America/Winnipeg'],
+  ['TORONTO','America/Toronto'],['HALIFAX','America/Halifax'],["ST. JOHN'S",'America/St_Johns']
+];
+const state={profile:null,pop:null,snapshot:null,fact:null,focus:null,shift:0,live:null,liveCheckedAt:null,w:0,o:0,toast:null,resizeFrame:null};
+const colours=Object.fromEntries(ACTIVITIES.map(a=>[a.key,a.colour]));
+
+const num=n=>Number.isFinite(n)?Math.round(n).toLocaleString('en-CA'):'—';
+const pct=n=>Number.isFinite(n)?Number(n).toFixed(1)+'%':'—';
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const instant=()=>new Date(Date.now()+state.shift*36e5);
+
+async function json(url){
+  const c=new AbortController(),t=setTimeout(()=>c.abort(),9000);
+  try{
+    const r=await fetch(url,{cache:'no-store',signal:c.signal});
+    if(!r.ok)throw new Error(String(r.status));
+    return await r.json();
+  }finally{clearTimeout(t)}
+}
+function toast(message,error=false){
+  const el=$('toast');el.textContent=message;el.className='toast show'+(error?' error':'');
+  clearTimeout(state.toast);state.toast=setTimeout(()=>el.className='toast',3400);
+}
+function chip(status,message){
+  const el=$('source-chip');el.className='chip '+status;el.querySelector('span').textContent=message;
+}
+function local(tz,date=instant(),seconds=false){
+  return new Intl.DateTimeFormat('en-CA',{timeZone:tz,hour:'2-digit',minute:'2-digit',second:seconds?'2-digit':undefined,hour12:false}).format(date);
+}
+function ageLabel(value){
+  const d=value?new Date(value):null;
+  if(!d||Number.isNaN(d.getTime()))return'—';
+  const s=Math.max(0,Math.round((Date.now()-d.getTime())/1000));
+  if(s<45)return'JUST NOW';
+  if(s<3600)return Math.floor(s/60)+'M AGO';
+  if(s<86400)return Math.floor(s/3600)+'H AGO';
+  return Math.floor(s/86400)+'D AGO';
+}
+function dateLabel(iso){
+  if(!iso)return'—';
+  const d=new Date(String(iso).slice(0,10)+'T12:00:00Z');
+  return d.toLocaleDateString('en-CA',{timeZone:'UTC',weekday:'short',month:'short',day:'numeric',year:'numeric'});
+}
+function zonedInstant(date,hour,minute,tz){
+  const [y,m,d]=date.split('-').map(Number),desired=Date.UTC(y,m-1,d,hour,minute);
+  let guess=new Date(desired);
+  const f=new Intl.DateTimeFormat('en-CA',{timeZone:tz,year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false});
+  for(let i=0;i<3;i++){
+    const p=Object.fromEntries(f.formatToParts(guess).filter(x=>x.type!=='literal').map(x=>[x.type,x.value]));
+    const actual=Date.UTC(Number(p.year),Number(p.month)-1,Number(p.day),Number(p.hour)%24,Number(p.minute));
+    guess=new Date(guess.getTime()+desired-actual);
+  }
+  return guess;
+}
+function countdown(ms){
+  if(!Number.isFinite(ms)||ms<=0)return'RELEASING TODAY';
+  const minutes=Math.floor(ms/60000),days=Math.floor(minutes/1440),hours=Math.floor(minutes%1440/60),mins=minutes%60;
+  if(days)return`IN ${days}D ${hours}H`;
+  if(hours)return`IN ${hours}H ${mins}M`;
+  return`IN ${Math.max(1,mins)}M`;
+}
+
+async function init(){
+  chip('','LOADING VERIFIED DATA');
+  try{
+    [state.profile,state.pop]=await Promise.all([json(DATA.profile),json(DATA.population)]);
+    if(Object.keys(state.profile.weekdays||{}).length!==288||Object.keys(state.profile.weekends||{}).length!==288)throw new Error('time-use profile incomplete');
+    chip('ready','STATCAN // VERIFIED');
+    recompute();
+  }catch(e){
+    chip('error','CORE DATA UNAVAILABLE');
+    $('awake-percent').textContent='—';
+    $('awake-count').textContent='No substitute numbers shown.';
+    $('activity-list').innerHTML='<div class="loading">VERIFIED CORE DATA UNAVAILABLE</div>';
+    toast('Verified time-use data bundle unavailable.',true);
+  }
+
+  try{
+    state.live=await json(DATA.live);
+    renderLive();
+    renderStatCan();
+  }catch{
+    $('live-status').textContent='BUILD SNAPSHOT UNAVAILABLE // CHECKING SOURCES';
+  }
+  loadLive();
+}
+function recompute(){
+  if(!state.profile||!state.pop)return;
+  try{
+    state.snapshot=buildCanadaSnapshot(state.profile,state.pop,instant());
+    renderCore();
+    if(state.shift===0)loadFact();else{state.fact=deterministicFact(state.snapshot);renderFact()}
+  }catch(e){toast(e.message||String(e),true)}
+}
+function renderCore(){
+  const s=state.snapshot;
+  const leading=ACTIVITIES.filter(a=>a.key!=='sleep').map(a=>({...a,value:s.national.activities[a.key]})).sort((a,b)=>b.value-a.value)[0];
+  $('awake-percent').textContent=pct(s.national.awakePercent);
+  $('awake-count').textContent=`~${num(s.national.awakeCount)} people in the modelled survey scope`;
+  $('pulse-updated').textContent=state.pop.strategy==='live-wds'?'LIVE WDS POPULATION':'VERIFIED POP SNAPSHOT';
+  $('hero-leading').textContent=leading?`${leading.short.toUpperCase()} // ${pct(leading.value)}`:'—';
+  $('activity-note').textContent=`Official five-minute participation rates · population snapshot ${state.pop.asOf||'verified'} · survey scope 15+.`;
+  renderTicker();
+  renderActivities();
+  renderProvinces();
+  renderMap();
+  renderFocus();
+}
+function renderTicker(){
+  const d=instant();
+  $('pulse-instant').textContent=d.toLocaleTimeString('en-CA',{timeZone:'UTC',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false})+' UTC';
+  const set=CLOCKS.map(([name,tz])=>`<span>${name} ${local(tz,d,true)}</span>`).join('');
+  $('clock-ticker').innerHTML=set+set;
+  $('map-clock').textContent=d.toLocaleTimeString('en-CA',{timeZone:'UTC',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false})+' UTC';
+  renderReleaseClock();
+  renderFreshness();
+}
+function renderActivities(){
+  const s=state.snapshot;
+  const rows=ACTIVITIES.map(a=>({a,value:s.national.activities[a.key],count:s.national.counts[a.key]})).sort((x,y)=>y.value-x.value);
+  $('activity-list').innerHTML=rows.map(({a,value,count},i)=>`<div class="activity-row" style="--activity:${a.colour};--w:${Math.min(100,Math.max(0,value))}%"><i></i><div class="activity-name">${String(i+1).padStart(2,'0')} · ${esc(a.label)}</div><div class="activity-track"><span></span></div><div class="activity-pct">${pct(value)}</div><div class="activity-count">~${num(count)} people</div></div>`).join('');
+}
+function renderProvinces(){
+  $('province-grid').innerHTML=state.snapshot.regions.map(r=>`<button class="province-card ${state.focus===r.id?'active':''}" data-r="${r.id}" type="button"><div class="top"><span>${esc(r.abbr)}</span><span>${esc(r.weekday)} // ${esc(r.timeSlot)}</span></div><div class="time">${esc(r.localTime)}</div><div class="awake">${pct(r.awakePercent)} awake · ~${num(r.awakeCount)}</div><div class="dom" style="color:${colours[r.dominant]}">● ${esc(ACTIVITIES.find(a=>a.key===r.dominant)?.short||r.dominant)}</div></button>`).join('');
+  document.querySelectorAll('[data-r]').forEach(b=>b.onclick=()=>focus(b.dataset.r));
+}
+function focus(id){
+  state.focus=id;
+  renderMap();renderFocus();renderProvinces();
+}
+function renderFocus(){
+  const all=[...state.snapshot.regions,...state.snapshot.territories],r=all.find(x=>x.id===state.focus);
+  if(!r){
+    $('focus-kicker').textContent='SELECT A PROVINCE';
+    $('focus-name').textContent='Canada';
+    $('focus-time').textContent='—';
+    $('focus-awake').textContent=pct(state.snapshot.national.awakePercent);
+    $('focus-dominant').textContent='—';
+    $('focus-copy').textContent='Choose a province signal or card to inspect its local model slice.';
+    return;
+  }
+  $('focus-kicker').textContent=r.surveyIncluded===false?'TIME-ZONE CONTEXT':'LOCAL MODEL SLICE';
+  $('focus-name').textContent=r.name;
+  $('focus-time').textContent=r.localTime;
+  if(r.surveyIncluded===false){
+    $('focus-awake').textContent='NOT MODELLED';$('focus-dominant').textContent='—';
+    $('focus-copy').textContent='Local time only. The selected Time Use Survey covers the ten provinces.';
+  }else{
+    $('focus-awake').textContent=pct(r.awakePercent);
+    $('focus-dominant').textContent=ACTIVITIES.find(a=>a.key===r.dominant)?.short||r.dominant;
+    $('focus-copy').textContent=`Canada-level survey profile evaluated at ${r.localTime} local time and population-scaled to ${r.name}. This is not a province-specific diary estimate.`;
+  }
+}
+function renderMap(){
+  if(!state.snapshot)return;
+  const c=$('canada-map'),x=c.getContext('2d'),dpr=Math.min(2,window.devicePixelRatio||1),box=c.getBoundingClientRect();
+  const w=Math.max(680,Math.floor(box.width*dpr)),h=Math.max(480,Math.floor(box.height*dpr));
+  if(c.width!==w||c.height!==h){c.width=w;c.height=h}
+  x.clearRect(0,0,w,h);x.save();x.scale(w/1500,h/820);
+
+  const bands=[90,320,550,790,1030,1260,1450];
+  for(let i=0;i<bands.length-1;i++){
+    x.fillStyle=i%2?'rgba(112,229,255,.013)':'rgba(255,255,255,.008)';
+    x.fillRect(bands[i],0,bands[i+1]-bands[i],820);
+    x.strokeStyle='rgba(210,232,222,.07)';x.beginPath();x.moveTo(bands[i],0);x.lineTo(bands[i],820);x.stroke();
+  }
+  x.strokeStyle='rgba(150,177,166,.075)';
+  for(let yy=130;yy<820;yy+=110){x.beginPath();x.moveTo(0,yy);x.lineTo(1500,yy);x.stroke()}
+
+  const outline=[[72,535],[122,472],[145,390],[220,345],[310,360],[365,420],[455,375],[540,405],[620,330],[680,260],[765,280],[825,340],[905,310],[980,330],[1050,380],[1112,368],[1180,405],[1240,392],[1300,448],[1380,455],[1430,520],[1388,575],[1320,604],[1240,590],[1170,636],[1090,623],[1020,655],[940,690],[850,660],[770,706],[675,671],[585,704],[500,670],[410,695],[330,655],[250,684],[175,641],[105,615]];
+  x.beginPath();outline.forEach((p,i)=>i?x.lineTo(...p):x.moveTo(...p));x.closePath();
+  const g=x.createLinearGradient(80,250,1420,710);g.addColorStop(0,'rgba(112,229,255,.08)');g.addColorStop(.45,'rgba(255,83,100,.04)');g.addColorStop(1,'rgba(201,152,255,.075)');
+  x.fillStyle=g;x.fill();x.strokeStyle='rgba(220,238,231,.3)';x.lineWidth=2;x.stroke();
+
+  const north=[[190,345],[230,250],[300,190],[390,170],[470,205],[560,140],[650,160],[720,115],[800,145],[875,118],[945,160],[1025,150],[1110,205],[1165,260],[1110,330],[1010,300],[920,310],[825,285],[730,270],[630,330],[545,405],[455,375],[365,420],[310,360]];
+  x.beginPath();north.forEach((p,i)=>i?x.lineTo(...p):x.moveTo(...p));x.closePath();x.fillStyle='rgba(112,229,255,.018)';x.fill();x.strokeStyle='rgba(220,238,231,.09)';x.stroke();
+
+  const hub=state.snapshot.regions.find(r=>r.id==='on');
+  if(hub){
+    for(const q of state.snapshot.regions){
+      if(q.id==='on')continue;
+      x.beginPath();x.moveTo(hub.x*1500,hub.y*820);x.quadraticCurveTo((hub.x+q.x)*750,Math.min(hub.y,q.y)*820-55,q.x*1500,q.y*820);
+      x.strokeStyle='rgba(99,232,165,.075)';x.lineWidth=1;x.stroke();
+    }
+  }
+  x.restore();
+
+  const all=[...state.snapshot.regions,...state.snapshot.territories];
+  $('map-nodes').innerHTML=all.map(q=>`<button class="map-node ${q.surveyIncluded===false?'territory':''} ${state.focus===q.id?'active':''}" data-m="${q.id}" data-abbr="${esc(q.abbr)}" aria-label="${esc(q.name)}" type="button" style="left:${q.x*100}%;top:${q.y*100}%;color:${q.surveyIncluded===false?'#73807a':colours[q.dominant]}"></button>`).join('');
+  document.querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>focus(b.dataset.m));
+}
+
+async function loadFact(){
+  try{
+    const f=await json(DATA.jev),age=Math.abs(new Date(state.snapshot.instant)-new Date(f.snapshotInstant||f.generatedAt||0));
+    state.fact=age<72e5?f:deterministicFact(state.snapshot);
+  }catch{state.fact=deterministicFact(state.snapshot)}
+  renderFact();
+}
+function renderFact(){
+  const f=state.fact;
+  if(!f?.selected)return;
+  $('fact-mode').textContent=f.mode==='jev'?'JEV // VERIFIED FACT SELECTOR':'VERIFIED DATA NOTE';
+  $('fact-title').textContent=f.selected.title;
+  $('fact-detail').textContent=f.selected.detail;
+}
+
+function weather(j){const f=j?.features||[];return{live:true,checkedAt:new Date().toISOString(),numberMatched:j?.numberMatched??f.length,items:f.slice(0,8).map(q=>({name:q.properties?.alert_short_name_en||q.properties?.alert_name_en,feature:q.properties?.feature_name_en,province:q.properties?.province,published:q.properties?.publication_datetime}))}}
+function openGov(j){return{live:true,checkedAt:new Date().toISOString(),items:(j?.result||[]).slice(0,8).map(q=>({timestamp:q.timestamp,id:q.object_id,title:q.data?.package?.title_translated?.en||q.data?.package?.title||q.data?.package?.name||'Updated dataset',organization:q.data?.package?.organization?.title||'',url:`https://open.canada.ca/data/en/dataset/${q.object_id}`}))}}
+function bank(j){const r=j?.observations?.at(-1),v=Number(r?.FXUSDCAD?.v);return{live:true,checkedAt:new Date().toISOString(),date:r?.d,value:Number.isFinite(v)?v:null,description:j?.seriesDetail?.FXUSDCAD?.description||'Daily average USD/CAD'}}
+
+async function loadLive(){
+  if(!state.live){
+    try{state.live=await json(DATA.live);renderLive();renderStatCan()}catch{}
+  }
+  $('live-status').textContent='CHECKING PUBLIC SOURCES DIRECTLY…';
+  $('live-refresh').disabled=true;
+  const [w,o,b]=await Promise.allSettled([json(LIVE.weather),json(LIVE.open),json(LIVE.bank)]);
+  const previous=state.live||{weather:{items:[]},openGovernment:{items:[]},bank:{},statcan:{}};
+  state.live={
+    ...previous,
+    weather:w.status==='fulfilled'?weather(w.value):previous.weather,
+    openGovernment:o.status==='fulfilled'?openGov(o.value):previous.openGovernment,
+    bank:b.status==='fulfilled'?bank(b.value):previous.bank
+  };
+  if([w,o,b].some(x=>x.status==='fulfilled'))state.liveCheckedAt=new Date();
+  renderLive();renderStatCan();
+  $('live-refresh').disabled=false;
+}
+function renderFreshness(){
+  if(!state.live)return;
+  const snap=state.live.generatedAt;
+  $('hero-freshness').textContent=state.liveCheckedAt?'DIRECT CHECK '+ageLabel(state.liveCheckedAt):snap?'SNAPSHOT '+ageLabel(snap):'OFFLINE';
+  const map=[
+    ['weather-source-state',state.live.weather],['open-source-state',state.live.openGovernment],['bank-source-state',state.live.bank]
+  ];
+  for(const [id,s] of map)$(id).textContent=s?.live?'LIVE API':'BUILD SNAPSHOT';
+  $('weather-freshness').textContent=state.live.weather?.checkedAt?ageLabel(state.live.weather.checkedAt):ageLabel(snap);
+  $('open-data-freshness').textContent=state.live.openGovernment?.checkedAt?ageLabel(state.live.openGovernment.checkedAt):ageLabel(snap);
+  $('fx-freshness').textContent=state.live.bank?.checkedAt?ageLabel(state.live.bank.checkedAt):ageLabel(snap);
+  $('indicator-freshness').textContent=snap?'SNAPSHOT '+ageLabel(snap):'STATCAN SNAPSHOT';
+}
+function renderLive(){
+  const w=state.live?.weather||{},o=state.live?.openGovernment||{},b=state.live?.bank||{},wi=(w.items||[])[state.w],oi=(o.items||[])[state.o];
+  $('weather-count').textContent=Number.isFinite(w.numberMatched)?num(w.numberMatched):'—';
+  $('weather-caption').textContent=Number.isFinite(w.numberMatched)?'active alert areas':'feed unavailable';
+  $('weather-detail').textContent=wi?`${wi.name||'Weather alert'} · ${wi.feature||wi.province||'Canada'}`:'No current alert detail.';
+  $('weather-list').innerHTML=(w.items||[]).slice(0,4).map((q,i)=>`<button class="${i===state.w?'active':''}" data-w="${i}" type="button">${esc(q.province||'CA')} · ${esc(q.name||'alert')}</button>`).join('');
+  document.querySelectorAll('[data-w]').forEach(button=>button.onclick=()=>{state.w=+button.dataset.w;renderLive()});
+  $('weather-card').classList.toggle('live',!!w.live);
+
+  $('open-data-title').textContent=oi?.title||'Open Government feed unavailable';
+  $('open-data-time').textContent=oi?.timestamp?new Date(oi.timestamp).toLocaleString('en-CA'):'—';
+  $('open-data-link').href=oi?.url||'https://open.canada.ca/data/en/';
+  $('open-data-list').innerHTML=(o.items||[]).slice(0,4).map((q,i)=>`<button class="${i===state.o?'active':''}" data-o="${i}" type="button">${String(i+1).padStart(2,'0')} · ${esc((q.organization||'dataset').slice(0,22))}</button>`).join('');
+  document.querySelectorAll('[data-o]').forEach(button=>button.onclick=()=>{state.o=+button.dataset.o;renderLive()});
+  $('open-card').classList.toggle('live',!!o.live);
+
+  $('fx-rate').textContent=Number.isFinite(b.value)?b.value.toFixed(4):'—';
+  $('fx-date').textContent=b.date?'Published '+b.date:'—';
+  $('fx-description').textContent=b.description||'Official daily USD/CAD average.';
+  $('bank-card').classList.toggle('live',!!b.live);
+
+  const liveCount=[w,o,b].filter(x=>x?.live).length;
+  $('live-status').textContent=liveCount?`${liveCount}/3 DIRECT SOURCES RESPONDED // STATCAN DATA FROM VERIFIED BUILD`:`BUILD SNAPSHOT // ${state.live.generatedAt?ageLabel(state.live.generatedAt):'NO TIMESTAMP'}`;
+  renderFreshness();
+}
+function nextRelease(){
+  const schedule=state.live?.statcan?.schedule||[],now=new Date();
+  for(const item of schedule){
+    const target=zonedInstant(item.date,8,30,'America/Toronto');
+    if(target.getTime()>now.getTime()-30*60000)return{item,target};
+  }
+  return schedule[0]?{item:schedule[0],target:zonedInstant(schedule[0].date,8,30,'America/Toronto')}:null;
+}
+function renderReleaseClock(){
+  const next=nextRelease();
+  if(!next)return;
+  const delta=next.target.getTime()-Date.now();
+  $('statcan-countdown').textContent=countdown(delta);
+}
+function renderStatCan(){
+  const s=state.live?.statcan;
+  if(!s)return;
+  const next=nextRelease();
+  if(next){
+    $('statcan-next-date').textContent=dateLabel(next.item.date)+' // 08:30 ET';
+    $('statcan-next-title').textContent=next.item.title;
+    $('statcan-next-description').textContent=next.item.description||'Major Statistics Canada release';
+    $('statcan-next-link').href=next.item.url||'https://www150.statcan.gc.ca/n1/dai-quo/index-eng.html';
+  }
+  const changed=s.changed||{};
+  $('statcan-updated-count').textContent=Number.isFinite(changed.count)?num(changed.count):'—';
+  $('statcan-updated-date').textContent=changed.date?`${dateLabel(changed.date)} · WDS changed-table list`:'No recent release-day list available.';
+  const rows=(s.indicators||[]).slice(0,6);
+  $('indicator-grid').innerHTML=rows.length?rows.map(i=>{
+    const cls=i.direction==='2'?'down':i.direction==='1'?'':'flat';
+    const arrow=i.direction==='2'?'↓':i.direction==='1'?'↑':'•';
+    return`<a class="indicator-card" href="${esc(i.url||'https://www.statcan.gc.ca/en/subjects-start')}" target="_blank" rel="noreferrer"><small>${esc(i.releaseDate)} // ${esc(i.reference)}</small><strong>${esc(i.value)}</strong><span>${esc(i.title)}</span><em class="${cls}">${arrow} ${esc(i.growth||'LATEST')} ${esc(i.growthDetail||'')}</em></a>`;
+  }).join(''):'<div class="loading">INDICATOR SNAPSHOT UNAVAILABLE</div>';
+  renderReleaseClock();renderFreshness();
+}
+
+async function search(query){
+  const q=String(query||'').trim();if(!q)return;
+  $('data-search-input').value=q;$('data-search-results').innerHTML='<div class="search-empty">SEARCHING…</div>';
+  try{
+    const j=await json(`${LIVE.search}?rows=6&q=${encodeURIComponent(q)}`),rows=j?.result?.results||[];
+    $('data-search-results').innerHTML=rows.length?rows.map(r=>`<a class="result" target="_blank" rel="noreferrer" href="https://open.canada.ca/data/en/dataset/${r.id}"><small>${esc(r.organization?.title||'Open Government')}</small><strong>${esc(r.title_translated?.en||r.title||r.name)}</strong></a>`).join(''):'<div class="search-empty">NO MATCHES.</div>';
+  }catch{$('data-search-results').innerHTML='<div class="search-empty">SEARCH UNAVAILABLE.</div>'}
+}
+function setShift(value,commit=false){
+  state.shift=Number(value);$('time-shift').value=state.shift;
+  $('time-shift-label').textContent=state.shift===0?'LIVE':(state.shift>0?'+':'−')+Math.abs(state.shift)+'H';
+  $('pulse-mode').innerHTML=state.shift===0?'<i></i> LIVE CLOCK':'TIME MACHINE';
+  if(commit){
+    const u=new URL(location.href);state.shift?u.searchParams.set('shift',state.shift):u.searchParams.delete('shift');history.replaceState(null,'',u);
+  }
+  recompute();
+}
+
+$('focus-reset').onclick=()=>focus(null);
+$('time-shift').onchange=e=>setShift(e.target.value,true);
+$('time-shift').oninput=e=>{$('time-shift-label').textContent=e.target.value==0?'LIVE':(e.target.value>0?'+':'−')+Math.abs(e.target.value)+'H'};
+$('now-button').onclick=()=>setShift(0,true);
+$('share-button').onclick=async()=>{
+  const text=state.snapshot?`Who Up North? ${pct(state.snapshot.national.awakePercent)} of the modelled Canadian 15+ survey scope is awake right now.`:'Who Up North? Canada, right now.';
+  try{
+    if(navigator.share)await navigator.share({title:'Who Up North?',text,url:location.href});
+    else{await navigator.clipboard.writeText(text+' '+location.href);toast('Snapshot link copied.')}
+  }catch{}
+};
+$('live-refresh').onclick=loadLive;
+$('data-search-form').onsubmit=e=>{e.preventDefault();search($('data-search-input').value)};
+document.querySelectorAll('[data-search-query]').forEach(b=>b.onclick=()=>search(b.dataset.searchQuery));
+addEventListener('resize',()=>{cancelAnimationFrame(state.resizeFrame);state.resizeFrame=requestAnimationFrame(()=>state.snapshot&&renderMap())},{passive:true});
+
+const sh=Number(new URL(location.href).searchParams.get('shift')||0);
+if(Number.isFinite(sh)&&Math.abs(sh)<=12)state.shift=sh;
+setInterval(renderTicker,1000);
+setInterval(()=>{if(state.shift===0&&state.profile)recompute()},60000);
+init();
