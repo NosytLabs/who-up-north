@@ -91,9 +91,16 @@
   </div>
 
   <div class="map-shell">
-    <canvas id="canada-map" aria-hidden="true"></canvas>
-    <div class="timezone-labels" aria-hidden="true"><span>PACIFIC</span><span>MOUNTAIN</span><span>CENTRAL</span><span>EASTERN</span><span>ATLANTIC</span><span>NEWFOUNDLAND</span></div>
-    <div id="map-nodes" class="map-nodes"></div>
+    <svg id="canada-map" class="canada-map" viewBox="0 0 1200 720" role="img" aria-label="Canada provinces and territories coloured by the leading modelled activity">
+      <defs>
+        <filter id="map-glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+        <linearGradient id="map-ocean" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0c1820"/><stop offset="1" stop-color="#060a0e"/></linearGradient>
+      </defs>
+      <rect width="1200" height="720" fill="url(#map-ocean)"/>
+      <g id="map-grid"></g>
+      <g id="map-shapes"></g>
+      <g id="map-labels"></g>
+    </svg>
     <div class="map-meta"><span id="map-clock">— UTC</span><span>TIME-ZONE SIGNAL MAP // NOT TO SCALE</span></div>
   </div>
 
