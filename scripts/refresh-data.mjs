@@ -13,6 +13,7 @@ const BANK='https://www.bankofcanada.ca/valet/observations/FXUSDCAD/json?recent=
 const STATCAN_IND='https://www150.statcan.gc.ca/n1/dai-quo/ssi/homepage/ind-econ.json';
 const STATCAN_SCHEDULE='https://www150.statcan.gc.ca/n1/dai-quo/ssi/homepage/schedule-key_indicators-eng.json';
 const STATCAN_CHANGED='https://www150.statcan.gc.ca/t1/wds/rest/getChangedCubeList';
+const STATCAN_BOUNDARIES='https://geo.statcan.gc.ca/geo_wa/rest/services/2021/Digital_boundary_files/MapServer/0/query?where=1%3D1&outFields=PRUID%2CPRNAME%2CPREABBR&returnGeometry=true&outSR=4326&maxAllowableOffset=0.025&geometryPrecision=4&f=geojson';
 
 const POP_PRODUCT_ID=17100009;
 const V={canada:1,nl:2,pe:3,ns:4,nb:5,qc:6,on:7,mb:8,sk:9,ab:10,bc:11,yt:12,nt:14,nu:15};
@@ -274,4 +275,25 @@ async function live(){
   console.log(`signals: ok; StatCan indicators=${out.statcan.indicators.length}, upcoming=${out.statcan.schedule.length}, changed=${out.statcan.changed.count}`);
 }
 
-await Promise.all([timeUse(),population(),live()]);
+
+async function boundaries(){
+  const geo=await(await get(STATCAN_BOUNDARIES,{headers:{accept:'application/geo+json, application/json'}})).json();
+  if(geo?.type!=='FeatureCollection'||!Array.isArray(geo.features)||geo.features.length!==13)throw new Error('Unexpected Statistics Canada province boundary response');
+  const allowed=new Set(['10','11','12','13','24','35','46','47','48','59','60','61','62']);
+  for(const feature of geo.features){
+    const id=String(feature?.properties?.PRUID||'');
+    if(!allowed.has(id)||!feature.geometry)throw new Error('Invalid province/territory boundary feature');
+  }
+  await writeFile(new URL('canada-provinces.geojson',OUT),JSON.stringify({
+    ...geo,
+    source:{
+      agency:'Statistics Canada',
+      layer:'2021 Digital boundary files — provinces and territories',
+      url:'https://geo.statcan.gc.ca/geo_wa/rest/services/2021/Digital_boundary_files/MapServer/0'
+    },
+    generatedAt:new Date().toISOString()
+  }));
+  console.log('boundaries: ok');
+}
+
+await Promise.all([timeUse(),population(),live(),boundaries()]);
