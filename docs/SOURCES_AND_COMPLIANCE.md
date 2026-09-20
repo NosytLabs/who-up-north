@@ -42,7 +42,7 @@ The browser does not call these population endpoints per visitor. GitHub Actions
 
 The dashboard also consumes official Statistics Canada developer services for context:
 
-- major economic indicators JSON, including province/territory records for employment, unemployment, weekly earnings, building permits, retail sales and real GDP where published;
+- major economic indicators JSON, including province/territory records for employment, unemployment, weekly earnings, building permits, retail sales and annual real-GDP growth where published;
 - major-release schedule JSON;
 - WDS `getChangedCubeList`;
 - WDS `getCubeMetadata` for names of selected changed tables.
