@@ -94,9 +94,9 @@
 
   <div class="map-shell">
     <svg id="canada-map" class="canada-map" viewBox="0 0 1200 720" role="group" aria-label="Interactive Canada provinces and territories coloured by the leading modelled awake activity">
-      <g id="map-grid"></g>
+      <g id="map-grid" aria-hidden="true"></g>
       <g id="map-shapes"></g>
-      <g id="map-labels"></g>
+      <g id="map-labels" aria-hidden="true"></g>
     </svg>
     <div class="map-meta"><span id="map-clock">— UTC</span><span>VERIFIED CANADA BOUNDARIES // AWAKE-ACTIVITY OVERLAY</span></div>
   </div>
@@ -211,7 +211,7 @@
   </div>
 
   <details class="explorer">
-    <summary><span>OPEN DATA EXPLORER</span><strong>Search the federal public-data catalogue</strong><i>+</i></summary>
+    <summary><span>OPEN DATA EXPLORER</span><strong>Search the federal public-data catalogue</strong><i aria-hidden="true">+</i></summary>
     <div class="explorer-body">
       <div>
         <p>Query the Open Government catalogue directly. Try housing, wildfire, ferries, salmon, or moose.</p>
