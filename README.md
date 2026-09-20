@@ -6,12 +6,12 @@
 
 Who Up North? is a static GitHub Pages data visualization that combines a live clock with Statistics Canada time-use distributions and current Canadian public-data signals.
 
-It does **not** track people. “Right now” means the current Canadian local clocks are applied to aggregate survey distributions.
+It does **not** track people. “Right now” means the representative Canadian reference clocks are applied to aggregate survey distributions.
 
 ## What the site shows
 
 - **Canada now:** an estimate of the survey-aligned 15+ population awake and participating in eight non-overlapping activity groups.
-- **Across Canada:** the same Canada-level time-use profile evaluated at each province's local five-minute survey slot, plus province/territory drilldowns for current StatCan indicators. Territories also have dedicated clock/data cards even though they are excluded from the time-use model.
+- **Across Canada:** the same Canada-level time-use profile evaluated at one representative reference clock for each province, plus province/territory drilldowns for current StatCan indicators. Territories also have dedicated clock/data cards even though they are excluded from the time-use model.
 - **Time-model path:** how the model changes over the next several hours using the same official survey profile.
 - **StatCan release wire:** recent changed tables, major economic indicators and the next scheduled major release.
 - **Official signal wire:** ECCC weather-alert records, Open Government catalogue activity and the Bank of Canada USD/CAD daily average.
@@ -49,7 +49,7 @@ For each of the ten survey-covered provinces:
 
 ```text
 current instant
-→ province local time
+→ province reference clock
 → weekday/weekend bucket
 → official 5-minute StatCan activity vector
 → province population × national 15+ share × activity rate
@@ -124,7 +124,7 @@ Repository setup: **Settings → Pages → Build and deployment → Source → G
 ## Important limits
 
 - The time-use table is **Canada-level**, not a province-specific diary dataset.
-- Province cards use the Canada profile at province-local time; they are not province-specific behavioural measurements.
+- Province cards use the Canada profile at one representative city clock per province; they are not province-specific behavioural measurements or a claim that every resident shares that time zone.
 - Displayed activity rates are survey estimates and carry sampling uncertainty.
 - Suppressed/incomplete five-minute survey slots are replaced only with the nearest complete official vector from the same weekday/weekend series, and the mapping is recorded in generated data.
 - The 15+ adjustment uses a national age share, not province-specific age structures.
