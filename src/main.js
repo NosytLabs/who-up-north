@@ -125,7 +125,7 @@ function renderCore(){
   const leading=ACTIVITIES.filter(a=>a.key!=='sleep').map(a=>({...a,value:s.national.activities[a.key]})).sort((a,b)=>b.value-a.value)[0];
   $('awake-percent').textContent=pct(s.national.awakePercent);
   $('awake-count').textContent=`~${num(s.national.awakeCount)} people in the modelled survey scope`;
-  $('pulse-updated').textContent=String(state.pop.strategy||'').startsWith('live-wds')?'LIVE WDS POPULATION':'VERIFIED POP SNAPSHOT';
+  $('pulse-updated').textContent=String(state.pop.strategy||'').startsWith('live-wds')?'LATEST WDS POPULATION':'VERIFIED POP SNAPSHOT';
   $('hero-leading').textContent=leading?`${leading.short.toUpperCase()} // ${pct(leading.value)}`:'—';
   $('activity-note').textContent=`Official five-minute participation rates · population snapshot ${state.pop.asOf||'verified'} · survey scope 15+.`;
   renderTicker();
@@ -292,7 +292,7 @@ function renderFreshness(){
 function renderLive(){
   const w=state.live?.weather||{},o=state.live?.openGovernment||{},b=state.live?.bank||{},wi=(w.items||[])[state.w],oi=(o.items||[])[state.o];
   $('weather-count').textContent=Number.isFinite(w.numberMatched)?num(w.numberMatched):'—';
-  $('weather-caption').textContent=Number.isFinite(w.numberMatched)?'active alert areas':'feed unavailable';
+  $('weather-caption').textContent=Number.isFinite(w.numberMatched)?'current alert records':'feed unavailable';
   $('weather-detail').textContent=wi?`${wi.name||'Weather alert'} · ${wi.feature||wi.province||'Canada'}`:'No current alert detail.';
   $('weather-list').innerHTML=(w.items||[]).slice(0,4).map((q,i)=>`<button class="${i===state.w?'active':''}" data-w="${i}" type="button" title="${esc((q.name||'Weather alert')+' · '+(q.feature||q.province||'Canada'))}">${esc(q.province||'CA')} · ${esc(q.name||'alert')}</button>`).join('');
   document.querySelectorAll('[data-w]').forEach(button=>button.onclick=()=>{state.w=+button.dataset.w;renderLive()});
