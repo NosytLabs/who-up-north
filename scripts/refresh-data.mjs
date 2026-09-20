@@ -17,14 +17,28 @@ const STATCAN_CHANGED='https://www150.statcan.gc.ca/t1/wds/rest/getChangedCubeLi
 const STATCAN_META='https://www150.statcan.gc.ca/t1/wds/rest/getCubeMetadata';
 const STATCAN_BOUNDARIES='https://geo.statcan.gc.ca/geo_wa/rest/services/2021/Digital_boundary_files/MapServer/0/query?where=1%3D1&outFields=PRUID%2CPRNAME%2CPREABBR&returnGeometry=true&outSR=4326&geometryPrecision=3&maxAllowableOffset=0.05&f=geojson';
 const GOV_MB_BOUNDARIES='https://geoportal.gov.mb.ca/api/download/v1/items/e46938cbb3e84c3688d03b8622d8f212/geojson?layers=0';
+const PUBLISHED_BOUNDARIES='https://nosytlabs.github.io/who-up-north/data/canada-provinces.geojson';
 
 const POP_PRODUCT_ID=17100009;
 const V={canada:1,nl:2,pe:3,ns:4,nb:5,qc:6,on:7,mb:8,sk:9,ab:10,bc:11,yt:12,nt:14,nu:15};
 
-async function get(url,opt){
-  const r=await fetch(url,opt);
-  if(!r.ok)throw new Error(`${url} -> ${r.status}`);
-  return r;
+const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
+async function get(url,opt={},retries=2){
+  let lastError;
+  for(let attempt=0;attempt<=retries;attempt++){
+    try{
+      const r=await fetch(url,opt);
+      if(r.ok)return r;
+      const error=new Error(`${url} -> ${r.status}`);
+      if(r.status<500&&r.status!==429)throw error;
+      lastError=error;
+    }catch(error){
+      lastError=error;
+      if(attempt===retries)break;
+    }
+    await sleep(350*(attempt+1));
+  }
+  throw lastError||new Error(`Request failed: ${url}`);
 }
 function blocks(xml){return xml.match(/<generic:Series>[\s\S]*?<\/generic:Series>/g)||[]}
 function fld(b,id){return b.match(new RegExp(`id="${id}" value="([^"]+)"`,'i'))?.[1]}
@@ -396,7 +410,9 @@ function reprojectWebMercator(geometry){
 async function boundaries(){
   const allowed=new Set(['10','11','12','13','24','35','46','47','48','59','60','61','62']);
   const postalToPr={NL:'10',PE:'11',NS:'12',NB:'13',QC:'24',ON:'35',MB:'46',SK:'47',AB:'48',BC:'59',YT:'60',NT:'61',NU:'62'};
-  let geo,source;
+  let geo,source,preSimplified=false;
+  const failures=[];
+
   try{
     geo=await(await get(STATCAN_BOUNDARIES,{headers:{accept:'application/geo+json, application/json'}})).json();
     if(geo?.type!=='FeatureCollection'||!Array.isArray(geo.features)||geo.features.length!==13)throw new Error('Unexpected Statistics Canada province boundary response');
@@ -405,41 +421,72 @@ async function boundaries(){
       layer:'2021 Digital boundary files — provinces and territories',
       url:'https://geo.statcan.gc.ca/geo_wa/rest/services/2021/Digital_boundary_files/MapServer/0'
     };
-  }catch(primaryError){
-    const fallback=await(await get(GOV_MB_BOUNDARIES,{headers:{accept:'application/geo+json, application/json'}})).json();
-    if(fallback?.type!=='FeatureCollection'||!Array.isArray(fallback.features))throw primaryError;
-    geo={
-      type:'FeatureCollection',
-      features:fallback.features.filter(f=>postalToPr[String(f?.properties?.postal||'').toUpperCase()]).map(f=>{
-        const postal=String(f.properties.postal).toUpperCase(),pruid=postalToPr[postal];
-        return{
-          type:'Feature',
-          properties:{PRUID:pruid,PRNAME:f.properties.Name_EN||postal,PREABBR:postal},
-          geometry:reprojectWebMercator(f.geometry)
-        };
-      })
-    };
-    source={
-      agency:'Government of Manitoba',
-      layer:'Canada Provincial boundaries, April 2022',
-      url:GOV_MB_BOUNDARIES,
-      catalogue:'https://open.canada.ca/data/en/dataset/85efc01b-163f-ebba-2378-c43eadfb3b3f',
-      fallbackFor:'Statistics Canada 2021 Digital Boundary Files',
-      fallbackReason:String(primaryError?.message||primaryError)
-    };
-    console.warn('StatCan boundaries unavailable; using official Government of Manitoba fallback:',primaryError?.message||primaryError);
+  }catch(error){
+    failures.push(`StatCan: ${error?.message||error}`);
+  }
+
+  if(!geo){
+    try{
+      const fallback=await(await get(GOV_MB_BOUNDARIES,{headers:{accept:'application/geo+json, application/json'}})).json();
+      if(fallback?.type!=='FeatureCollection'||!Array.isArray(fallback.features))throw new Error('Unexpected Government of Manitoba boundary response');
+      geo={
+        type:'FeatureCollection',
+        features:fallback.features.filter(f=>postalToPr[String(f?.properties?.postal||'').toUpperCase()]).map(f=>{
+          const postal=String(f.properties.postal).toUpperCase(),pruid=postalToPr[postal];
+          return{
+            type:'Feature',
+            properties:{PRUID:pruid,PRNAME:f.properties.Name_EN||postal,PREABBR:postal},
+            geometry:reprojectWebMercator(f.geometry)
+          };
+        })
+      };
+      if(geo.features.length!==13)throw new Error(`Government of Manitoba returned ${geo.features.length}/13 normalized regions`);
+      source={
+        agency:'Government of Manitoba',
+        layer:'Canada Provincial boundaries, April 2022',
+        url:GOV_MB_BOUNDARIES,
+        catalogue:'https://open.canada.ca/data/en/dataset/85efc01b-163f-ebba-2378-c43eadfb3b3f',
+        fallbackFor:'Statistics Canada 2021 Digital Boundary Files'
+      };
+    }catch(error){
+      geo=null;
+      failures.push(`Manitoba: ${error?.message||error}`);
+    }
+  }
+
+  if(!geo){
+    try{
+      const cached=await(await get(PUBLISHED_BOUNDARIES,{headers:{accept:'application/geo+json, application/json'}},1)).json();
+      if(cached?.type!=='FeatureCollection'||!Array.isArray(cached.features)||cached.features.length!==13)throw new Error('Published boundary artifact is not a validated 13-region FeatureCollection');
+      geo={type:'FeatureCollection',features:cached.features};
+      preSimplified=true;
+      source={
+        ...(cached.source||{}),
+        cachedFrom:PUBLISHED_BOUNDARIES,
+        cachedArtifactGeneratedAt:cached.generatedAt||null,
+        fallbackFor:'remote boundary services',
+        fallbackReason:failures.join(' | ')
+      };
+    }catch(error){
+      failures.push(`Published artifact: ${error?.message||error}`);
+      console.warn('boundaries unavailable; deploying dashboard without a refreshed map:',failures.join(' | '));
+      return;
+    }
   }
 
   if(geo.features.length!==13)throw new Error(`Boundary source returned ${geo.features.length}/13 regions`);
   const features=geo.features.map(feature=>{
     const id=String(feature?.properties?.PRUID||'');
     if(!allowed.has(id)||!feature.geometry)throw new Error('Invalid province/territory boundary feature');
-    return{...feature,geometry:simplifyGeometry(feature.geometry)};
+    return{...feature,geometry:preSimplified?feature.geometry:simplifyGeometry(feature.geometry)};
   });
   await writeFile(new URL('canada-provinces.geojson',OUT),JSON.stringify({
-    type:'FeatureCollection',features,source,generatedAt:new Date().toISOString()
+    type:'FeatureCollection',
+    features,
+    source:{...source,fallbackReason:source?.fallbackReason||failures.join(' | ')||null},
+    generatedAt:new Date().toISOString()
   }));
-  console.log(`boundaries: ok (${source.agency})`);
+  console.log(`boundaries: ok (${source.agency||'cached verified artifact'})`);
 }
 
 await Promise.all([timeUse(),population(),live(),boundaries()]);
