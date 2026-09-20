@@ -1,25 +1,17 @@
 :root {
 --bg:#070b0e;
   --panel:#0b1115;
-  --panel2:#10181d;
   --surface:rgba(255,255,255,.018);
-  --surface-hover:rgba(255,255,255,.036);
   --ink:#f2f5f2;
   --muted:#9da8a2;
   --dim:#68736e;
   --line:rgba(230,240,235,.10);
   --line-strong:rgba(230,240,235,.18);
-  --accent:#f05d68;
-  --accent-soft:rgba(240,93,104,.10);
   --data:#78c7d3;
-  --success:#6fd19a;
-  --warning:#d9b969;
-  --red:var(--accent);
+  --red:#f05d68;
   --red2:#f58a93;
-  --cyan:var(--data);
-  --green:var(--success);
-  --orange:var(--warning);
-  --violet:#a895c8;
+  --green:#6fd19a;
+  --orange:#d9b969;
   --radius:16px;
   --page-gutter:44px;
   --section-y:76px;
@@ -58,7 +50,7 @@ button,input {
   font:inherit
 }
 button:focus-visible,a:focus-visible,input:focus-visible,summary:focus-visible {
-  outline:2px solid var(--cyan);
+  outline:2px solid var(--data);
   outline-offset:3px
 }
 .wrap {
@@ -789,7 +781,7 @@ min-height:126px;
 .province-stat-card em {
   margin-top:auto;
   padding-top:10px;
-  color:var(--cyan);
+  color:var(--data);
   font:750 .55rem/1.3 ui-monospace,monospace;
   font-style:normal
 }
@@ -873,7 +865,7 @@ min-height:128px;
   position:absolute;
   inset:0 auto 0 0;
   width:2px;
-  background:var(--cyan);
+  background:var(--data);
   box-shadow:0 0 12px rgba(120,199,211,.45)
 }
 .territory-card .top {
@@ -893,7 +885,7 @@ min-height:128px;
 }
 .territory-card .dom {
   margin-top:14px;
-  color:var(--cyan);
+  color:var(--data);
   font-size:.68rem;
   line-height:1.35;
   font-weight:760
@@ -1084,7 +1076,7 @@ min-height:148px;
   margin-top:auto;
   padding-top:12px;
   font:750 .57rem/1.3 ui-monospace,monospace;
-  color:var(--cyan)
+  color:var(--data)
 }
 .indicator-card em.down {
   color:var(--red2)
@@ -1133,7 +1125,7 @@ min-height:300px;
   background:var(--line)
 }
 .signal-card.live:before {
-  background:linear-gradient(90deg,var(--green),var(--cyan))
+  background:linear-gradient(90deg,var(--green),var(--data))
 }
 .signal-card.daily:before {
   background:linear-gradient(90deg,var(--orange),rgba(217,185,105,.25))
@@ -1165,7 +1157,7 @@ min-height:300px;
   font-size:.52rem
 }
 .freshness span:first-child {
-  color:var(--cyan)
+  color:var(--data)
 }
 .signal-number {
   font:950 clamp(3.4rem,5.2vw,5.2rem)/.82 ui-monospace,monospace;
@@ -1201,7 +1193,7 @@ display:flex;
 }
 .open-velocity strong {
   font:950 2.35rem/.8 ui-monospace,monospace;
-  color:var(--cyan);
+  color:var(--data);
   letter-spacing:-.06em
 }
 .open-velocity span {
