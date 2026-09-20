@@ -795,7 +795,7 @@ min-height:126px;
   flex-direction:column;
   text-decoration:none;
   min-width:0;
-  background:rgba(255,255,255,.004);
+  background:var(--panel);
   transition:background .15s,border-color .15s
 }
 .province-stat-card:hover {
@@ -895,7 +895,7 @@ min-height:128px;
   position:relative;
   border:0;
   border-right:1px solid var(--line);
-  background:rgba(255,255,255,.004);
+  background:var(--panel);
   color:var(--ink);
   text-align:left;
   cursor:pointer;
@@ -944,7 +944,7 @@ min-height:140px;
   border:0;
   border-right:1px solid var(--line);
   border-bottom:1px solid var(--line);
-  background:rgba(255,255,255,.004);
+  background:var(--panel);
   color:var(--ink);
   text-align:left;
   cursor:pointer;
@@ -1100,7 +1100,7 @@ min-height:148px;
   text-decoration:none;
   display:flex;
   flex-direction:column;
-  background:rgba(255,255,255,.003);
+  background:var(--panel);
   transition:background .15s
 }
 .indicator-card:nth-child(even) {
@@ -1165,7 +1165,7 @@ min-height:330px;
   padding:var(--card-pad);
   display:flex;
   flex-direction:column;
-  background:rgba(255,255,255,.004);
+  background:var(--panel);
   position:relative;
   overflow:hidden
 }
@@ -1420,7 +1420,7 @@ display:grid;
   min-height:184px;
   border-right:1px solid var(--line);
   border-bottom:1px solid var(--line);
-  background:rgba(255,255,255,.008)
+  background:var(--panel)
 }
 .steps b {
   color:var(--red);
@@ -1863,4 +1863,21 @@ footer a {
   .province-grid {
     grid-template-columns:1fr
   }
+}
+
+/* Unified grid seams */
+.province-grid,.territory-grid,.live-grid,.steps,.sources {
+  gap:1px;
+  background:var(--line)
+}
+.province-stat-grid,.province-open-results,.indicator-grid {
+  gap:1px;
+  background:var(--line)
+}
+.province-card,.territory-card,.signal-card,.steps article,.sources article,
+.province-stat-card,.province-open-results a,.indicator-card {
+  border:0
+}
+.sources article,.steps article,.province-open-results a {
+  background:var(--panel)
 }
