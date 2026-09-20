@@ -56,7 +56,7 @@ Additional official Statistics Canada services used by the dashboard:
 - WDS `getChangedCubeList` for the most recent business-day table-release count.
 - 2021 Digital Boundary Files province/territory ArcGIS layer, requested as GeoJSON and simplified during the build for browser rendering.
 
-These feeds are informational context around the core time-use model. The release schedule is shown as a countdown to the published release date/time; it is not a prediction. The map geometry is official geography, while activity colours layered onto it are this project's statistical visualization.
+These feeds are informational context around the core time-use model. The release schedule is shown as a countdown to the published release date/time; it is not a prediction. The build also calls `getCubeMetadata` for a small set of tables returned by the latest `getChangedCubeList` response so the release wire can show table names instead of opaque product IDs. The map geometry is official geography, while activity colours layered onto it are this project's statistical visualization. Statistics Canada's 2021 province/territory digital boundary service is the primary source. If that ArcGIS service rejects the GitHub runner request, the build falls back to the Government of Manitoba's April 2022 Canada provinces/territories GeoJSON listed in the federal Open Government catalogue, reprojects it from EPSG:3857 to longitude/latitude, normalizes PRUIDs and validates all 13 regions before publication.
 
 ## 4. Open Government Portal CKAN API
 
@@ -66,7 +66,7 @@ Endpoint used:
 
 The Open Government API documentation describes the Portal API as live CKAN access. Public read-only API calls do not require an API key, and the Portal supports GET requests.
 
-The site uses the feed only for a small “recently changed dataset” signal. It does not publish or modify Open Government records.
+The site uses the feed for a small “recently changed dataset” signal, direct catalogue search, and a `package_search` count filtered to records whose `metadata_modified` timestamp falls within the previous 24 hours. It does not publish or modify Open Government records.
 
 ## 5. Environment and Climate Change Canada / MSC GeoMet
 
@@ -136,7 +136,7 @@ The UI intentionally separates three concepts:
 
 - **Live clock:** current device time converted to Canadian time zones.
 - **Statistical model:** 2022–23 time-use participation rates applied to the current local five-minute interval.
-- **Live public signals:** current/recent official API records such as weather alerts and Open Government activity.
+- **Live public signals:** current/recent official API records such as weather-alert feature records and Open Government activity. Direct API connectivity is labelled separately from the age of the underlying statistic (for example, Bank of Canada daily averages).
 
 “Live” never means individual people are being observed.
 
