@@ -69,7 +69,7 @@ Read-only CKAN endpoints power:
 - catalogue search;
 - a rolling count of records whose `metadata_modified` timestamp falls within the previous 24 hours.
 
-Public read requests require no API key. The site does not create or modify catalogue records. Selecting a province/territory issues a read-only CKAN `package_search` query using Solr title syntax for that region name. If no title matches are returned, the client may fall back to a normal full-text query. Results are labelled as federal catalogue matches, not as records published by that provincial or territorial government.
+Public read requests require no API key. The site does not create or modify catalogue records. Selecting a province/territory issues a read-only CKAN `package_search` query using Solr title syntax for that region name and excludes catalogue titles marked `inactive`. If no title matches are returned, the client may fall back to a normal full-text query with the same inactive-title filter. Results are labelled as federal catalogue matches, not as records published by that provincial or territorial government.
 
 ## Environment and Climate Change Canada / MSC GeoMet
 
