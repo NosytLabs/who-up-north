@@ -68,6 +68,10 @@ for (const fn of [
   }
 }
 
+if (!main.includes("gdp:'REAL GDP GROWTH'")) {
+  throw new Error('regional GDP must be labelled as growth');
+}
+
 for (const expected of [
   "searchParams.set('region'",
   "state.w>=weatherItems.length",
@@ -189,6 +193,12 @@ if (existsSync('public/data/population.json')) {
 
   if (!Number.isFinite(Number(population.canada)) || !population.values) {
     throw new Error('generated population bundle invalid');
+  }
+
+  if (!Number.isFinite(Number(population.age15PlusShare))
+      || Number(population.age15PlusShare) <= 0
+      || Number(population.age15PlusShare) >= 1) {
+    throw new Error('generated population age15PlusShare missing or invalid');
   }
 
   const regionalTotal = Object.values(population.values)
