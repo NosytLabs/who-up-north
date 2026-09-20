@@ -27,7 +27,8 @@ async function get(url,opt={},retries=2){
   let lastError;
   for(let attempt=0;attempt<=retries;attempt++){
     try{
-      const r=await fetch(url,opt);
+      const requestOptions={...opt,signal:opt.signal||AbortSignal.timeout(12000)};
+      const r=await fetch(url,requestOptions);
       if(r.ok)return r;
       const error=new Error(`${url} -> ${r.status}`);
       if(r.status<500&&r.status!==429)throw error;
@@ -333,12 +334,12 @@ async function changedTables(){
 
 async function live(){
   const all=await Promise.allSettled([
-    fetch(WEATHER).then(r=>{if(!r.ok)throw new Error(r.status);return r.json()}),
-    fetch(OG).then(r=>{if(!r.ok)throw new Error(r.status);return r.json()}),
-    fetch(OG_RECENT_COUNT).then(r=>{if(!r.ok)throw new Error(r.status);return r.json()}),
-    fetch(BANK).then(r=>{if(!r.ok)throw new Error(r.status);return r.json()}),
-    fetch(STATCAN_IND).then(r=>{if(!r.ok)throw new Error(r.status);return r.json()}),
-    fetch(STATCAN_SCHEDULE).then(r=>{if(!r.ok)throw new Error(r.status);return r.json()}),
+    get(WEATHER).then(r=>r.json()),
+    get(OG).then(r=>r.json()),
+    get(OG_RECENT_COUNT).then(r=>r.json()),
+    get(BANK).then(r=>r.json()),
+    get(STATCAN_IND).then(r=>r.json()),
+    get(STATCAN_SCHEDULE).then(r=>r.json()),
     changedTables()
   ]);
   const val=i=>all[i].status==='fulfilled'?all[i].value:null;
