@@ -100,6 +100,7 @@ async function init(){
     if(Object.keys(state.profile.weekdays||{}).length!==288||Object.keys(state.profile.weekends||{}).length!==288)throw new Error('time-use profile incomplete');
     chip('ready','STATCAN // VERIFIED');
     recompute();
+    if(state.focus)loadProvinceOpenData(state.focus);
   }catch(e){
     chip('error','CORE DATA UNAVAILABLE');
     $('awake-percent').textContent='—';
@@ -141,6 +142,7 @@ function renderCore(){
   renderTicker();
   renderActivities();
   renderModelPath();
+  renderRegionSelect();
   renderProvinces();
   renderTerritories();
   renderMap();
@@ -171,6 +173,15 @@ function renderModelPath(){
   $('model-path').innerHTML=steps.map(({hours,at,snapshot,lead})=>`<article class="model-step"><small>${hours===0?(state.shift===0?'NOW':'SHIFTED BASE'):'+'+hours+'H'} // TORONTO ${local('America/Toronto',at)}</small><strong>${pct(snapshot.national.awakePercent)}</strong><span>modelled awake</span><em style="color:${colours[lead.key]}">● ${esc(lead.short)} · ${pct(lead.value)}</em></article>`).join('');
 }
 
+function renderRegionSelect(){
+  const select=$('region-select');
+  if(!select||!state.snapshot)return;
+  if(select.options.length===1){
+    const regions=[...state.snapshot.regions,...state.snapshot.territories];
+    select.insertAdjacentHTML('beforeend',regions.map(region=>`<option value="${region.id}">${esc(region.name)}</option>`).join(''));
+  }
+  select.value=state.focus||'';
+}
 function renderProvinces(){
   $('province-grid').innerHTML=state.snapshot.regions.map(r=>`<button class="province-card ${state.focus===r.id?'active':''}" data-r="${r.id}" type="button" aria-pressed="${state.focus===r.id?'true':'false'}" title="Inspect ${esc(r.name)}"><div class="top"><span>${esc(r.abbr)}</span><span>${esc(r.weekday)} // ${esc(r.timeSlot)}</span></div><div class="province-name">${esc(r.name)}</div><div class="time">${esc(r.localTime)}</div><div class="awake">${pct(r.awakePercent)} awake · ~${num(r.awakeCount)}</div><div class="dom" style="color:${colours[r.dominant]}">● ${esc(ACTIVITIES.find(a=>a.key===r.dominant)?.short||r.dominant)}</div></button>`).join('');
   document.querySelectorAll('[data-r]').forEach(b=>b.onclick=()=>focus(b.dataset.r));
@@ -186,15 +197,22 @@ function renderTerritories(){
   }).join('');
   grid.querySelectorAll('[data-t]').forEach(button=>button.onclick=()=>focus(button.dataset.t));
 }
-function focus(id){
-  state.focus=id;
+function focus(id,commit=true){
+  const all=state.snapshot?[...state.snapshot.regions,...state.snapshot.territories]:[];
+  state.focus=id&&all.some(region=>region.id===id)?id:null;
   state.provinceRequest+=1;
+  if(commit){
+    const url=new URL(location.href);
+    state.focus?url.searchParams.set('region',state.focus):url.searchParams.delete('region');
+    history.replaceState(null,'',url);
+  }
   renderMap();
   renderFocus();
+  renderRegionSelect();
   renderProvinces();
   renderTerritories();
   renderProvinceData();
-  if(id)loadProvinceOpenData(id);
+  if(state.focus)loadProvinceOpenData(state.focus);
 }
 function renderFocus(){
   const all=[...state.snapshot.regions,...state.snapshot.territories],r=all.find(x=>x.id===state.focus);
@@ -498,11 +516,15 @@ function renderFreshness(){
   $('indicator-freshness').textContent=snap?'SNAPSHOT '+ageLabel(snap):'STATCAN SNAPSHOT';
 }
 function renderLive(){
-  const w=state.live?.weather||{},o=state.live?.openGovernment||{},b=state.live?.bank||{},wi=(w.items||[])[state.w],oi=(o.items||[])[state.o];
+  const w=state.live?.weather||{},o=state.live?.openGovernment||{},b=state.live?.bank||{};
+  const weatherItems=w.items||[],openItems=o.items||[];
+  if(state.w>=weatherItems.length)state.w=0;
+  if(state.o>=openItems.length)state.o=0;
+  const wi=weatherItems[state.w],oi=openItems[state.o];
   $('weather-count').textContent=Number.isFinite(w.numberMatched)?num(w.numberMatched):'—';
   $('weather-caption').textContent=Number.isFinite(w.numberMatched)?'current alert records':'feed unavailable';
   $('weather-detail').textContent=wi?`${wi.name||'Weather alert'} · ${wi.feature||wi.province||'Canada'}`:'No current alert detail.';
-  $('weather-list').innerHTML=(w.items||[]).slice(0,4).map((q,i)=>`<button class="${i===state.w?'active':''}" data-w="${i}" type="button" title="${esc((q.name||'Weather alert')+' · '+(q.feature||q.province||'Canada'))}">${esc(q.province||'CA')} · ${esc(q.name||'alert')}</button>`).join('');
+  $('weather-list').innerHTML=weatherItems.slice(0,4).map((q,i)=>`<button class="${i===state.w?'active':''}" data-w="${i}" type="button" title="${esc((q.name||'Weather alert')+' · '+(q.feature||q.province||'Canada'))}">${esc(q.province||'CA')} · ${esc(q.name||'alert')}</button>`).join('');
   document.querySelectorAll('[data-w]').forEach(button=>button.onclick=()=>{state.w=+button.dataset.w;renderLive()});
   $('weather-card').classList.toggle('live',!!w.live);
 
@@ -511,7 +533,7 @@ function renderLive(){
   $('open-data-org').textContent=oi?.organization||'Federal Open Government catalogue';
   $('open-data-time').textContent=oi?.timestamp?new Date(oi.timestamp).toLocaleString('en-CA'):'—';
   $('open-data-link').href=oi?.url||'https://open.canada.ca/data/en/';
-  $('open-data-list').innerHTML=(o.items||[]).slice(0,4).map((q,i)=>`<button class="${i===state.o?'active':''}" data-o="${i}" type="button" title="${esc((q.title||q.organization||'dataset'))}">${String(i+1).padStart(2,'0')} · ${esc(q.title||q.organization||'dataset')}</button>`).join('');
+  $('open-data-list').innerHTML=openItems.slice(0,4).map((q,i)=>`<button class="${i===state.o?'active':''}" data-o="${i}" type="button" title="${esc((q.title||q.organization||'dataset'))}">${String(i+1).padStart(2,'0')} · ${esc(q.title||q.organization||'dataset')}</button>`).join('');
   document.querySelectorAll('[data-o]').forEach(button=>button.onclick=()=>{state.o=+button.dataset.o;renderLive()});
   $('open-card').classList.toggle('live',!!o.live);
 
@@ -585,6 +607,7 @@ function setShift(value,commit=false){
 }
 
 $('focus-reset').onclick=()=>focus(null);
+$('region-select').onchange=e=>focus(e.target.value||null);
 $('time-shift').onchange=e=>setShift(e.target.value,true);
 $('time-shift').oninput=e=>{$('time-shift-label').textContent=e.target.value==0?'LIVE':(e.target.value>0?'+':'−')+Math.abs(e.target.value)+'H'};
 $('now-button').onclick=()=>setShift(0,true);
@@ -598,8 +621,11 @@ $('share-button').onclick=async()=>{
 $('live-refresh').onclick=()=>loadLive();
 $('data-search-form').onsubmit=e=>{e.preventDefault();search($('data-search-input').value)};
 document.querySelectorAll('[data-search-query]').forEach(b=>b.onclick=()=>search(b.dataset.searchQuery));
-const sh=Number(new URL(location.href).searchParams.get('shift')||0);
+const initialUrl=new URL(location.href);
+const sh=Number(initialUrl.searchParams.get('shift')||0);
 if(Number.isFinite(sh)&&Math.abs(sh)<=12)state.shift=sh;
+const initialRegion=String(initialUrl.searchParams.get('region')||'').toLowerCase();
+if(/^(bc|ab|sk|mb|on|qc|nb|ns|pe|nl|yt|nt|nu)$/.test(initialRegion))state.focus=initialRegion;
 setInterval(renderTicker,1000);
 setInterval(()=>{if(state.shift===0&&state.profile)recompute()},60000);
 setInterval(()=>{if(document.visibilityState==='visible')loadLive({auto:true,includeBank:false})},300000);
