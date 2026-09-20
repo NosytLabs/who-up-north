@@ -50,6 +50,7 @@ for (const id of [
   'province-open-results',
   'open-data-org',
   'territory-grid',
+  'region-select',
 ]) {
   if (!html.includes(`id="${id}"`)) {
     throw new Error(`index.html missing #${id}`);
@@ -64,6 +65,17 @@ for (const fn of [
 ]) {
   if (!main.includes(`function ${fn}(`)) {
     throw new Error(`src/main.js missing ${fn}()`);
+  }
+}
+
+for (const expected of [
+  "searchParams.set('region'",
+  "state.w>=weatherItems.length",
+  "state.o>=openItems.length",
+  "ACTIVITIES.filter(activity=>activity.key!=='sleep')",
+]) {
+  if (!main.includes(expected)) {
+    throw new Error(`src/main.js missing regional/map safeguard: ${expected}`);
   }
 }
 
