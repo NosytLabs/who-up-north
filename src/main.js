@@ -228,10 +228,10 @@ function renderFocus(){
     $('focus-time').textContent='—';
     $('focus-awake').textContent=pct(state.snapshot.national.awakePercent);
     $('focus-dominant').textContent='—';
-    $('focus-copy').textContent='Choose a province or territory to inspect its local clock, model context, and official data.';
+    $('focus-copy').textContent='Choose a province or territory to inspect its reference clock, model context, and official data.';
     return;
   }
-  $('focus-kicker').textContent=r.surveyIncluded===false?'TIME-ZONE CONTEXT':'LOCAL MODEL SLICE';
+  $('focus-kicker').textContent=r.surveyIncluded===false?'REFERENCE CLOCK':'REFERENCE-CLOCK MODEL';
   $('focus-name').textContent=r.name;
   $('focus-time').textContent=r.localTime;
   if(r.surveyIncluded===false){
@@ -424,7 +424,10 @@ function renderMap(){
     if(!region)return'';
     const territory=region.surveyIncluded===false;
     const fill=territory?'#53645d':colours[region.dominant]||'#78c7d3';
-    return`<path class="province-shape ${territory?'territory':''} ${state.focus===item.id?'active':''}" data-m="${item.id}" d="${item.d}" fill="${fill}" aria-label="${esc(region.name)}" aria-pressed="${state.focus===item.id?'true':'false'}"><title>${esc(region.name)} · ${esc(region.localTime)}${territory?' · time-zone context':` · ${pct(region.awakePercent)} awake`}</title></path>`;
+    const detail=territory
+      ?`${region.clockLabel} reference clock ${region.localTime}; territory not included in the time-use model`
+      :`${region.clockLabel} reference clock ${region.localTime}; ${pct(region.awakePercent)} modelled awake`;
+    return`<path class="province-shape ${territory?'territory':''} ${state.focus===item.id?'active':''}" data-m="${item.id}" d="${item.d}" fill="${fill}" aria-label="${esc(region.name)} — ${esc(detail)}" aria-pressed="${state.focus===item.id?'true':'false'}"><title>${esc(region.name)} · ${esc(detail)}</title></path>`;
   }).join('');
 
   labelLayer.innerHTML=all.map(region=>{
