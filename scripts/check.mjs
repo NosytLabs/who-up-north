@@ -139,6 +139,13 @@ equal(fixtureSnapshot.national.awakePercent, 60, 'awake');
 equal(fixtureSnapshot.regions.length, 10, 'provinces');
 equal(fixtureSnapshot.territories.length, 3, 'territories');
 
+const refreshScript = await readFile('scripts/refresh-data.mjs', 'utf8');
+for (const expected of ['PUBLISHED_BOUNDARIES', 'deploying dashboard without a refreshed map']) {
+  if (!refreshScript.includes(expected)) {
+    throw new Error(`boundary resilience safeguard missing: ${expected}`);
+  }
+}
+
 const workflow = await readFile('.github/workflows/pages.yml', 'utf8');
 for (const expected of [
   'configure-pages@v6',
