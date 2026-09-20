@@ -130,8 +130,8 @@ height:66px;
   margin-right:8px
 }
 .brand span,.eyebrow,.chip,.map-meta,.signal-top,.fine,.metric-label,.truth-strip span,.pulse-stats span,.freshness,.province-head,.fact-inline>span,.indicator-head,.release-date {
-color:var(--data);
-  margin-top:36px
+  font:750 .62rem/1.25 ui-monospace,SFMono-Regular,Menlo,monospace;
+  letter-spacing:.105em
 }
 .brand span {
   color:var(--dim);
@@ -974,8 +974,8 @@ min-height:300px;
   box-shadow:0 0 12px var(--green)
 }
 .release-date {
-  color:var(--red);
-  margin-top:54px
+  color:var(--data);
+  margin-top:36px
 }
 .release-card h3 {
   font-size:clamp(1.6rem,2.4vw,2.55rem);
@@ -1002,9 +1002,7 @@ font:950 clamp(2.15rem,3.5vw,3.6rem)/1 ui-monospace,monospace;
   margin-top:22px
 }
 .update-card .signal-number {
-font:950 clamp(3.4rem,5.2vw,5.2rem)/.82 ui-monospace,monospace;
-  letter-spacing:-.07em;
-  margin-top:38px
+  margin-top:34px
 }
 .changed-list {
   display:grid;
@@ -1170,9 +1168,9 @@ min-height:300px;
   color:var(--cyan)
 }
 .signal-number {
-  font:950 clamp(3.8rem,6vw,6rem)/.8 ui-monospace,monospace;
-  letter-spacing:-.075em;
-  margin-top:52px
+  font:950 clamp(3.4rem,5.2vw,5.2rem)/.82 ui-monospace,monospace;
+  letter-spacing:-.07em;
+  margin-top:38px
 }
 .signal-number.compact {
   color:var(--orange)
@@ -1798,7 +1796,7 @@ footer a {
   * {
     scroll-behavior:auto!important
   }
-  .ticker-track,.pulse-card:before,.live-dot {
+  .ticker-track,.live-dot {
     animation:none!important
   }
   .activity-track span {
