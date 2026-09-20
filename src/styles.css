@@ -797,8 +797,6 @@ margin-top:14px;
 .province-stat-card {
 min-height:126px;
   padding:15px 17px;
-  border-right:1px solid var(--line);
-  border-bottom:1px solid var(--line);
   display:flex;
   flex-direction:column;
   text-decoration:none;
@@ -848,8 +846,6 @@ min-height:126px;
 }
 .province-open-results a {
   padding:14px 18px;
-  border-right:1px solid var(--line);
-  border-bottom:1px solid var(--line);
   text-decoration:none;
   min-width:0
 }
@@ -900,16 +896,11 @@ min-height:126px;
 min-height:128px;
   padding:15px 16px;
   position:relative;
-  border:0;
-  border-right:1px solid var(--line);
   background:var(--panel);
   color:var(--ink);
   text-align:left;
   cursor:pointer;
   transition:background .15s,border-color .15s
-}
-.territory-card:last-child {
-  border-right:0
 }
 .territory-card:hover,.territory-card.active {
   background:rgba(120,199,211,.045)
@@ -948,9 +939,6 @@ min-height:128px;
 min-height:140px;
   padding:15px 16px;
   position:relative;
-  border:0;
-  border-right:1px solid var(--line);
-  border-bottom:1px solid var(--line);
   background:var(--panel);
   color:var(--ink);
   text-align:left;
@@ -1102,16 +1090,11 @@ min-height:330px;
 .indicator-card {
 min-height:148px;
   padding:17px 19px;
-  border-right:1px solid var(--line);
-  border-bottom:1px solid var(--line);
   text-decoration:none;
   display:flex;
   flex-direction:column;
   background:var(--panel);
   transition:background .15s
-}
-.indicator-card:nth-child(even) {
-  border-right:0
 }
 .indicator-card:hover {
   background:rgba(120,199,211,.035)
@@ -1168,16 +1151,12 @@ display:grid;
 }
 .signal-card {
 min-height:330px;
-  border-right:1px solid var(--line);
   padding:var(--card-pad);
   display:flex;
   flex-direction:column;
   background:var(--panel);
   position:relative;
   overflow:hidden
-}
-.signal-card:last-child {
-  border-right:0
 }
 .signal-card:before {
   content:"";
@@ -1425,8 +1404,6 @@ display:grid;
 .steps article {
   padding:24px;
   min-height:184px;
-  border-right:1px solid var(--line);
-  border-bottom:1px solid var(--line);
   background:var(--panel)
 }
 .steps b {
@@ -1454,8 +1431,6 @@ display:grid;
 .sources article {
   min-height:240px;
   padding:var(--card-pad);
-  border-right:1px solid var(--line);
-  border-bottom:1px solid var(--line);
   display:flex;
   flex-direction:column
 }
@@ -1758,13 +1733,6 @@ footer a {
   .territory-grid {
     grid-template-columns:1fr
   }
-  .territory-card {
-    border-right:0;
-    border-bottom:1px solid var(--line)
-  }
-  .territory-card:last-child {
-    border-bottom:0
-  }
   .statcan-grid {
     grid-template-columns:1fr
   }
@@ -1780,20 +1748,12 @@ footer a {
   .indicator-grid {
     grid-template-columns:1fr
   }
-  .indicator-card {
-    border-right:0
-  }
   .live-grid {
     grid-template-columns:1fr
   }
   .signal-card,.signal-card:nth-child(2),.signal-card:last-child {
     grid-column:auto;
-    border-right:0;
-    border-top:1px solid var(--line);
     min-height:320px
-  }
-  .signal-card:first-child {
-    border-top:0
   }
   .explorer summary {
     grid-template-columns:1fr auto
