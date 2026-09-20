@@ -80,6 +80,30 @@ for (const expected of [
   }
 }
 
+for (const expected of [
+  'https://www.statcan.gc.ca/en/developers/wds/user-guide',
+  'https://www150.statcan.gc.ca/t1/tbl1/en/tv.action?pid=4510010501',
+  'https://api.weather.gc.ca/collections/weather-alerts?f=html',
+  'https://eccc-msc.github.io/open-data/msc-data/alerts/readme_alerts-geomet_en/',
+  'https://open.canada.ca/en/access-our-application-programming-interface-api',
+  'https://www.bankofcanada.ca/valet/docs/',
+  'https://www.bankofcanada.ca/valet/observations/FXUSDCAD/json?recent=1',
+]) {
+  if (!html.includes(expected)) {
+    throw new Error(`exact source link missing: ${expected}`);
+  }
+}
+
+for (const expected of [
+  'id="weather-link"',
+  'weather-alerts/items/${encodeURIComponent(wi.id)}',
+  'sort=score%20desc%2Cmetadata_modified%20desc',
+]) {
+  if (!html.includes(expected) && !main.includes(expected)) {
+    throw new Error(`dynamic source-link safeguard missing: ${expected}`);
+  }
+}
+
 const styles = await readFile('src/styles.css', 'utf8');
 if (!styles.includes('--surface:') || !styles.includes('@media(prefers-reduced-motion:reduce)')) {
   throw new Error('responsive visual system or reduced-motion safeguard missing');
