@@ -625,15 +625,19 @@ stroke:rgba(227,241,234,.42);
 }
 .province-shape:hover,.province-shape.active,.province-shape:focus-visible {
   opacity:1;
-  fill-opacity:.48;
+  fill-opacity:.72;
   stroke:rgba(255,255,255,.9);
   stroke-width:2;
   filter:drop-shadow(0 0 7px rgba(120,199,211,.35));
   outline:none
 }
 .province-shape.territory {
-opacity:.62;
+  opacity:.62;
   fill-opacity:.28
+}
+.province-shape.territory:hover,.province-shape.territory.active,.province-shape.territory:focus-visible {
+  opacity:1;
+  fill-opacity:.58
 }
 .map-label {
   pointer-events:none;
@@ -721,6 +725,10 @@ opacity:.62;
   font-size:.67rem;
   line-height:1.35
 }
+.region-picker select:hover {
+  border-color:var(--line-strong)
+}
+
 .focus {
 border:1px solid var(--line);
   border-top:0;
@@ -846,7 +854,7 @@ min-height:126px;
   min-width:0
 }
 .province-open-results a:hover {
-  background:rgba(240,93,104,.025)
+  background:rgba(120,199,211,.035)
 }
 .province-open-results small {
   display:block;
@@ -874,8 +882,7 @@ min-height:126px;
 .province-grid {
   display:grid;
   grid-template-columns:repeat(5,1fr);
-  border-top:1px solid var(--line);
-  border-left:1px solid var(--line);
+  border:1px solid var(--line);
   border-radius:12px;
   overflow:hidden
 }
@@ -951,15 +958,15 @@ min-height:140px;
   transition:background .15s,border-color .15s,transform .15s
 }
 .province-card:hover,.province-card.active {
-  background:var(--accent-soft)
+  background:rgba(120,199,211,.045)
 }
 .province-card.active:before {
   content:"";
   position:absolute;
   inset:0 auto 0 0;
   width:2px;
-  background:var(--red);
-  box-shadow:0 0 12px rgba(240,93,104,.48)
+  background:var(--data);
+  box-shadow:0 0 12px rgba(120,199,211,.45)
 }
 .province-card .top {
   display:flex;
