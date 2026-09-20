@@ -183,7 +183,7 @@ function renderRegionSelect(){
   select.value=state.focus||'';
 }
 function renderProvinces(){
-  $('province-grid').innerHTML=state.snapshot.regions.map(r=>`<button class="province-card ${state.focus===r.id?'active':''}" data-r="${r.id}" type="button" aria-pressed="${state.focus===r.id?'true':'false'}" title="Inspect ${esc(r.name)}"><div class="top"><span>${esc(r.abbr)}</span><span>${esc(r.weekday)} // ${esc(r.timeSlot)}</span></div><div class="province-name">${esc(r.name)}</div><div class="time">${esc(r.localTime)}</div><div class="awake">${pct(r.awakePercent)} awake · ~${num(r.awakeCount)}</div><div class="dom" style="color:${colours[r.dominant]}">● ${esc(ACTIVITIES.find(a=>a.key===r.dominant)?.short||r.dominant)}</div></button>`).join('');
+  $('province-grid').innerHTML=state.snapshot.regions.map(r=>`<button class="province-card ${state.focus===r.id?'active':''}" data-r="${r.id}" type="button" aria-pressed="${state.focus===r.id?'true':'false'}" title="Inspect ${esc(r.name)}"><div class="top"><span>${esc(r.abbr)}</span><span>${esc(r.clockLabel)} CLOCK</span></div><div class="province-name">${esc(r.name)}</div><div class="time">${esc(r.localTime)}</div><div class="awake">${pct(r.awakePercent)} awake · ~${num(r.awakeCount)}</div><div class="dom" style="color:${colours[r.dominant]}">● ${esc(ACTIVITIES.find(a=>a.key===r.dominant)?.short||r.dominant)}</div></button>`).join('');
   document.querySelectorAll('[data-r]').forEach(b=>b.onclick=()=>focus(b.dataset.r));
 }
 function renderTerritories(){
@@ -193,7 +193,7 @@ function renderTerritories(){
     const indicators=state.live?.statcan?.provinces?.[r.id]?.indicators||{};
     const headline=indicators.retail||indicators.building||indicators.earnings||indicators.gdp;
     const signal=headline?`${PROVINCE_STAT_LABELS[headline.key]||headline.title} · ${headline.value}`:'Official indicators available in drilldown';
-    return`<button class="territory-card ${state.focus===r.id?'active':''}" data-t="${r.id}" type="button" aria-pressed="${state.focus===r.id?'true':'false'}" title="Inspect ${esc(r.name)}"><div class="top"><span>${esc(r.abbr)}</span><span>TIME-ZONE CONTEXT</span></div><div class="province-name">${esc(r.name)}</div><div class="time">${esc(r.localTime)}</div><div class="awake">${num(r.population)} population</div><div class="dom">${esc(signal)}</div></button>`;
+    return`<button class="territory-card ${state.focus===r.id?'active':''}" data-t="${r.id}" type="button" aria-pressed="${state.focus===r.id?'true':'false'}" title="Inspect ${esc(r.name)}"><div class="top"><span>${esc(r.abbr)}</span><span>${esc(r.clockLabel)} CLOCK</span></div><div class="province-name">${esc(r.name)}</div><div class="time">${esc(r.localTime)}</div><div class="awake">${num(r.population)} population</div><div class="dom">${esc(signal)}</div></button>`;
   }).join('');
   grid.querySelectorAll('[data-t]').forEach(button=>button.onclick=()=>focus(button.dataset.t));
 }
@@ -230,11 +230,11 @@ function renderFocus(){
   $('focus-time').textContent=r.localTime;
   if(r.surveyIncluded===false){
     $('focus-awake').textContent='NOT MODELLED';$('focus-dominant').textContent='—';
-    $('focus-copy').textContent='The Time Use Survey model excludes territories. Official population and economic indicators are available below.';
+    $('focus-copy').textContent=`The time-use model excludes territories. ${r.clockLabel} is used only as a reference clock; official population and economic indicators are available below.`;
   }else{
     $('focus-awake').textContent=pct(r.awakePercent);
     $('focus-dominant').textContent=ACTIVITIES.find(a=>a.key===r.dominant)?.short||r.dominant;
-    $('focus-copy').textContent=`Canada-level survey profile evaluated at ${r.localTime} local time and population-scaled to ${r.name}. This is not a province-specific diary estimate.`;
+    $('focus-copy').textContent=`Canada-level survey profile evaluated on the ${r.clockLabel} reference clock at ${r.localTime} and population-scaled to ${r.name}. This is not a province-specific diary estimate.`;
   }
 }
 function focusedRegion(){
