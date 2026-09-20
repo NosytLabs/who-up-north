@@ -19,7 +19,7 @@ const CLOCKS=[
   ['VANCOUVER','America/Vancouver'],['CALGARY','America/Edmonton'],['WINNIPEG','America/Winnipeg'],
   ['TORONTO','America/Toronto'],['HALIFAX','America/Halifax'],["ST. JOHN'S",'America/St_Johns']
 ];
-const state={profile:null,pop:null,geo:null,snapshot:null,fact:null,focus:null,shift:0,live:null,lastCheckAt:null,directOk:0,directExpected:0,w:0,o:0,toast:null,provinceOpen:{},provinceRequest:0};
+const state={profile:null,pop:null,geo:null,mapGeometry:null,snapshot:null,fact:null,factTemplate:null,focus:null,shift:0,live:null,lastCheckAt:null,directOk:0,directExpected:0,w:0,o:0,toast:null,provinceOpen:{},provinceRequest:0};
 const colours=Object.fromEntries(ACTIVITIES.map(a=>[a.key,a.colour]));
 const GEO_ID={'10':'nl','11':'pe','12':'ns','13':'nb','24':'qc','35':'on','46':'mb','47':'sk','48':'ab','59':'bc','60':'yt','61':'nt','62':'nu'};
 const LABEL_COORDS={
@@ -337,44 +337,100 @@ function geoRings(geometry){
   if(geometry.type==='MultiPolygon')return geometry.coordinates.flat();
   return[];
 }
+function prepareMapGeometry(){
+  if(state.mapGeometry)return state.mapGeometry;
+  if(!state.geo?.features?.length)return null;
+
+  const projected=[];
+  for(const feature of state.geo.features){
+    for(const ring of geoRings(feature.geometry)){
+      for(const [lon,lat] of ring)projected.push(projectCanada(lon,lat));
+    }
+  }
+
+  const xs=projected.map(point=>point[0]),ys=projected.map(point=>point[1]);
+  const minX=Math.min(...xs),maxX=Math.max(...xs),minY=Math.min(...ys),maxY=Math.max(...ys);
+  const pad=42,W=1200,H=720;
+  const scale=Math.min((W-pad*2)/(maxX-minX),(H-pad*2)/(maxY-minY));
+  const tx=x=>pad+(x-minX)*scale,ty=y=>H-pad-(y-minY)*scale;
+  const pt=(lon,lat)=>{const [x,y]=projectCanada(lon,lat);return[tx(x),ty(y)]};
+  const pathFor=geometry=>geoRings(geometry).map(ring=>ring.map(([lon,lat],i)=>{
+    const [x,y]=pt(lon,lat);
+    return(i?'L':'M')+x.toFixed(1)+' '+y.toFixed(1);
+  }).join(' ')+' Z').join(' ');
+
+  const paths=state.geo.features.map(feature=>({
+    id:GEO_ID[String(feature.properties?.PRUID||'')],
+    d:pathFor(feature.geometry)
+  })).filter(item=>item.id);
+
+  const labels={};
+  for(const [id,coord] of Object.entries(LABEL_COORDS)){
+    const [x,y]=pt(...coord);
+    labels[id]={x,y};
+  }
+
+  const grid=Array.from({length:7},(_,i)=>`<line class="map-grid-line" x1="${80+i*170}" y1="30" x2="${80+i*170}" y2="690"/>`).join('')
+    +Array.from({length:5},(_,i)=>`<line class="map-grid-line" x1="30" y1="${100+i*125}" x2="1170" y2="${100+i*125}"/>`).join('');
+
+  state.mapGeometry={paths,labels,grid};
+  return state.mapGeometry;
+}
 function renderMap(){
   if(!state.snapshot)return;
   const shapeLayer=$('map-shapes'),labelLayer=$('map-labels'),grid=$('map-grid');
-  if(!state.geo?.features?.length){
-    shapeLayer.innerHTML='<text x="600" y="360" text-anchor="middle" fill="#60706a" font-family="ui-monospace,monospace" font-size="14">LOADING VERIFIED CANADA BOUNDARIES…</text>';
-    labelLayer.innerHTML='';return;
+  const geometry=prepareMapGeometry();
+  if(!geometry){
+    shapeLayer.innerHTML='<text x="600" y="360" text-anchor="middle" fill="#68736e" font-family="ui-monospace,monospace" font-size="14">LOADING VERIFIED CANADA BOUNDARIES…</text>';
+    labelLayer.innerHTML='';
+    return;
   }
-  const projected=[];
-  for(const feature of state.geo.features)for(const ring of geoRings(feature.geometry))for(const [lon,lat] of ring)projected.push(projectCanada(lon,lat));
-  const xs=projected.map(p=>p[0]),ys=projected.map(p=>p[1]),minX=Math.min(...xs),maxX=Math.max(...xs),minY=Math.min(...ys),maxY=Math.max(...ys);
-  const pad=42,W=1200,H=720,scale=Math.min((W-pad*2)/(maxX-minX),(H-pad*2)/(maxY-minY));
-  const tx=x=>pad+(x-minX)*scale,ty=y=>H-pad-(y-minY)*scale;
-  const pt=(lon,lat)=>{const [x,y]=projectCanada(lon,lat);return[tx(x),ty(y)]};
-  const pathFor=geometry=>geoRings(geometry).map(ring=>ring.map(([lon,lat],i)=>{const [x,y]=pt(lon,lat);return(i?'L':'M')+x.toFixed(1)+' '+y.toFixed(1)}).join(' ')+' Z').join(' ');
-  grid.innerHTML=Array.from({length:7},(_,i)=>`<line class="map-grid-line" x1="${80+i*170}" y1="30" x2="${80+i*170}" y2="690"/>`).join('')+Array.from({length:5},(_,i)=>`<line class="map-grid-line" x1="30" y1="${100+i*125}" x2="1170" y2="${100+i*125}"/>`).join('');
 
-  const all=[...state.snapshot.regions,...state.snapshot.territories],byId=Object.fromEntries(all.map(r=>[r.id,r]));
-  shapeLayer.innerHTML=state.geo.features.map(feature=>{
-    const id=GEO_ID[String(feature.properties?.PRUID||'')],region=byId[id];
-    if(!id||!region)return'';
-    const territory=region.surveyIncluded===false,fill=territory?'#53645d':colours[region.dominant]||'#70e5ff';
-    return`<path class="province-shape ${territory?'territory':''} ${state.focus===id?'active':''}" data-m="${id}" d="${pathFor(feature.geometry)}" fill="${fill}" aria-label="${esc(region.name)}" aria-pressed="${state.focus===id?'true':'false'}"><title>${esc(region.name)} · ${esc(region.localTime)}${territory?' · time-zone context':` · ${pct(region.awakePercent)} awake`}</title></path>`;
+  grid.innerHTML=geometry.grid;
+  const all=[...state.snapshot.regions,...state.snapshot.territories];
+  const byId=Object.fromEntries(all.map(region=>[region.id,region]));
+
+  shapeLayer.innerHTML=geometry.paths.map(item=>{
+    const region=byId[item.id];
+    if(!region)return'';
+    const territory=region.surveyIncluded===false;
+    const fill=territory?'#53645d':colours[region.dominant]||'#78c7d3';
+    return`<path class="province-shape ${territory?'territory':''} ${state.focus===item.id?'active':''}" data-m="${item.id}" d="${item.d}" fill="${fill}" aria-label="${esc(region.name)}" aria-pressed="${state.focus===item.id?'true':'false'}"><title>${esc(region.name)} · ${esc(region.localTime)}${territory?' · time-zone context':` · ${pct(region.awakePercent)} awake`}</title></path>`;
   }).join('');
 
   labelLayer.innerHTML=all.map(region=>{
-    const coord=LABEL_COORDS[region.id];if(!coord)return'';
-    const [x,y]=pt(...coord),territory=region.surveyIncluded===false;
-    return`<g><text class="map-label ${territory?'territory':''}" x="${x.toFixed(1)}" y="${y.toFixed(1)}">${esc(region.abbr)}</text><text class="map-sub-label" x="${x.toFixed(1)}" y="${(y+14).toFixed(1)}">${esc(region.localTime)}</text></g>`;
+    const point=geometry.labels[region.id];
+    if(!point)return'';
+    const territory=region.surveyIncluded===false;
+    return`<g><text class="map-label ${territory?'territory':''}" x="${point.x.toFixed(1)}" y="${point.y.toFixed(1)}">${esc(region.abbr)}</text><text class="map-sub-label" x="${point.x.toFixed(1)}" y="${(point.y+14).toFixed(1)}">${esc(region.localTime)}</text></g>`;
   }).join('');
-  shapeLayer.querySelectorAll('[data-m]').forEach(path=>{path.addEventListener('click',()=>focus(path.dataset.m));path.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();focus(path.dataset.m)}});path.setAttribute('tabindex','0');path.setAttribute('role','button')});
-  $('map-legend').innerHTML=ACTIVITIES.map(a=>`<span><i style="--legend:${a.colour}"></i>${esc(a.label)}</span>`).join('');
+
+  shapeLayer.querySelectorAll('[data-m]').forEach(path=>{
+    path.addEventListener('click',()=>focus(path.dataset.m));
+    path.addEventListener('keydown',event=>{
+      if(event.key==='Enter'||event.key===' '){
+        event.preventDefault();
+        focus(path.dataset.m);
+      }
+    });
+    path.setAttribute('tabindex','0');
+    path.setAttribute('role','button');
+  });
+  $('map-legend').innerHTML=ACTIVITIES.map(activity=>`<span><i style="--legend:${activity.colour}"></i>${esc(activity.label)}</span>`).join('');
 }
 
 async function loadFact(){
-  try{
-    const f=await json(DATA.jev),candidates=factCandidates(state.snapshot),selected=candidates.find(x=>x.id===f?.selected?.id)||candidates[1]||candidates[0];
-    state.fact={...f,snapshotInstant:state.snapshot.instant,selected,clientRefreshed:true};
-  }catch{state.fact=deterministicFact(state.snapshot)}
+  if(!state.factTemplate){
+    try{
+      state.factTemplate=await json(DATA.jev);
+    }catch{
+      state.factTemplate={mode:'deterministic',selected:{id:'top'}};
+    }
+  }
+  const candidates=factCandidates(state.snapshot);
+  const selected=candidates.find(candidate=>candidate.id===state.factTemplate?.selected?.id)
+    ||candidates[1]||candidates[0];
+  state.fact={...state.factTemplate,snapshotInstant:state.snapshot.instant,selected,clientRefreshed:true};
   renderFact();
 }
 function renderFact(){
