@@ -1,159 +1,155 @@
 # Sources, methodology and compliance
 
-_Last reviewed: 2026-09-19._
+_Last reviewed: 2026-09-20._
 
-Who Up North? is an independent public-data visualization. It is not affiliated with, endorsed by, or operated by the Government of Canada, Statistics Canada, Environment and Climate Change Canada, or the Bank of Canada.
+Who Up North? is an independent public-data visualization. It is not affiliated with, endorsed by, or operated by the Government of Canada, Statistics Canada, Environment and Climate Change Canada, the Open Government Portal or the Bank of Canada.
 
-## 1. Statistics Canada — Time Use Survey
+For model equations and assumptions, see [DATA_MODEL.md](DATA_MODEL.md).
 
-Primary behavioural source:
+## Statistics Canada — Time Use Survey
 
-- Table 45-10-0105-01: **Participation in selected activities over 24 hours, by type of day, gender, and age group**
+**Table 45-10-0105-01** — *Participation in selected activities over 24 hours, by type of day, gender, and age group*
+
 - Product ID: `45100105`
 - SDMX dataflow: `DF_45100105`
-- Survey: 2022 Time Use Survey, collected July 2022 to July 2023
-- Geography in the table: Canada
-- Population: non-institutionalized persons aged 15+ living in the 10 provinces
+- Survey: 2022 Time Use Survey
+- Collection period: July 2022 to July 2023
+- Geography: Canada
+- Population: non-institutionalized persons aged 15+ living in the ten provinces
 
-The table contains participation rates for five-minute time-of-day intervals. The project uses one non-overlapping partition:
+The site uses eight non-overlapping activity groups and both weekday/weekend series.
 
-1. Sleep
-2. Personal care
-3. Eating
-4. Transportation
-5. Paid work, studying or learning
-6. Unpaid domestic and care work
-7. Socializing and leisure
-8. Other activities
+The refresh job validates all 288 five-minute slots in each series. If a slot has a suppressed or missing component, the entire slot is mapped to the nearest complete official vector in the same series; the substitution is recorded instead of silently fabricated.
 
-Parent and child activity groups are never summed together. This prevents double-counting.
+## Statistics Canada — population
 
-The data refresh script requests both weekday and weekend series and validates all 288 five-minute slots before publication. If StatCan suppresses any component within a slot, the build copies the nearest complete official five-minute vector from the same weekday/weekend series and records the substitution in the generated profile; it does not fabricate the missing component. On the current source release, 21 weekend slots require this treatment and no weekday slots do.
+**Table 17-10-0009-01** — *Population estimates, quarterly*
 
-## 2. Statistics Canada — population weights
+The build uses WDS `getDataFromCubePidCoordAndLatestNPeriods` with product ID `17100009` and geography in the first coordinate position.
 
-Population source:
+Safeguards require:
 
-- Table 17-10-0009-01: **Population estimates, quarterly**
-- WDS method `getDataFromCubePidCoordAndLatestNPeriods` with product ID `17100009` and the table's geography member code in the first coordinate position. The build validates the returned product ID, requires all 13 province/territory values, reconciles their sum to Canada, and compares each generated value with the last verified snapshot to catch member-order mistakes.
+- Canada plus all 13 province/territory values;
+- the expected product ID;
+- province/territory totals that reconcile to Canada;
+- plausible values relative to the last verified snapshot.
 
-Survey-denominator alignment:
+**Table 17-10-0005-01** supplies the national age denominator. The site derives the 15+ share as all ages minus the 0–4, 5–9 and 10–14 groups.
 
-- Table 17-10-0005-01: **Population estimates on July 1, by age and gender**
-- Canada / total gender
-- `All ages` minus the `0–4`, `5–9`, and `10–14` groups yields the national 15+ share.
+The browser does not call these population endpoints per visitor. GitHub Actions refreshes them and publishes a reusable static snapshot.
 
-The scheduled build refreshes both sources. If that refresh fails, the application may use the last explicitly verified Statistics Canada snapshot embedded in source control metadata; the strategy and reference date are carried in `population.json`.
+## Statistics Canada — release wire
 
-Statistics Canada WDS documentation notes that WDS is intended for discrete data requests, operates continuously with some overnight table locking, and documents rate limits. The static architecture avoids per-visitor WDS population calls: GitHub Actions performs one compact coordinate-based refresh and the result is reused by all visitors.
+The dashboard also consumes official Statistics Canada developer services for context:
 
-## 3. Statistics Canada — release wire and map
+- major economic indicators JSON;
+- major-release schedule JSON;
+- WDS `getChangedCubeList`;
+- WDS `getCubeMetadata` for names of selected changed tables.
 
-Additional official Statistics Canada services used by the dashboard:
+The release countdown uses the published schedule. It is not a prediction.
 
-- Major economic indicators JSON: `ind-econ.json`.
-- Major-release schedule JSON: `schedule-key_indicators-eng.json`.
-- WDS `getChangedCubeList` for the most recent business-day table-release count.
-- 2021 Digital Boundary Files province/territory ArcGIS layer, requested as GeoJSON and simplified during the build for browser rendering.
+## Canada map geometry
 
-These feeds are informational context around the core time-use model. The release schedule is shown as a countdown to the published release date/time; it is not a prediction. The build also calls `getCubeMetadata` for a small set of tables returned by the latest `getChangedCubeList` response so the release wire can show table names instead of opaque product IDs. The map geometry is official geography, while activity colours layered onto it are this project's statistical visualization. Statistics Canada's 2021 province/territory digital boundary service is the primary source. If that ArcGIS service rejects the GitHub runner request, the build falls back to the Government of Manitoba's April 2022 Canada provinces/territories GeoJSON listed in the federal Open Government catalogue, reprojects it from EPSG:3857 to longitude/latitude, normalizes PRUIDs and validates all 13 regions before publication.
+Primary geometry source:
 
-## 4. Open Government Portal CKAN API
+- Statistics Canada 2021 Digital Boundary Files, province/territory layer.
 
-Endpoint used:
+The build requests GeoJSON, simplifies coordinate rings for display performance and validates the 13 expected region IDs.
 
-`https://open.canada.ca/data/en/api/3/action/recently_changed_packages_activity_list`
+If the StatCan ArcGIS service rejects a runner request, the build can use an official Government of Manitoba Canada province/territory GeoJSON listed in the federal Open Government catalogue. That fallback is reprojected to longitude/latitude, normalized to StatCan province/territory IDs and validated before publication.
 
-The Open Government API documentation describes the Portal API as live CKAN access. Public read-only API calls do not require an API key, and the Portal supports GET requests.
+Activity colours layered onto the geometry are this project's model output, not an official StatCan map variable.
 
-The site uses the feed for a small “recently changed dataset” signal, direct catalogue search, and a `package_search` count filtered to records whose `metadata_modified` timestamp falls within the previous 24 hours. It does not publish or modify Open Government records.
+## Open Government Portal
 
-## 5. Environment and Climate Change Canada / MSC GeoMet
+Read-only CKAN endpoints power:
 
-Endpoint family:
+- the recently changed dataset feed;
+- catalogue search;
+- a rolling count of records whose `metadata_modified` timestamp falls within the previous 24 hours.
 
-`https://api.weather.gc.ca/`
+Public read requests require no API key. The site does not create or modify catalogue records.
 
-The project reads the public `weather-alerts` collection and displays short official alert names, affected areas/provinces, and links to the official feed.
+## Environment and Climate Change Canada / MSC GeoMet
 
-The ECCC Data Services End-use Licence permits reuse, including commercial use, subject to its conditions. It specifically requires attribution and says weather alerts must be reproduced without altering their content or intent.
+The site reads the public `weather-alerts` collection from `api.weather.gc.ca`.
 
-Attribution used by this project:
+Displayed content is limited to official alert labels/areas plus links back to the official weather service. The site does not use an LLM to rewrite warning meaning or instructions.
+
+Attribution:
 
 > Data source: Environment and Climate Change Canada.
 
-The visualization does not rewrite warning meaning or use an LLM to summarize alert instructions.
+## Bank of Canada Valet API
 
-## 6. Bank of Canada Valet API
+Endpoint family: Bank of Canada Valet, series `FXUSDCAD`.
 
-Endpoint used:
+The value shown is the latest published **daily average** of the US dollar in Canadian dollars. It is not a live tradable quote.
 
-`https://www.bankofcanada.ca/valet/observations/FXUSDCAD/json?recent=1`
+The browser may check the API directly on page load/manual refresh, but it is not polled every five minutes because the underlying statistic updates daily.
 
-The Valet API requires no registration or API key. The project caches the response in the static Pages artifact and may also attempt a direct browser refresh.
-
-Displayed value: latest published daily average USD/CAD series (`FXUSDCAD`). This is explicitly labelled as a daily average, not a real-time tradable FX quote.
-
-Bank of Canada terms require attribution, due diligence around accuracy, and no suggestion of endorsement. They also prohibit circumventing request-frequency limits. The Bank recommends caching data that only updates daily; the scheduled-build fallback follows that recommendation.
-
-Attribution used by this project:
+Attribution:
 
 > Data source: Bank of Canada.
 
 No Bank of Canada logo or wordmark is reproduced.
 
-## 7. Open Government Licence — Canada
+## Open Government Licence — Canada
 
-Where applicable, information is reused under the Open Government Licence – Canada. The project provides source attribution and does not imply official status or endorsement.
+Where applicable, information is reused under the Open Government Licence – Canada.
 
-Government symbols, departmental signatures and official logos are not used as project branding.
+The project:
 
-## 8. Jev / TypeSafe System One
+- attributes its sources;
+- does not imply official status or endorsement;
+- does not use government logos, signatures or symbols as project branding.
 
-Jev is not a statistical source.
+## Jev / TypeSafe System One
 
-During a GitHub Actions build, `scripts/generate-jev-fact.mjs` can use `typesafe-ai/jev` through Vercel AI Gateway when the repository owner supplies `AI_GATEWAY_API_KEY` as a GitHub Actions secret.
+Jev is optional and is not a statistical source.
 
-The model receives only aggregate public statistics already computed by this project and a closed list of candidate facts. It selects which supported fact is interesting to feature. It cannot alter source values.
+During a build, it receives aggregate public statistics plus a closed list of already-computed fact candidates. It can choose which supported fact to feature but cannot alter counts, percentages or source data.
 
-If the model is unavailable or no API key is configured, the build writes a deterministic candidate instead.
+If it is unavailable, the build uses a deterministic fact candidate.
 
-## 9. Privacy
+## Privacy
 
 The site does not request:
 
-- precise browser geolocation;
+- precise geolocation;
 - camera or microphone access;
 - account identity;
-- contact information;
+- contact details;
 - user-written prompts.
 
-The browser does make ordinary HTTPS requests to public official APIs for live-signal cards when available. Those services can necessarily observe normal network metadata such as the visitor IP address. The core time-use model does not require those live requests and can run entirely from the static Pages artifact.
+The browser makes ordinary HTTPS requests to public official APIs for direct signal checks. Those services can observe normal network metadata such as the visitor's IP address.
 
-## 10. Accuracy labels
+The core time-use model can run entirely from the static Pages artifact.
 
-The UI intentionally separates three concepts:
+## Accuracy labels
 
-- **Live clock:** current device time converted to Canadian time zones.
-- **Statistical model:** 2022–23 time-use participation rates applied to the current local five-minute interval.
-- **Live public signals:** current/recent official API records such as weather-alert feature records and Open Government activity. Direct API connectivity is labelled separately from the age of the underlying statistic (for example, Bank of Canada daily averages).
+The UI separates:
 
-“Live” never means individual people are being observed.
+- **Live clock** — current device time converted to Canadian time zones.
+- **Statistical model** — historical survey distributions applied to the current local five-minute interval.
+- **Direct API check** — a successful current request to an official public endpoint.
+- **Build snapshot** — data captured during the most recent successful GitHub Actions refresh.
+- **Daily statistic** — a value such as Bank of Canada FX that may be freshly checked but is published only daily.
 
-## 11. Operational safeguards
+“Live” never means that individual people are being observed.
 
-Before publishing a Pages artifact, the workflow:
+## Publication safeguards
 
-1. downloads the official StatCan time-use profile;
-2. validates 288 weekday + 288 weekend slots;
-3. verifies every displayed activity exists in each slot;
-4. checks the non-overlapping activity partition;
-5. refreshes population and 15+ denominator data;
-6. snapshots live official feeds plus StatCan release-wire data;
-7. fetches and validates all 13 official province/territory boundary features;
-8. validates generated population geography mappings against the verified snapshot;
-9. generates the optional Jev fact selection;
-10. runs local integrity and Pages workflow tests;
-11. deploys only if the build succeeds.
+Before deployment, the workflow:
 
-If core time-use data is missing, the client fails closed and shows no substitute activity statistics.
+1. downloads and validates the weekday/weekend time-use profile;
+2. refreshes and validates population/age data;
+3. snapshots official public-signal and StatCan release feeds;
+4. fetches and validates Canada boundary geometry;
+5. optionally selects a verified fact;
+6. runs model, generated-data and Pages-workflow tests;
+7. builds the static artifact;
+8. deploys only after the checks succeed.
+
+If core time-use data is unavailable, the browser fails closed and shows no substitute activity statistics.
