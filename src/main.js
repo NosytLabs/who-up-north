@@ -304,7 +304,7 @@ function renderProvinceData(){
   }
 
   $('province-stat-grid').innerHTML=cards.map(card=>{
-    const source=card.url||'https://www.statcan.gc.ca/en/subjects-start';
+    const source=card.url||'https://www150.statcan.gc.ca/n1/dai-quo/index-eng.html';
     const growth=card.key==='population'
       ?`<em class="flat">${esc(card.growth)}</em>`
       :growthMarkup(card);
@@ -483,7 +483,7 @@ function weather(j){
     const key=`${province}|${name}`;
     if(seen.has(key))continue;
     seen.add(key);
-    items.push({name,feature:q.properties?.feature_name_en,province,published:q.properties?.publication_datetime});
+    items.push({id:q.id||'',name,feature:q.properties?.feature_name_en,province,published:q.properties?.publication_datetime});
     if(items.length===8)break;
   }
   return{live:true,checkedAt:new Date().toISOString(),numberMatched:j?.numberMatched??features.length,items};
@@ -544,6 +544,9 @@ function renderLive(){
   $('weather-count').textContent=Number.isFinite(w.numberMatched)?num(w.numberMatched):'—';
   $('weather-caption').textContent=Number.isFinite(w.numberMatched)?'current alert records':'feed unavailable';
   $('weather-detail').textContent=wi?`${wi.name||'Weather alert'} · ${wi.feature||wi.province||'Canada'}`:'No current alert detail.';
+  $('weather-link').href=wi?.id
+    ?`https://api.weather.gc.ca/collections/weather-alerts/items/${encodeURIComponent(wi.id)}?f=html`
+    :'https://api.weather.gc.ca/collections/weather-alerts?f=html';
   $('weather-list').innerHTML=weatherItems.slice(0,4).map((q,i)=>`<button class="${i===state.w?'active':''}" data-w="${i}" type="button" aria-pressed="${i===state.w?'true':'false'}" title="${esc((q.name||'Weather alert')+' · '+(q.feature||q.province||'Canada'))}">${esc(q.province||'CA')} · ${esc(q.name||'alert')}</button>`).join('');
   document.querySelectorAll('[data-w]').forEach(button=>button.onclick=()=>{state.w=+button.dataset.w;renderLive()});
   $('weather-card').classList.toggle('live',!!w.live);
@@ -593,12 +596,12 @@ function renderStatCan(){
   $('statcan-updated-count').textContent=Number.isFinite(changed.count)?num(changed.count):'—';
   $('statcan-updated-date').textContent=changed.date?`${dateLabel(changed.date)} · WDS changed-table list`:'No recent release-day list available.';
   const changedItems=(changed.items||[]).slice(0,4);
-  $('statcan-changed-list').innerHTML=changedItems.map(item=>`<a href="${esc(item.url||'https://www.statcan.gc.ca/en/subjects-start')}" target="_blank" rel="noreferrer"><span>${esc(String(item.productId))}</span><strong>${esc(item.title)}</strong></a>`).join('');
+  $('statcan-changed-list').innerHTML=changedItems.map(item=>`<a href="${esc(item.url||'https://www150.statcan.gc.ca/n1/dai-quo/index-eng.html')}" target="_blank" rel="noreferrer"><span>${esc(String(item.productId))}</span><strong>${esc(item.title)}</strong></a>`).join('');
   const rows=(s.indicators||[]).slice(0,6);
   $('indicator-grid').innerHTML=rows.length?rows.map(i=>{
     const cls=i.direction==='2'?'down':i.direction==='1'?'':'flat';
     const arrow=i.direction==='2'?'↓':i.direction==='1'?'↑':'•';
-    return`<a class="indicator-card" href="${esc(i.url||'https://www.statcan.gc.ca/en/subjects-start')}" target="_blank" rel="noreferrer"><small>${esc(i.releaseDate)} // ${esc(i.reference)}</small><strong>${esc(i.value)}</strong><span>${esc(i.title)}</span><em class="${cls}">${arrow} ${esc(i.growth||'LATEST')} ${esc(i.growthDetail||'')}</em></a>`;
+    return`<a class="indicator-card" href="${esc(i.url||'https://www150.statcan.gc.ca/n1/dai-quo/index-eng.html')}" target="_blank" rel="noreferrer"><small>${esc(i.releaseDate)} // ${esc(i.reference)}</small><strong>${esc(i.value)}</strong><span>${esc(i.title)}</span><em class="${cls}">${arrow} ${esc(i.growth||'LATEST')} ${esc(i.growthDetail||'')}</em></a>`;
   }).join(''):'<div class="loading">INDICATOR SNAPSHOT UNAVAILABLE</div>';
   renderReleaseClock();renderFreshness();
   if(state.snapshot){
@@ -612,8 +615,8 @@ async function search(query){
   const q=String(query||'').trim();if(!q)return;
   $('data-search-input').value=q;$('data-search-results').innerHTML='<div class="search-empty">SEARCHING…</div>';
   try{
-    const j=await json(`${LIVE.search}?rows=6&q=${encodeURIComponent(q)}`),rows=j?.result?.results||[];
-    $('data-search-results').innerHTML=rows.length?rows.map(r=>`<a class="result" target="_blank" rel="noreferrer" href="https://open.canada.ca/data/en/dataset/${r.id}"><small>${esc(r.organization?.title||'Open Government')}</small><strong>${esc(r.title_translated?.en||r.title||r.name)}</strong></a>`).join(''):'<div class="search-empty">NO MATCHES.</div>';
+    const j=await json(`${LIVE.search}?rows=6&sort=score%20desc%2Cmetadata_modified%20desc&q=${encodeURIComponent(q)}`),rows=j?.result?.results||[];
+    $('data-search-results').innerHTML=rows.length?rows.map(r=>`<a class="result" target="_blank" rel="noreferrer" href="https://open.canada.ca/data/en/dataset/${r.id}"><small>${esc(orgName(r.organization?.title)||'Open Government')}</small><strong>${esc(r.title_translated?.en||r.title||r.name)}</strong></a>`).join(''):'<div class="search-empty">NO MATCHES.</div>';
   }catch{$('data-search-results').innerHTML='<div class="search-empty">SEARCH UNAVAILABLE.</div>'}
 }
 function setShift(value,commit=false){
