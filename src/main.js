@@ -713,4 +713,8 @@ setInterval(renderTicker,1000);
 setInterval(()=>{if(state.shift===0&&state.profile)recompute()},60000);
 setInterval(()=>{if(document.visibilityState==='visible')loadLive({auto:true,includeBank:false})},300000);
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&(!state.lastCheckAt||Date.now()-state.lastCheckAt.getTime()>300000))loadLive({auto:true,includeBank:false})});
-init();
+init().then(()=>{
+  if(initialRegion&&!location.hash){
+    requestAnimationFrame(()=>document.querySelector('#across')?.scrollIntoView({block:'start'}));
+  }
+});
