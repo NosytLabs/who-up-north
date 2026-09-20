@@ -19,7 +19,7 @@ const CLOCKS=[
   ['VANCOUVER','America/Vancouver'],['CALGARY','America/Edmonton'],['WINNIPEG','America/Winnipeg'],
   ['TORONTO','America/Toronto'],['HALIFAX','America/Halifax'],["ST. JOHN'S",'America/St_Johns']
 ];
-const state={profile:null,pop:null,geo:null,snapshot:null,fact:null,focus:null,shift:0,live:null,liveCheckedAt:null,lastCheckAt:null,directOk:0,directExpected:0,w:0,o:0,toast:null};
+const state={profile:null,pop:null,geo:null,snapshot:null,fact:null,focus:null,shift:0,live:null,lastCheckAt:null,directOk:0,directExpected:0,w:0,o:0,toast:null};
 const colours=Object.fromEntries(ACTIVITIES.map(a=>[a.key,a.colour]));
 const GEO_ID={'10':'nl','11':'pe','12':'ns','13':'nb','24':'qc','35':'on','46':'mb','47':'sk','48':'ab','59':'bc','60':'yt','61':'nt','62':'nu'};
 const LABEL_COORDS={
@@ -278,7 +278,6 @@ async function loadLive(options={}){
   state.lastCheckAt=checkedAt;
   state.directExpected=direct.length;
   state.directOk=direct.filter(x=>x.status==='fulfilled'&&x.value).length;
-  if(state.directOk)state.liveCheckedAt=checkedAt;
   renderLive();renderStatCan();
   if(!auto)$('live-refresh').disabled=false;
 }
