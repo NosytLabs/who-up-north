@@ -834,6 +834,64 @@ nav a:hover {
   border-radius:12px;
   overflow:hidden
 }
+.territory-head {
+  margin-top:8px
+}
+.territory-grid {
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  border:1px solid var(--line);
+  border-radius:12px;
+  overflow:hidden
+}
+.territory-card {
+  min-height:150px;
+  padding:18px;
+  position:relative;
+  border:0;
+  border-right:1px solid var(--line);
+  background:rgba(255,255,255,.006);
+  color:var(--ink);
+  text-align:left;
+  cursor:pointer;
+  transition:.18s
+}
+.territory-card:last-child {
+  border-right:0
+}
+.territory-card:hover,.territory-card.active {
+  background:rgba(112,229,255,.04)
+}
+.territory-card.active:before {
+  content:"";
+  position:absolute;
+  inset:0 auto 0 0;
+  width:2px;
+  background:var(--cyan);
+  box-shadow:0 0 12px rgba(112,229,255,.65)
+}
+.territory-card .top {
+  display:flex;
+  justify-content:space-between;
+  gap:8px;
+  color:var(--dim);
+  font:700 .56rem/1 ui-monospace,monospace
+}
+.territory-card .time {
+  font:950 1.75rem/1 ui-monospace,monospace;
+  margin:9px 0 7px
+}
+.territory-card .awake {
+  color:var(--muted);
+  font-size:.73rem
+}
+.territory-card .dom {
+  margin-top:18px;
+  color:var(--cyan);
+  font-size:.68rem;
+  line-height:1.35;
+  font-weight:760
+}
 .province-card {
   min-height:168px;
   padding:18px;
@@ -1620,6 +1678,16 @@ footer a {
   }
   .province-grid {
     grid-template-columns:1fr 1fr
+  }
+  .territory-grid {
+    grid-template-columns:1fr
+  }
+  .territory-card {
+    border-right:0;
+    border-bottom:1px solid var(--line)
+  }
+  .territory-card:last-child {
+    border-bottom:0
   }
   .statcan-grid {
     grid-template-columns:1fr
