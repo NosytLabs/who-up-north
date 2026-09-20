@@ -149,6 +149,17 @@ if (existsSync('public/data/live-signals.json')) {
     ) {
       throw new Error('StatCan changed-table metadata missing');
     }
+
+    const provinces = signals.statcan.provinces;
+    if (!provinces || typeof provinces !== 'object') {
+      throw new Error('StatCan provincial indicator snapshot missing');
+    }
+
+    for (const id of ['bc', 'ab', 'sk', 'mb', 'on', 'qc', 'nb', 'ns', 'pe', 'nl']) {
+      if (!provinces[id]?.indicators || !Object.keys(provinces[id].indicators).length) {
+        throw new Error(`StatCan provincial indicators missing for ${id}`);
+      }
+    }
   }
 }
 
