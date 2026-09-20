@@ -317,11 +317,12 @@ async function loadProvinceOpenData(id){
   if(state.focus===id)renderProvinceOpenData(region,null);
   try{
     const exactQuery=`title:"${region.name.replaceAll('"','')}"`;
-    let response=await json(`${LIVE.search}?rows=4&sort=metadata_modified%20desc&q=${encodeURIComponent(exactQuery)}`);
+    const activeFilter=encodeURIComponent('-title:inactive');
+    let response=await json(`${LIVE.search}?rows=4&sort=metadata_modified%20desc&fq=${activeFilter}&q=${encodeURIComponent(exactQuery)}`);
     let result=response?.result||{},rows=result.results||[];
     let mode='TITLE MATCHES';
     if(!rows.length){
-      response=await json(`${LIVE.search}?rows=4&sort=metadata_modified%20desc&q=${encodeURIComponent(region.name)}`);
+      response=await json(`${LIVE.search}?rows=4&sort=metadata_modified%20desc&fq=${activeFilter}&q=${encodeURIComponent(region.name)}`);
       result=response?.result||{};rows=result.results||[];mode='FULL-TEXT FALLBACK';
     }
     const record={
