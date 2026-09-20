@@ -435,7 +435,7 @@ function renderMap(){
     path.setAttribute('tabindex','0');
     path.setAttribute('role','button');
   });
-  $('map-legend').innerHTML=ACTIVITIES.map(activity=>`<span><i style="--legend:${activity.colour}"></i>${esc(activity.label)}</span>`).join('');
+  $('map-legend').innerHTML=ACTIVITIES.filter(activity=>activity.key!=='sleep').map(activity=>`<span><i style="--legend:${activity.colour}"></i>${esc(activity.label)}</span>`).join('');
 }
 
 async function loadFact(){
