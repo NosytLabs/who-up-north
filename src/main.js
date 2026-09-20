@@ -222,6 +222,7 @@ function focus(id,commit=true){
 }
 function renderFocus(){
   const all=[...state.snapshot.regions,...state.snapshot.territories],r=all.find(x=>x.id===state.focus);
+  $('focus-reset').hidden=!r;
   if(!r){
     $('focus-kicker').textContent='SELECT A REGION';
     $('focus-name').textContent='Canada';
@@ -346,7 +347,6 @@ async function loadProvinceOpenData(id){
     if(state.focus===id&&request===state.provinceRequest)renderProvinceOpenData(region,record);
   }catch{
     const record={error:true,items:[],count:0};
-    state.provinceOpen[id]=record;
     if(state.focus===id&&request===state.provinceRequest)renderProvinceOpenData(region,record);
   }
 }
@@ -521,9 +521,14 @@ function renderFreshness(){
   if(!state.live)return;
   const snap=state.live.generatedAt;
   $('hero-freshness').textContent=state.lastCheckAt?`${state.directOk}/${state.directExpected} · ${ageLabel(state.lastCheckAt)}`:snap?'SNAPSHOT · '+ageLabel(snap):'OFFLINE';
-  $('weather-source-state').textContent=state.live.weather?.live?'DIRECT API':'BUILD SNAPSHOT';
-  $('open-source-state').textContent=state.live.openGovernment?.live?'DIRECT API':'BUILD SNAPSHOT';
-  $('bank-source-state').textContent=state.live.bank?.live?'DIRECT CHECK':'BUILD SNAPSHOT';
+  const sourceState=(source,directLabel,cachedLabel='CACHED RESULT')=>source?.live
+    ?directLabel
+    :source?.checkFailedAt
+      ?cachedLabel
+      :'BUILD SNAPSHOT';
+  $('weather-source-state').textContent=sourceState(state.live.weather,'DIRECT API');
+  $('open-source-state').textContent=sourceState(state.live.openGovernment,'DIRECT API');
+  $('bank-source-state').textContent=sourceState(state.live.bank,'DIRECT CHECK','CACHED DAILY');
   $('weather-freshness').textContent=state.live.weather?.checkedAt?ageLabel(state.live.weather.checkedAt):ageLabel(snap);
   $('open-data-freshness').textContent=state.live.openGovernment?.checkedAt?ageLabel(state.live.openGovernment.checkedAt):ageLabel(snap);
   $('fx-freshness').textContent=state.live.bank?.checkedAt?ageLabel(state.live.bank.checkedAt):ageLabel(snap);
