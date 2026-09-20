@@ -28,7 +28,7 @@
       <a href="#method">Method</a>
     </nav>
     <div class="actions">
-      <div id="source-chip" class="chip" aria-live="polite"><i></i><span>LOADING VERIFIED DATA</span></div>
+      <a id="source-chip" class="chip" href="#live" aria-live="polite" aria-label="Open live source status"><i></i><span>LOADING VERIFIED DATA</span></a>
       <button id="share-button" class="btn ghost" type="button">SHARE</button>
     </div>
   </div>
@@ -115,7 +115,7 @@
     <div><span>AWAKE</span><strong id="focus-awake">—</strong></div>
     <div><span>LEADING</span><strong id="focus-dominant">—</strong></div>
     <p id="focus-copy">Choose a province or territory to inspect its reference clock, model context and official data.</p>
-    <button id="focus-reset" class="btn small" type="button" hidden>RESET</button>
+    <div class="focus-actions"><button id="focus-copy-link" class="btn small ghost" type="button" hidden>COPY LINK</button><button id="focus-reset" class="btn small" type="button" hidden>RESET</button></div>
   </div>
 
   <section id="province-data" class="province-data" hidden>
@@ -270,6 +270,7 @@
   <div><a href="https://github.com/NosytLabs/who-up-north/blob/main/docs/SOURCES_AND_COMPLIANCE.md" target="_blank" rel="noreferrer">Sources & methodology ↗</a><a href="https://github.com/NosytLabs/who-up-north" target="_blank" rel="noreferrer">GitHub ↗</a></div>
 </footer>
 
+<button id="back-top" class="back-top" type="button" hidden aria-label="Back to top">↑ TOP</button>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
 <script type="module" src="./src/main.js"></script>
 </body>
