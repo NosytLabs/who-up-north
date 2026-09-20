@@ -57,6 +57,21 @@ function toast(message,error=false){
 function chip(status,message){
   const el=$('source-chip');el.className='chip '+status;el.querySelector('span').textContent=message;
 }
+async function copyText(value){
+  if(navigator.clipboard?.writeText){
+    await navigator.clipboard.writeText(value);
+    return;
+  }
+  const input=document.createElement('textarea');
+  input.value=value;input.setAttribute('readonly','');input.style.position='fixed';input.style.opacity='0';
+  document.body.append(input);input.select();document.execCommand('copy');input.remove();
+}
+function updatePageContext(region=null){
+  const title=region?`${region.name} — Who's Up North?`:"Who's Up North? — Canada right now";
+  document.title=title;
+  const og=document.querySelector('meta[property="og:title"]');
+  if(og)og.content=title;
+}
 function local(tz,date=instant(),seconds=false){
   return new Intl.DateTimeFormat('en-CA',{timeZone:tz,hour:'2-digit',minute:'2-digit',second:seconds?'2-digit':undefined,hour12:false}).format(date);
 }
@@ -224,6 +239,8 @@ function focus(id,commit=true){
 function renderFocus(){
   const all=[...state.snapshot.regions,...state.snapshot.territories],r=all.find(x=>x.id===state.focus);
   $('focus-reset').hidden=!r;
+  $('focus-copy-link').hidden=!r;
+  updatePageContext(r||null);
   if(!r){
     $('focus-kicker').textContent='SELECT A REGION';
     $('focus-name').textContent='Canada';
@@ -635,15 +652,54 @@ $('time-shift').onchange=e=>setShift(e.target.value,true);
 $('time-shift').oninput=e=>{$('time-shift-label').textContent=e.target.value==0?'LIVE':(e.target.value>0?'+':'−')+Math.abs(e.target.value)+'H'};
 $('now-button').onclick=()=>setShift(0,true);
 $('share-button').onclick=async()=>{
-  const text=state.snapshot?`Who's Up North? ${pct(state.snapshot.national.awakePercent)} of the modelled Canadian 15+ survey scope is awake right now.`:"Who's Up North? Canada, right now.";
+  const region=focusedRegion();
+  const text=region
+    ?region.surveyIncluded===false
+      ?`Who's Up North? ${region.name} uses the ${region.clockLabel} reference clock; the territory is not included in the time-use model.`
+      :`Who's Up North? ${region.name}: ${pct(region.awakePercent)} modelled awake on the ${region.clockLabel} reference clock.`
+    :state.snapshot
+      ?`Who's Up North? ${pct(state.snapshot.national.awakePercent)} of the modelled Canadian 15+ survey scope is awake right now.`
+      :"Who's Up North? Canada, right now.";
   try{
-    if(navigator.share)await navigator.share({title:"Who's Up North?",text,url:location.href});
-    else{await navigator.clipboard.writeText(text+' '+location.href);toast('Snapshot link copied.')}
+    if(navigator.share)await navigator.share({title:document.title,text,url:location.href});
+    else{await copyText(text+' '+location.href);toast('Snapshot link copied.')}
   }catch{}
+};
+$('focus-copy-link').onclick=async()=>{
+  try{await copyText(location.href);toast('Region link copied.')}catch{toast('Could not copy link.',true)}
 };
 $('live-refresh').onclick=()=>loadLive();
 $('data-search-form').onsubmit=e=>{e.preventDefault();search($('data-search-input').value)};
 document.querySelectorAll('[data-search-query]').forEach(b=>b.onclick=()=>search(b.dataset.searchQuery));
+
+const navLinks=[...document.querySelectorAll('.topbar nav a[href^="#"]')];
+const navTargets=navLinks.map(link=>({link,target:document.querySelector(link.getAttribute('href'))})).filter(x=>x.target);
+let scrollFrame=0;
+function updateScrollUi(){
+  scrollFrame=0;
+  const marker=window.scrollY+Math.min(180,window.innerHeight*.22);
+  let active=navTargets[0];
+  for(const item of navTargets){
+    if(item.target.offsetTop<=marker)active=item;else break;
+  }
+  for(const item of navTargets){
+    const selected=item===active;
+    item.link.classList.toggle('active',selected);
+    selected?item.link.setAttribute('aria-current','location'):item.link.removeAttribute('aria-current');
+  }
+  $('back-top').hidden=window.scrollY<700;
+}
+function queueScrollUi(){
+  if(!scrollFrame)scrollFrame=requestAnimationFrame(updateScrollUi);
+}
+window.addEventListener('scroll',queueScrollUi,{passive:true});
+window.addEventListener('resize',queueScrollUi,{passive:true});
+$('back-top').onclick=()=>window.scrollTo({
+  top:0,
+  behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'
+});
+updateScrollUi();
+
 const initialUrl=new URL(location.href);
 const sh=Number(initialUrl.searchParams.get('shift')||0);
 if(Number.isFinite(sh)&&Math.abs(sh)<=12)state.shift=sh;
