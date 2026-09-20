@@ -11,10 +11,11 @@ It does **not** track people. “Right now” means the current Canadian local c
 ## What the site shows
 
 - **Canada now:** an estimate of the survey-aligned 15+ population awake and participating in eight non-overlapping activity groups.
-- **Across Canada:** the same Canada-level time-use profile evaluated at each province's local five-minute survey slot.
+- **Across Canada:** the same Canada-level time-use profile evaluated at each province's local five-minute survey slot, plus province/territory drilldowns for current StatCan economic indicators.
 - **Time-model path:** how the model changes over the next several hours using the same official survey profile.
 - **StatCan release wire:** recent changed tables, major economic indicators and the next scheduled major release.
 - **Official signal wire:** ECCC weather-alert records, Open Government catalogue activity and the Bank of Canada USD/CAD daily average.
+- **Province open-data matches:** selecting a region runs an on-demand federal Open Government catalogue search for that province/territory name.
 - **Open-data explorer:** direct read-only search of the federal Open Government catalogue.
 
 ## Core data
