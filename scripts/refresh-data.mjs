@@ -160,17 +160,27 @@ async function population(){
   }
 }
 function weatherSnapshot(w){
+  const features=w?.features||[],seen=new Set,items=[];
+  for(const feature of features){
+    const name=feature.properties?.alert_short_name_en||feature.properties?.alert_name_en||'Weather alert';
+    const province=feature.properties?.province||'CA';
+    const key=`${province}|${name}`;
+    if(seen.has(key))continue;
+    seen.add(key);
+    items.push({
+      id:feature.id,
+      name,
+      feature:feature.properties?.feature_name_en,
+      province,
+      risk:feature.properties?.risk_colour_en,
+      published:feature.properties?.publication_datetime
+    });
+    if(items.length===10)break;
+  }
   return{
     status:w?'ready':'error',
-    numberMatched:w?.numberMatched??w?.features?.length??0,
-    items:(w?.features||[]).slice(0,10).map(f=>({
-      id:f.id,
-      name:f.properties?.alert_short_name_en||f.properties?.alert_name_en,
-      feature:f.properties?.feature_name_en,
-      province:f.properties?.province,
-      risk:f.properties?.risk_colour_en,
-      published:f.properties?.publication_datetime
-    }))
+    numberMatched:w?.numberMatched??features.length,
+    items
   };
 }
 function openSnapshot(o,recent){
