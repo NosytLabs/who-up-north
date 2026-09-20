@@ -171,8 +171,19 @@ function renderModelPath(){
 }
 
 function renderProvinces(){
-  $('province-grid').innerHTML=state.snapshot.regions.map(r=>`<button class="province-card ${state.focus===r.id?'active':''}" data-r="${r.id}" type="button"><div class="top"><span>${esc(r.abbr)}</span><span>${esc(r.weekday)} // ${esc(r.timeSlot)}</span></div><div class="province-name">${esc(r.name)}</div><div class="time">${esc(r.localTime)}</div><div class="awake">${pct(r.awakePercent)} awake · ~${num(r.awakeCount)}</div><div class="dom" style="color:${colours[r.dominant]}">● ${esc(ACTIVITIES.find(a=>a.key===r.dominant)?.short||r.dominant)}</div></button>`).join('');
+  $('province-grid').innerHTML=state.snapshot.regions.map(r=>`<button class="province-card ${state.focus===r.id?'active':''}" data-r="${r.id}" type="button" aria-pressed="${state.focus===r.id?'true':'false'}" title="Inspect ${esc(r.name)}"><div class="top"><span>${esc(r.abbr)}</span><span>${esc(r.weekday)} // ${esc(r.timeSlot)}</span></div><div class="province-name">${esc(r.name)}</div><div class="time">${esc(r.localTime)}</div><div class="awake">${pct(r.awakePercent)} awake · ~${num(r.awakeCount)}</div><div class="dom" style="color:${colours[r.dominant]}">● ${esc(ACTIVITIES.find(a=>a.key===r.dominant)?.short||r.dominant)}</div></button>`).join('');
   document.querySelectorAll('[data-r]').forEach(b=>b.onclick=()=>focus(b.dataset.r));
+}
+function renderTerritories(){
+  const grid=$('territory-grid');
+  if(!grid||!state.snapshot)return;
+  grid.innerHTML=state.snapshot.territories.map(r=>{
+    const indicators=state.live?.statcan?.provinces?.[r.id]?.indicators||{};
+    const headline=indicators.retail||indicators.building||indicators.earnings||indicators.gdp;
+    const signal=headline?`${PROVINCE_STAT_LABELS[headline.key]||headline.title} · ${headline.value}`:'Official indicators available in drilldown';
+    return`<button class="territory-card ${state.focus===r.id?'active':''}" data-t="${r.id}" type="button" aria-pressed="${state.focus===r.id?'true':'false'}" title="Inspect ${esc(r.name)}"><div class="top"><span>${esc(r.abbr)}</span><span>TIME-ZONE CONTEXT</span></div><div class="province-name">${esc(r.name)}</div><div class="time">${esc(r.localTime)}</div><div class="awake">${num(r.population)} population</div><div class="dom">${esc(signal)}</div></button>`;
+  }).join('');
+  grid.querySelectorAll('[data-t]').forEach(button=>button.onclick=()=>focus(button.dataset.t));
 }
 function focus(id){
   state.focus=id;
@@ -187,12 +198,12 @@ function focus(id){
 function renderFocus(){
   const all=[...state.snapshot.regions,...state.snapshot.territories],r=all.find(x=>x.id===state.focus);
   if(!r){
-    $('focus-kicker').textContent='SELECT A PROVINCE';
+    $('focus-kicker').textContent='SELECT A REGION';
     $('focus-name').textContent='Canada';
     $('focus-time').textContent='—';
     $('focus-awake').textContent=pct(state.snapshot.national.awakePercent);
     $('focus-dominant').textContent='—';
-    $('focus-copy').textContent='Choose a province signal or card to inspect its local model slice.';
+    $('focus-copy').textContent='Choose a province or territory to inspect its local clock, model context, and official data.';
     return;
   }
   $('focus-kicker').textContent=r.surveyIncluded===false?'TIME-ZONE CONTEXT':'LOCAL MODEL SLICE';
