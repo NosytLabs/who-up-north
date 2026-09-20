@@ -142,6 +142,20 @@ nav a {
 nav a:hover {
   color:var(--ink)
 }
+nav a.active,nav a[aria-current="location"] {
+  color:var(--ink);
+  position:relative
+}
+nav a.active:after,nav a[aria-current="location"]:after {
+  content:"";
+  position:absolute;
+  left:0;
+  right:0;
+  bottom:-10px;
+  height:2px;
+  border-radius:2px;
+  background:var(--data)
+}
 .actions {
   display:flex;
   justify-content:flex-end;
@@ -191,7 +205,14 @@ border-color:var(--data);
   border:1px solid var(--line);
   border-radius:999px;
   padding:9px 12px;
-  white-space:nowrap
+  white-space:nowrap;
+  text-decoration:none;
+  transition:border-color .15s,color .15s,background .15s
+}
+a.chip:hover {
+  color:var(--ink);
+  border-color:var(--line-strong);
+  background:rgba(120,199,211,.04)
 }
 .chip i,.live-dot {
   width:7px;
@@ -712,6 +733,15 @@ border:1px solid var(--line);
   font-size:.75rem;
   line-height:1.48;
   margin:0
+}
+.focus-actions {
+  display:flex;
+  justify-content:flex-end;
+  gap:8px;
+  align-items:center
+}
+.focus-actions .btn {
+  white-space:nowrap
 }
 .province-data {
 margin-top:14px;
@@ -1471,10 +1501,35 @@ footer strong {
 footer a {
   text-underline-offset:4px
 }
-.toast {
+.back-top {
   position:fixed;
   right:20px;
   bottom:20px;
+  z-index:75;
+  min-height:40px;
+  padding:0 12px;
+  border:1px solid var(--line);
+  border-radius:999px;
+  background:rgba(11,17,21,.92);
+  color:var(--muted);
+  backdrop-filter:blur(12px);
+  cursor:pointer;
+  font:800 .58rem/1 ui-monospace,monospace;
+  letter-spacing:.07em;
+  transition:opacity .15s,transform .15s,border-color .15s,color .15s
+}
+.back-top:hover {
+  color:var(--ink);
+  border-color:var(--data);
+  transform:translateY(-1px)
+}
+.back-top[hidden] {
+  display:none
+}
+.toast {
+  position:fixed;
+  right:20px;
+  bottom:70px;
   padding:12px 14px;
   background:#11171d;
   border:1px solid var(--line);
@@ -1517,6 +1572,10 @@ footer a {
   }
   .focus>p {
     grid-column:1/-1
+  }
+  .focus-actions {
+    grid-column:1/-1;
+    justify-content:flex-start
   }
   .statcan-grid {
     grid-template-columns:1fr 1fr
@@ -1723,6 +1782,13 @@ footer a {
   }
   .focus>div:first-child,.focus>p {
     grid-column:1/-1
+  }
+  .focus-actions {
+    grid-column:1/-1;
+    width:100%
+  }
+  .focus-actions .btn {
+    flex:1
   }
   .province-head {
     font-size:.5rem
