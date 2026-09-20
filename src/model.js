@@ -1,12 +1,12 @@
 export const ACTIVITIES = [
-  { code: '1', key: 'sleep', label: 'Sleep', short: 'sleeping', colour: '#7d8cff' },
-  { code: '3', key: 'personal', label: 'Personal care', short: 'personal care', colour: '#72d9ff' },
-  { code: '4', key: 'eating', label: 'Eating', short: 'eating', colour: '#61e6a2' },
-  { code: '5', key: 'travel', label: 'Transportation', short: 'in transit', colour: '#f6c85f' },
-  { code: '6', key: 'work', label: 'Paid work, studying or learning', short: 'work / study', colour: '#ff6675' },
-  { code: '7', key: 'care', label: 'Unpaid domestic and care work', short: 'household / care', colour: '#c98cff' },
-  { code: '10', key: 'leisure', label: 'Socializing and leisure', short: 'socializing / leisure', colour: '#43d9d0' },
-  { code: '14', key: 'other', label: 'Other activities', short: 'other', colour: '#b7c1c9' },
+  { code: '1', key: 'sleep', label: 'Sleep', short: 'sleeping', colour: '#8795e8' },
+  { code: '3', key: 'personal', label: 'Personal care', short: 'personal care', colour: '#72b7d4' },
+  { code: '4', key: 'eating', label: 'Eating', short: 'eating', colour: '#69c58e' },
+  { code: '5', key: 'travel', label: 'Transportation', short: 'in transit', colour: '#d6af63' },
+  { code: '6', key: 'work', label: 'Paid work, studying or learning', short: 'work / study', colour: '#e0707c' },
+  { code: '7', key: 'care', label: 'Unpaid domestic and care work', short: 'household / care', colour: '#aa8cc7' },
+  { code: '10', key: 'leisure', label: 'Socializing and leisure', short: 'socializing / leisure', colour: '#4db9b4' },
+  { code: '14', key: 'other', label: 'Other activities', short: 'other', colour: '#87938e' },
 ];
 
 export const PROVINCES = [
