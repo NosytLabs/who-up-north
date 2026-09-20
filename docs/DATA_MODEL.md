@@ -1,26 +1,74 @@
 # Data model
 
-## Core formula
+This document describes only the statistical/model logic. Source provenance and licence notes live in [SOURCES_AND_COMPLIANCE.md](SOURCES_AND_COMPLIANCE.md).
 
-For every included province `p` at instant `t`:
+## Scope
+
+The behavioural source is Statistics Canada Table **45-10-0105-01** from the 2022 Time Use Survey.
+
+The selected table represents:
+
+- Canada-level activity participation rates;
+- persons aged 15+;
+- the ten provinces;
+- weekday and weekend profiles;
+- 288 five-minute intervals per day.
+
+Territories are displayed only for local-time context.
+
+## Activity partition
+
+The model uses eight non-overlapping groups:
+
+1. Sleep
+2. Personal care
+3. Eating
+4. Transportation
+5. Paid work, studying or learning
+6. Unpaid domestic and care work
+7. Socializing and leisure
+8. Other activities
+
+Parent and child groups are not added together.
+
+## Per-province calculation
+
+For province `p` at instant `t`:
 
 ```text
-local_time(p,t)
+local_time(p, t)
 → weekday/weekend bucket
-→ 5-minute StatCan time code
-→ Canada-level activity participation vector
-→ province population × national 15+ share × activity rate
+→ 5-minute survey code
+→ activity-rate vector
 ```
 
-National activity counts are the sum of those ten provincial model counts. National percentages use the modelled 15+ population across the ten provinces as denominator.
+For activity `a`:
 
-## Why time zones matter
+```text
+scope_population(p)
+  = province_population(p) × national_15_plus_share
 
-A single Eastern-time profile multiplied by Canada's population would be wrong. At one instant, Vancouver, Toronto, Halifax and St. John's occupy different survey slots. The model therefore evaluates each province separately before combining it.
+activity_count(p, a, t)
+  = scope_population(p) × activity_rate(a, local_time(p,t)) / 100
+```
 
-## Time coding
+Awake share is:
 
-StatCan's table starts its code list at 04:00:
+```text
+awake_rate(p,t) = 100 - sleep_rate(p,t)
+```
+
+National activity counts are the sum of the ten provincial model counts. National percentages divide those sums by the total modelled 15+ population across the ten provinces.
+
+## Why province-local time matters
+
+A single Eastern-time slice multiplied by Canada's population would apply the wrong part of the daily profile to western and Atlantic provinces.
+
+At one instant, Vancouver, Winnipeg, Toronto, Halifax and St. John's occupy different five-minute survey intervals. The model evaluates each province first, then combines them.
+
+## StatCan time coding
+
+Table 45-10-0105-01 starts its time-code sequence at 04:00:
 
 ```text
 1   = 04:00–04:04
@@ -30,25 +78,57 @@ StatCan's table starts its code list at 04:00:
 288 = 03:55–03:59
 ```
 
-No interpolation is used between official slots. The value is held for the five minutes represented by that StatCan interval.
+No interpolation occurs between official intervals. A five-minute value is held for the interval it represents.
 
-## Province cards
+## Population alignment
 
-The source time-use table is Canada-level. A province card is therefore **not** a claim that StatCan measured a province-specific behavioural rate. It is the Canada profile evaluated at that province's local clock and population-scaled for the visualization.
+Quarterly total population comes from Table **17-10-0009-01** through the coordinate-based WDS endpoint.
 
-## Territories
+The build:
 
-The selected Time Use Survey table covers the ten provinces. Territories are shown only as local-time context and excluded from national activity estimates.
+1. requests Canada plus all 13 provinces/territories;
+2. validates the returned product ID;
+3. requires every geography;
+4. checks that province/territory totals reconcile to Canada;
+5. compares each result with the last verified snapshot to catch geography-order mistakes.
 
-## Population age alignment
+The survey is 15+, so the model derives a national 15+ share from Table **17-10-0005-01**:
 
-Quarterly population estimates are total population. The build reads Table 17-10-0009-01 through the coordinate-based WDS endpoint (`getDataFromCubePidCoordAndLatestNPeriods`), using the geography member code in the first coordinate position. It then reconciles all 13 province/territory values to Canada and checks them against the last verified snapshot. To align approximately with the survey's 15+ scope, the build calculates the latest national 15+ share from StatCan population-by-age data and applies it to provincial totals.
+```text
+15+ share
+= (all ages - age 0–4 - age 5–9 - age 10–14) / all ages
+```
+
+That national share is applied to each province. This is an approximation; it does not use province-specific age structures.
 
 ## Suppressed five-minute cells
 
-Some StatCan five-minute cells are unavailable/suppressed. The build does not synthesize a missing component. Instead, it replaces an incomplete slot with the nearest **complete official five-minute vector** from the same weekday/weekend series and records each mapping under `gapFill` in the generated profile. On the current source release, this affects 21 weekend slots and no weekday slots.
+Some survey cells are suppressed or incomplete.
 
+The build does **not** fabricate a missing activity. If any component is missing, it replaces the entire interval with the nearest complete official five-minute vector from the same weekday/weekend series.
 
-## Map geometry
+Every substitution is recorded in `public/data/time-use-profile.json` under `gapFill`.
 
-The interactive map uses Statistics Canada's 2021 province/territory Digital Boundary Files requested as GeoJSON. The build simplifies coordinate rings only for display performance; it does not change which region a feature represents. The fill colour is not an official StatCan map variable: it represents the leading activity from this project's current time-use model slice.
+## Province cards and map
+
+Province cards and map colours are model outputs, not province-specific survey estimates.
+
+For each province they show:
+
+- local clock time;
+- current modelled awake share/count;
+- leading non-sleep activity.
+
+The interactive map uses verified province/territory geometry. Geometry is simplified for display performance only; region identity is validated before publication.
+
+## Time machine and model path
+
+The time slider and future-path cards do not forecast behaviour.
+
+They apply the same official weekday/weekend profile to another clock instant:
+
+```text
+shifted instant → local province clocks → matching official survey slots
+```
+
+This answers “what does this statistical model look like at another time?” rather than “what will people actually do in the future?”
