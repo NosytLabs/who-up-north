@@ -235,7 +235,8 @@ function statcanProvincialIndicators(data){
     const title=String(row.title.en).trim(),normalized=title.toLowerCase();
     const match=PROVINCE_INDICATOR_MATCHERS.find(([,test])=>test(normalized));
     const value=String(row.value?.en??'').trim();
-    if(!match||!value)continue;
+    const growth=String(row.growth_rate?.growth?.en??'').trim();
+    if(!match||(!value&&!growth))continue;
 
     const id=INDICATOR_GEO[String(row.geo_code)],key=match[0];
     output[id]||={geoCode:String(row.geo_code),indicators:{}};
@@ -244,10 +245,10 @@ function statcanProvincialIndicators(data){
     output[id].indicators[key]={
       key,
       title,
-      value,
+      value:value||growth,
       reference:row.refper?.en||'',
       releaseDate:row.release_date,
-      growth:row.growth_rate?.growth?.en||'',
+      growth,
       growthDetail:row.growth_rate?.details?.en||'',
       direction:row.growth_rate?.arrow_direction||'0',
       url:row.daily_url?.en?new URL(row.daily_url.en,'https://www150.statcan.gc.ca/n1').href:null
