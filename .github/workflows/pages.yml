@@ -32,8 +32,16 @@ jobs:
           node-version: 22
           package-manager-cache: false
 
-      - name: Install dependencies
-        run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Install optional Jev dependency
+        env:
+          AI_GATEWAY_API_KEY: ${{ secrets.AI_GATEWAY_API_KEY }}
+        shell: bash
+        run: |
+          if [ -n "${AI_GATEWAY_API_KEY}" ]; then
+            npm install --ignore-scripts --no-audit --no-fund
+          else
+            echo "AI_GATEWAY_API_KEY not configured; deterministic fact mode needs no npm dependencies."
+          fi
 
       - name: Refresh official Canadian data
         run: node scripts/refresh-data.mjs
