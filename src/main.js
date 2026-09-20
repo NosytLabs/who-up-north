@@ -39,6 +39,7 @@ const PROVINCE_STAT_LABELS={
 const num=n=>Number.isFinite(n)?Math.round(n).toLocaleString('en-CA'):'—';
 const pct=n=>Number.isFinite(n)?Number(n).toFixed(1)+'%':'—';
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const orgName=value=>String(value||'').split(' | ')[0].trim();
 const instant=()=>new Date(Date.now()+state.shift*36e5);
 
 async function json(url){
@@ -311,7 +312,7 @@ async function loadProvinceOpenData(id){
       items:rows.map(item=>({
         id:item.id,
         title:item.title_translated?.en||item.title||item.name||'Dataset',
-        organization:item.organization?.title||'Open Government',
+        organization:orgName(item.organization?.title)||'Open Government',
         modified:item.metadata_modified?new Date(item.metadata_modified).toLocaleDateString('en-CA'):'',
         url:`https://open.canada.ca/data/en/dataset/${item.id}`
       }))
@@ -454,7 +455,7 @@ function weather(j){
   }
   return{live:true,checkedAt:new Date().toISOString(),numberMatched:j?.numberMatched??features.length,items};
 }
-function openGov(j,count){return{live:true,checkedAt:new Date().toISOString(),changedLast24h:Number.isFinite(Number(count?.result?.count))?Number(count.result.count):null,items:(j?.result||[]).slice(0,8).map(q=>({timestamp:q.timestamp,id:q.object_id,title:q.data?.package?.title_translated?.en||q.data?.package?.title||q.data?.package?.name||'Updated dataset',organization:q.data?.package?.organization?.title||'',url:`https://open.canada.ca/data/en/dataset/${q.object_id}`}))}}
+function openGov(j,count){return{live:true,checkedAt:new Date().toISOString(),changedLast24h:Number.isFinite(Number(count?.result?.count))?Number(count.result.count):null,items:(j?.result||[]).slice(0,8).map(q=>({timestamp:q.timestamp,id:q.object_id,title:q.data?.package?.title_translated?.en||q.data?.package?.title||q.data?.package?.name||'Updated dataset',organization:orgName(q.data?.package?.organization?.title),url:`https://open.canada.ca/data/en/dataset/${q.object_id}`}))}}
 function bank(j){const r=j?.observations?.at(-1),v=Number(r?.FXUSDCAD?.v);return{live:true,checkedAt:new Date().toISOString(),date:r?.d,value:Number.isFinite(v)?v:null,description:j?.seriesDetail?.FXUSDCAD?.description||'Daily average USD/CAD'}}
 
 async function loadLive(options={}){
@@ -487,7 +488,7 @@ async function loadLive(options={}){
 function renderFreshness(){
   if(!state.live)return;
   const snap=state.live.generatedAt;
-  $('hero-freshness').textContent=state.lastCheckAt?`${state.directOk}/${state.directExpected} APIS · ${ageLabel(state.lastCheckAt)}`:snap?'SNAPSHOT · '+ageLabel(snap):'OFFLINE';
+  $('hero-freshness').textContent=state.lastCheckAt?`${state.directOk}/${state.directExpected} · ${ageLabel(state.lastCheckAt)}`:snap?'SNAPSHOT · '+ageLabel(snap):'OFFLINE';
   $('weather-source-state').textContent=state.live.weather?.live?'DIRECT API':'BUILD SNAPSHOT';
   $('open-source-state').textContent=state.live.openGovernment?.live?'DIRECT API':'BUILD SNAPSHOT';
   $('bank-source-state').textContent=state.live.bank?.live?'DIRECT CHECK':'BUILD SNAPSHOT';
