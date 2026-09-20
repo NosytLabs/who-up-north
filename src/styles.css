@@ -1133,6 +1133,8 @@ min-height:300px;
 .signal-top {
   display:flex;
   justify-content:space-between;
+  align-items:center;
+  gap:10px;
   color:var(--dim)
 }
 .signal-top i {
@@ -1391,9 +1393,49 @@ min-height:200px;
   display:flex;
   flex-direction:column
 }
-.sources article>span {
+.source-title {
+  display:flex;
+  align-items:center;
+  gap:9px;
+  color:var(--dim);
   font:750 .58rem/1 ui-monospace,monospace;
-  color:var(--dim)
+  letter-spacing:.08em
+}
+.source-icon {
+  width:28px;
+  height:28px;
+  flex:0 0 28px;
+  display:inline-grid;
+  place-items:center;
+  border:1px solid var(--line);
+  border-radius:8px;
+  background:rgba(120,199,211,.055);
+  color:var(--data);
+  font:850 .76rem/1 ui-monospace,monospace
+}
+.source-icon.small {
+  width:22px;
+  height:22px;
+  flex-basis:22px;
+  border-radius:7px;
+  font-size:.67rem
+}
+.signal-label {
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  min-width:0
+}
+.source-links {
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px 14px;
+  margin-top:auto
+}
+.source-links a {
+  font-size:.7rem;
+  font-weight:800;
+  text-underline-offset:4px
 }
 .sources h3 {
 margin:28px 0 8px
@@ -1740,6 +1782,9 @@ footer a {
   .sources article {
     min-height:0;
     padding:20px
+  }
+  .source-links {
+    gap:8px 12px
   }
   .sources h3 {
     margin:20px 0 8px
