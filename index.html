@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="theme-color" content="#06090d">
+  <meta name="theme-color" content="#070b0e">
   <meta name="color-scheme" content="dark">
   <title>Who Up North? — Canada right now</title>
   <meta name="description" content="A live-to-the-clock statistical portrait of Canada built from Statistics Canada and current Canadian public-data signals.">
@@ -94,11 +94,6 @@
 
   <div class="map-shell">
     <svg id="canada-map" class="canada-map" viewBox="0 0 1200 720" role="group" aria-label="Interactive Canada provinces and territories coloured by the leading modelled activity">
-      <defs>
-        <filter id="map-glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-        <linearGradient id="map-ocean" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0c1820"/><stop offset="1" stop-color="#060a0e"/></linearGradient>
-      </defs>
-      <rect width="1200" height="720" fill="url(#map-ocean)"/>
       <g id="map-grid"></g>
       <g id="map-shapes"></g>
       <g id="map-labels"></g>
@@ -106,6 +101,13 @@
     <div class="map-meta"><span id="map-clock">— UTC</span><span>VERIFIED CANADA BOUNDARIES // MODEL OVERLAY</span></div>
   </div>
   <div id="map-legend" class="map-legend" aria-label="Activity colour legend"></div>
+  <div class="region-picker">
+    <label for="region-select">REGION</label>
+    <select id="region-select" aria-label="Select a province or territory">
+      <option value="">Canada overview</option>
+    </select>
+    <span>Map shapes are interactive; this selector is the easier control for small regions.</span>
+  </div>
 
   <div id="focus-card" class="focus">
     <div><span id="focus-kicker">SELECT A REGION</span><h3 id="focus-name">Canada</h3></div>
@@ -116,16 +118,16 @@
     <button id="focus-reset" class="btn small" type="button">RESET</button>
   </div>
 
-  <section id="province-data" class="province-data" hidden aria-live="polite">
+  <section id="province-data" class="province-data" hidden>
     <div class="province-data-head">
       <div><span>REGION DATA</span><strong id="province-data-title">Select a region</strong></div>
-      <span id="province-data-status">STATCAN + OPEN GOVERNMENT</span>
+      <span id="province-data-status" aria-live="polite">STATCAN + OPEN GOVERNMENT</span>
     </div>
     <div id="province-stat-grid" class="province-stat-grid"></div>
     <div class="province-open-data">
       <div class="province-open-head">
         <div><span>OPEN GOVERNMENT CATALOGUE</span><strong id="province-open-title">Region-related datasets</strong></div>
-        <span id="province-open-status">SELECT A REGION</span>
+        <span id="province-open-status" aria-live="polite">SELECT A REGION</span>
       </div>
       <div id="province-open-results" class="province-open-results"></div>
     </div>
