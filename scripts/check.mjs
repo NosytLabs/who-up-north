@@ -1,3 +1,4 @@
+import { spawnSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 
@@ -23,6 +24,44 @@ const requiredFiles = [
 for (const file of requiredFiles) {
   if (!existsSync(file) || (await readFile(file, 'utf8')).trim() === '') {
     throw new Error(`${file} missing`);
+  }
+}
+
+for (const file of [
+  'src/main.js',
+  'src/model.js',
+  'scripts/refresh-data.mjs',
+  'scripts/generate-jev-fact.mjs',
+]) {
+  const result = spawnSync(process.execPath, ['--check', file], {
+    encoding: 'utf8',
+  });
+  if (result.status !== 0) {
+    throw new Error(`syntax check failed for ${file}: ${result.stderr || result.stdout}`);
+  }
+}
+
+const html = await readFile('index.html', 'utf8');
+const main = await readFile('src/main.js', 'utf8');
+
+for (const id of [
+  'province-data',
+  'province-stat-grid',
+  'province-open-results',
+  'territory-grid',
+]) {
+  if (!html.includes(`id="${id}"`)) {
+    throw new Error(`index.html missing #${id}`);
+  }
+}
+
+for (const fn of [
+  'renderProvinceData',
+  'loadProvinceOpenData',
+  'renderTerritories',
+]) {
+  if (!main.includes(`function ${fn}(`)) {
+    throw new Error(`src/main.js missing ${fn}()`);
   }
 }
 
