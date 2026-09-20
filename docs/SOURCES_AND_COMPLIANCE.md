@@ -57,7 +57,7 @@ Primary geometry source:
 
 The build requests GeoJSON, simplifies coordinate rings for display performance and validates the 13 expected region IDs.
 
-If the StatCan ArcGIS service rejects a runner request, the build can use an official Government of Manitoba Canada province/territory GeoJSON listed in the federal Open Government catalogue. That fallback is reprojected to longitude/latitude, normalized to StatCan province/territory IDs and validated before publication.
+If the StatCan ArcGIS service rejects a runner request, the build first tries an official Government of Manitoba Canada province/territory GeoJSON listed in the federal Open Government catalogue. That fallback is reprojected to longitude/latitude, normalized to StatCan province/territory IDs and validated before publication. If both remote geometry services fail, the build can reuse the last successfully deployed, already-validated 13-region boundary artifact from this project. If every geometry source is unavailable, map refresh degrades without blocking the rest of the official-data deployment; the region selector and region cards remain usable.
 
 Activity colours layered onto the geometry are this project's model output, not an official StatCan map variable.
 
