@@ -125,7 +125,7 @@ function renderCore(){
   const leading=ACTIVITIES.filter(a=>a.key!=='sleep').map(a=>({...a,value:s.national.activities[a.key]})).sort((a,b)=>b.value-a.value)[0];
   $('awake-percent').textContent=pct(s.national.awakePercent);
   $('awake-count').textContent=`~${num(s.national.awakeCount)} people in the modelled survey scope`;
-  $('pulse-updated').textContent=String(state.pop.strategy||'').startsWith('live-wds')?'LATEST WDS POPULATION':'VERIFIED POP SNAPSHOT';
+  $('pulse-updated').textContent=String(state.pop.strategy||'').startsWith('live-wds')?'STATCAN WDS POP SNAPSHOT':'VERIFIED POP SNAPSHOT';
   $('hero-leading').textContent=leading?`${leading.short.toUpperCase()} // ${pct(leading.value)}`:'—';
   $('activity-note').textContent=`Official five-minute participation rates · population snapshot ${state.pop.asOf||'verified'} · survey scope 15+.`;
   renderTicker();
@@ -206,7 +206,7 @@ function renderMap(){
   if(!state.snapshot)return;
   const shapeLayer=$('map-shapes'),labelLayer=$('map-labels'),grid=$('map-grid');
   if(!state.geo?.features?.length){
-    shapeLayer.innerHTML='<text x="600" y="360" text-anchor="middle" fill="#60706a" font-family="ui-monospace,monospace" font-size="14">LOADING OFFICIAL STATISTICS CANADA BOUNDARIES…</text>';
+    shapeLayer.innerHTML='<text x="600" y="360" text-anchor="middle" fill="#60706a" font-family="ui-monospace,monospace" font-size="14">LOADING VERIFIED CANADA BOUNDARIES…</text>';
     labelLayer.innerHTML='';return;
   }
   const projected=[];
@@ -223,7 +223,7 @@ function renderMap(){
     const id=GEO_ID[String(feature.properties?.PRUID||'')],region=byId[id];
     if(!id||!region)return'';
     const territory=region.surveyIncluded===false,fill=territory?'#53645d':colours[region.dominant]||'#70e5ff';
-    return`<path class="province-shape ${territory?'territory':''} ${state.focus===id?'active':''}" data-m="${id}" d="${pathFor(feature.geometry)}" fill="${fill}" aria-label="${esc(region.name)}"><title>${esc(region.name)} · ${esc(region.localTime)}${territory?' · time-zone context':` · ${pct(region.awakePercent)} awake`}</title></path>`;
+    return`<path class="province-shape ${territory?'territory':''} ${state.focus===id?'active':''}" data-m="${id}" d="${pathFor(feature.geometry)}" fill="${fill}" aria-label="${esc(region.name)}" aria-pressed="${state.focus===id?'true':'false'}"><title>${esc(region.name)} · ${esc(region.localTime)}${territory?' · time-zone context':` · ${pct(region.awakePercent)} awake`}</title></path>`;
   }).join('');
 
   labelLayer.innerHTML=all.map(region=>{
@@ -279,11 +279,10 @@ async function loadLive(options={}){
 function renderFreshness(){
   if(!state.live)return;
   const snap=state.live.generatedAt;
-  $('hero-freshness').textContent=state.liveCheckedAt?'DIRECT CHECK '+ageLabel(state.liveCheckedAt):snap?'SNAPSHOT '+ageLabel(snap):'OFFLINE';
-  const map=[
-    ['weather-source-state',state.live.weather],['open-source-state',state.live.openGovernment],['bank-source-state',state.live.bank]
-  ];
-  for(const [id,s] of map)$(id).textContent=s?.live?'LIVE API':'BUILD SNAPSHOT';
+  $('hero-freshness').textContent=state.liveCheckedAt?'DIRECT API CHECK '+ageLabel(state.liveCheckedAt):snap?'BUILD SNAPSHOT '+ageLabel(snap):'OFFLINE';
+  $('weather-source-state').textContent=state.live.weather?.live?'DIRECT API':'BUILD SNAPSHOT';
+  $('open-source-state').textContent=state.live.openGovernment?.live?'DIRECT API':'BUILD SNAPSHOT';
+  $('bank-source-state').textContent=state.live.bank?.live?'DIRECT CHECK':'BUILD SNAPSHOT';
   $('weather-freshness').textContent=state.live.weather?.checkedAt?ageLabel(state.live.weather.checkedAt):ageLabel(snap);
   $('open-data-freshness').textContent=state.live.openGovernment?.checkedAt?ageLabel(state.live.openGovernment.checkedAt):ageLabel(snap);
   $('fx-freshness').textContent=state.live.bank?.checkedAt?ageLabel(state.live.bank.checkedAt):ageLabel(snap);
@@ -312,7 +311,7 @@ function renderLive(){
   $('bank-card').classList.toggle('live',!!b.live);
 
   const liveCount=[w,o,b].filter(x=>x?.live).length;
-  $('live-status').textContent=liveCount?`${liveCount}/3 DIRECT SOURCES RESPONDED // STATCAN DATA FROM VERIFIED BUILD`:`BUILD SNAPSHOT // ${state.live.generatedAt?ageLabel(state.live.generatedAt):'NO TIMESTAMP'}`;
+  $('live-status').textContent=liveCount?`${liveCount}/3 SOURCES CHECKED DIRECTLY // STATCAN SNAPSHOT VERIFIED`:`BUILD SNAPSHOT // ${state.live.generatedAt?ageLabel(state.live.generatedAt):'NO TIMESTAMP'}`;
   renderFreshness();
 }
 function nextRelease(){
