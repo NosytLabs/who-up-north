@@ -25,7 +25,7 @@ The refresh job validates all 288 five-minute slots in each series. If a slot ha
 
 **Table 17-10-0009-01** — *Population estimates, quarterly*
 
-The build uses WDS `getDataFromCubePidCoordAndLatestNPeriods` with product ID `17100009` and geography in the first coordinate position.
+The build uses the documented WDS `POST /getDataFromCubePidCoordAndLatestNPeriods` method with product ID `17100009` and geography in the first coordinate position. Official WDS guide: <https://www.statcan.gc.ca/en/developers/wds/user-guide>.
 
 Safeguards require:
 
@@ -63,17 +63,17 @@ Activity colours layered onto the geometry are this project's model output, not 
 
 ## Open Government Portal
 
-Read-only CKAN endpoints power:
+Read-only CKAN Action API endpoints power:
 
 - the recently changed dataset feed;
 - catalogue search;
 - a rolling count of records whose `metadata_modified` timestamp falls within the previous 24 hours.
 
-Public read requests require no API key. The site does not create or modify catalogue records. Selecting a province/territory issues a read-only CKAN `package_search` query using Solr title syntax for that region name and excludes catalogue titles marked `inactive`. If no title matches are returned, the client may fall back to a normal full-text query with the same inactive-title filter. Results are labelled as federal catalogue matches, not as records published by that provincial or territorial government.
+Open Canada documents its CKAN API as GET-only; parameters are sent in the request URL. Public read requests require no API key. The site does not create or modify catalogue records. Official API page: <https://open.canada.ca/en/access-our-application-programming-interface-api>. Selecting a province/territory issues a read-only CKAN `package_search` query using Solr title syntax for that region name and excludes catalogue titles marked `inactive`. If no title matches are returned, the client may fall back to a normal full-text query with the same inactive-title filter. Results are labelled as federal catalogue matches, not as records published by that provincial or territorial government.
 
 ## Environment and Climate Change Canada / MSC GeoMet
 
-The site reads the public `weather-alerts` collection from `api.weather.gc.ca`.
+The site reads the public GeoMet OGC API Features `weather-alerts` collection from `api.weather.gc.ca`. Official alert/GeoMet documentation: <https://eccc-msc.github.io/open-data/msc-data/alerts/readme_alerts-geomet_en/>.
 
 Displayed content is limited to official alert labels/areas plus links back to the official weather service. The site does not use an LLM to rewrite warning meaning or instructions.
 
@@ -83,7 +83,7 @@ Attribution:
 
 ## Bank of Canada Valet API
 
-Endpoint family: Bank of Canada Valet, series `FXUSDCAD`.
+Endpoint family: Bank of Canada Valet, series `FXUSDCAD`, using `GET /valet/observations/FXUSDCAD/json?recent=1`. Official Valet docs: <https://www.bankofcanada.ca/valet/docs/>.
 
 The value shown is the latest published **daily average** of the US dollar in Canadian dollars. It is not a live tradable quote.
 
