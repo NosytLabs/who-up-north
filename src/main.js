@@ -211,7 +211,7 @@ function renderFocus(){
   $('focus-time').textContent=r.localTime;
   if(r.surveyIncluded===false){
     $('focus-awake').textContent='NOT MODELLED';$('focus-dominant').textContent='—';
-    $('focus-copy').textContent='Local time only. The selected Time Use Survey covers the ten provinces.';
+    $('focus-copy').textContent='The Time Use Survey model excludes territories. Official population and economic indicators are available below.';
   }else{
     $('focus-awake').textContent=pct(r.awakePercent);
     $('focus-dominant').textContent=ACTIVITIES.find(a=>a.key===r.dominant)?.short||r.dominant;
@@ -231,7 +231,7 @@ function growthMarkup(indicator){
   return`<em class="${cls}">${arrow} ${growth} ${detail}</em>`;
 }
 function renderProvinceOpenData(region,record){
-  $('province-open-title').textContent=`Catalogue matches mentioning ${region.name}`;
+  $('province-open-title').textContent=`Open Government datasets for ${region.name}`;
   if(!record){
     $('province-open-status').textContent='SEARCHING OPEN CANADA…';
     $('province-open-results').innerHTML='<div class="province-open-empty">Loading recent catalogue matches…</div>';
@@ -242,6 +242,9 @@ function renderProvinceOpenData(region,record){
     $('province-open-results').innerHTML='<div class="province-open-empty">Open Government catalogue search is unavailable right now.</div>';
     return;
   }
+  $('province-open-title').textContent=record.mode==='TITLE MATCHES'
+    ?`Datasets with ${region.name} in the title`
+    :`Catalogue matches for ${region.name}`;
   $('province-open-status').textContent=`${num(record.count)} ${record.mode||'MATCHES'}`;
   $('province-open-results').innerHTML=record.items.length?record.items.map(item=>`<a href="${esc(item.url)}" target="_blank" rel="noreferrer"><small>${esc(item.organization||'Open Government')} · ${esc(item.modified||'')}</small><strong>${esc(item.title)}</strong></a>`).join(''):'<div class="province-open-empty">No recent catalogue matches found.</div>';
 }
@@ -253,9 +256,11 @@ function renderProvinceData(){
   }
   panel.hidden=false;
   $('province-data-title').textContent=region.name;
-  $('province-data-status').textContent=state.live?.generatedAt?`STATCAN SNAPSHOT · ${ageLabel(state.live.generatedAt)}`:'STATCAN SNAPSHOT LOADING';
-
   const indicators=state.live?.statcan?.provinces?.[region.id]?.indicators||{};
+  const indicatorCount=Object.keys(indicators).length;
+  $('province-data-status').textContent=state.live?.generatedAt
+    ?`STATCAN · ${indicatorCount} INDICATOR${indicatorCount===1?'':'S'} · ${ageLabel(state.live.generatedAt)}`
+    :'STATCAN DATA LOADING';
   const populationShare=Number.isFinite(Number(state.pop?.canada))?region.population/Number(state.pop.canada)*100:null;
   const cards=[{
     key:'population',
@@ -380,7 +385,19 @@ function renderFact(){
   $('fact-detail').textContent=f.selected.detail;
 }
 
-function weather(j){const f=j?.features||[];return{live:true,checkedAt:new Date().toISOString(),numberMatched:j?.numberMatched??f.length,items:f.slice(0,8).map(q=>({name:q.properties?.alert_short_name_en||q.properties?.alert_name_en,feature:q.properties?.feature_name_en,province:q.properties?.province,published:q.properties?.publication_datetime}))}}
+function weather(j){
+  const features=j?.features||[],seen=new Set,items=[];
+  for(const q of features){
+    const name=q.properties?.alert_short_name_en||q.properties?.alert_name_en||'Weather alert';
+    const province=q.properties?.province||'CA';
+    const key=`${province}|${name}`;
+    if(seen.has(key))continue;
+    seen.add(key);
+    items.push({name,feature:q.properties?.feature_name_en,province,published:q.properties?.publication_datetime});
+    if(items.length===8)break;
+  }
+  return{live:true,checkedAt:new Date().toISOString(),numberMatched:j?.numberMatched??features.length,items};
+}
 function openGov(j,count){return{live:true,checkedAt:new Date().toISOString(),changedLast24h:Number.isFinite(Number(count?.result?.count))?Number(count.result.count):null,items:(j?.result||[]).slice(0,8).map(q=>({timestamp:q.timestamp,id:q.object_id,title:q.data?.package?.title_translated?.en||q.data?.package?.title||q.data?.package?.name||'Updated dataset',organization:q.data?.package?.organization?.title||'',url:`https://open.canada.ca/data/en/dataset/${q.object_id}`}))}}
 function bank(j){const r=j?.observations?.at(-1),v=Number(r?.FXUSDCAD?.v);return{live:true,checkedAt:new Date().toISOString(),date:r?.d,value:Number.isFinite(v)?v:null,description:j?.seriesDetail?.FXUSDCAD?.description||'Daily average USD/CAD'}}
 
@@ -414,7 +431,7 @@ async function loadLive(options={}){
 function renderFreshness(){
   if(!state.live)return;
   const snap=state.live.generatedAt;
-  $('hero-freshness').textContent=state.lastCheckAt?`SOURCE CHECK ${state.directOk}/${state.directExpected} · ${ageLabel(state.lastCheckAt)}`:snap?'BUILD SNAPSHOT '+ageLabel(snap):'OFFLINE';
+  $('hero-freshness').textContent=state.lastCheckAt?`${state.directOk}/${state.directExpected} APIS · ${ageLabel(state.lastCheckAt)}`:snap?'SNAPSHOT · '+ageLabel(snap):'OFFLINE';
   $('weather-source-state').textContent=state.live.weather?.live?'DIRECT API':'BUILD SNAPSHOT';
   $('open-source-state').textContent=state.live.openGovernment?.live?'DIRECT API':'BUILD SNAPSHOT';
   $('bank-source-state').textContent=state.live.bank?.live?'DIRECT CHECK':'BUILD SNAPSHOT';
@@ -434,6 +451,7 @@ function renderLive(){
 
   $('open-updated-count').textContent=Number.isFinite(o.changedLast24h)?num(o.changedLast24h):'—';
   $('open-data-title').textContent=oi?.title||'Open Government feed unavailable';
+  $('open-data-org').textContent=oi?.organization||'Federal Open Government catalogue';
   $('open-data-time').textContent=oi?.timestamp?new Date(oi.timestamp).toLocaleString('en-CA'):'—';
   $('open-data-link').href=oi?.url||'https://open.canada.ca/data/en/';
   $('open-data-list').innerHTML=(o.items||[]).slice(0,4).map((q,i)=>`<button class="${i===state.o?'active':''}" data-o="${i}" type="button" title="${esc((q.title||q.organization||'dataset'))}">${String(i+1).padStart(2,'0')} · ${esc(q.title||q.organization||'dataset')}</button>`).join('');
@@ -445,7 +463,7 @@ function renderLive(){
   $('fx-description').textContent=b.description||'Official daily USD/CAD average.';
   $('bank-card').classList.toggle('daily',!!b.live);
 
-  $('live-status').textContent=state.lastCheckAt?`${state.directOk}/${state.directExpected} RESPONDED TO CURRENT CHECK // STATCAN SNAPSHOT VERIFIED`:`BUILD SNAPSHOT // ${state.live.generatedAt?ageLabel(state.live.generatedAt):'NO TIMESTAMP'}`;
+  $('live-status').textContent=state.lastCheckAt?`${state.directOk}/${state.directExpected} PUBLIC APIS RESPONDED · ${ageLabel(state.lastCheckAt)}`:`BUILD SNAPSHOT · ${state.live.generatedAt?ageLabel(state.live.generatedAt):'NO TIMESTAMP'}`;
   renderFreshness();
 }
 function nextRelease(){
