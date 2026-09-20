@@ -70,7 +70,7 @@
       <strong id="fact-title">Waiting for the current slice…</strong>
       <p id="fact-detail">Only source-backed aggregate statistics can appear here.</p>
     </div>
-    <p class="fine">Estimate for the survey-aligned 15+ population in the ten provinces, weighted by each province’s current local time. Territories are shown for clock context only.</p>
+    <p class="fine">Estimate for the survey-aligned 15+ population in the ten provinces, using one representative reference clock per province. Territories are shown for clock context only.</p>
   </article>
 </section>
 
@@ -88,8 +88,8 @@
 
 <section id="across" class="section wrap map-section">
   <div class="section-head">
-    <div><p class="eyebrow">ACROSS CANADA</p><h2>One country. Six local clocks.</h2></div>
-    <p>The Canada-level survey profile is evaluated at each province’s local five-minute slot, then population-weighted. Select any region for official StatCan indicators and federal Open Government catalogue matches.</p>
+    <div><p class="eyebrow">ACROSS CANADA</p><h2>One country. Six reference clocks.</h2></div>
+    <p>The Canada-level survey profile is evaluated at one representative reference clock per province, then population-weighted. Select any region for official StatCan indicators and federal Open Government catalogue matches.</p>
   </div>
 
   <div class="map-shell">
@@ -111,7 +111,7 @@
 
   <div id="focus-card" class="focus">
     <div><span id="focus-kicker">SELECT A REGION</span><h3 id="focus-name">Canada</h3></div>
-    <div><span>LOCAL</span><strong id="focus-time">—</strong></div>
+    <div><span>CLOCK</span><strong id="focus-time">—</strong></div>
     <div><span>AWAKE</span><strong id="focus-awake">—</strong></div>
     <div><span>LEADING</span><strong id="focus-dominant">—</strong></div>
     <p id="focus-copy">Choose a province or territory to inspect its local clock, model context and official data.</p>
@@ -230,7 +230,7 @@
     <p>The time-use model advances locally with Canadian clocks. GitHub Actions refreshes the official build snapshots on a 15-minute schedule, while the browser directly rechecks ECCC weather and Open Government every five minutes when visible. Bank of Canada FX is a daily statistic, so it is checked without pretending to be a live market quote.</p>
   </div>
   <div class="steps">
-    <article><b>01</b><h3>Resolve clocks</h3><p>Convert one instant into each province’s local time.</p></article>
+    <article><b>01</b><h3>Resolve clocks</h3><p>Convert one instant into each province’s representative reference clock.</p></article>
     <article><b>02</b><h3>Select survey slot</h3><p>Use the official weekday/weekend five-minute participation vector.</p></article>
     <article><b>03</b><h3>Weight population</h3><p>Apply current quarterly province estimates and the latest national 15+ share.</p></article>
     <article><b>04</b><h3>Combine transparently</h3><p>Sum the ten survey-covered provinces and label every limitation.</p></article>
