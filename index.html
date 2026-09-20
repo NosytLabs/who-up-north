@@ -208,7 +208,7 @@
   <div>
     <p class="eyebrow">HOW IT WORKS</p>
     <h2>Live clock.<br>Official distributions.<br>Clear limits.</h2>
-    <p>The browser advances the current five-minute survey slice using Canadian local time. GitHub Actions is scheduled every 15 minutes to refresh official population and signal snapshots; GitHub may delay scheduled jobs. On page load, the site also attempts direct read-only checks of the public weather, Open Government and Bank of Canada APIs.</p>
+    <p>The browser advances the current five-minute survey slice using Canadian local time. GitHub Actions is scheduled every 15 minutes to refresh official population and signal snapshots; GitHub may delay scheduled jobs. On page load, the site checks ECCC weather, Open Government and the Bank of Canada directly. While the tab stays visible, weather and Open Government are rechecked every five minutes; the Bank of Canada value is a daily average and is not polled every five minutes.</p>
   </div>
   <div class="steps">
     <article><b>01</b><h3>Resolve clocks</h3><p>Convert one instant into each province’s local time.</p></article>
