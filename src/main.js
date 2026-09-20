@@ -206,7 +206,7 @@ function renderRegionSelect(){
 }
 function renderProvinces(){
   $('province-grid').innerHTML=state.snapshot.regions.map(r=>`<button class="province-card ${state.focus===r.id?'active':''}" data-r="${r.id}" type="button" aria-pressed="${state.focus===r.id?'true':'false'}" title="Inspect ${esc(r.name)}"><div class="top"><span>${esc(r.abbr)}</span><span>${esc(r.clockLabel)} CLOCK</span></div><div class="province-name">${esc(r.name)}</div><div class="time">${esc(r.localTime)}</div><div class="awake">${pct(r.awakePercent)} awake · ~${num(r.awakeCount)}</div><div class="dom" style="color:${colours[r.dominant]}">● ${esc(ACTIVITIES.find(a=>a.key===r.dominant)?.short||r.dominant)}</div></button>`).join('');
-  document.querySelectorAll('[data-r]').forEach(b=>b.onclick=()=>focus(b.dataset.r));
+  document.querySelectorAll('[data-r]').forEach(b=>b.onclick=()=>focus(b.dataset.r,true,true));
 }
 function renderTerritories(){
   const grid=$('territory-grid');
@@ -217,9 +217,9 @@ function renderTerritories(){
     const signal=headline?`${PROVINCE_STAT_LABELS[headline.key]||headline.title} · ${headline.value}`:'Official indicators available in drilldown';
     return`<button class="territory-card ${state.focus===r.id?'active':''}" data-t="${r.id}" type="button" aria-pressed="${state.focus===r.id?'true':'false'}" title="Inspect ${esc(r.name)}"><div class="top"><span>${esc(r.abbr)}</span><span>${esc(r.clockLabel)} CLOCK</span></div><div class="province-name">${esc(r.name)}</div><div class="time">${esc(r.localTime)}</div><div class="awake">${num(r.population)} population</div><div class="dom">${esc(signal)}</div></button>`;
   }).join('');
-  grid.querySelectorAll('[data-t]').forEach(button=>button.onclick=()=>focus(button.dataset.t));
+  grid.querySelectorAll('[data-t]').forEach(button=>button.onclick=()=>focus(button.dataset.t,true,true));
 }
-function focus(id,commit=true){
+function focus(id,commit=true,reveal=false){
   const all=state.snapshot?[...state.snapshot.regions,...state.snapshot.territories]:[];
   state.focus=id&&all.some(region=>region.id===id)?id:null;
   state.provinceRequest+=1;
@@ -235,6 +235,10 @@ function focus(id,commit=true){
   renderTerritories();
   renderProvinceData();
   if(state.focus)loadProvinceOpenData(state.focus);
+  if(reveal)requestAnimationFrame(()=>$('focus-card').scrollIntoView({
+    behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',
+    block:'nearest'
+  }));
 }
 function renderFocus(){
   const all=[...state.snapshot.regions,...state.snapshot.territories],r=all.find(x=>x.id===state.focus);
@@ -456,11 +460,11 @@ function renderMap(){
   }).join('');
 
   shapeLayer.querySelectorAll('[data-m]').forEach(path=>{
-    path.addEventListener('click',()=>focus(path.dataset.m));
+    path.addEventListener('click',()=>focus(path.dataset.m,true,true));
     path.addEventListener('keydown',event=>{
       if(event.key==='Enter'||event.key===' '){
         event.preventDefault();
-        focus(path.dataset.m);
+        focus(path.dataset.m,true,true);
       }
     });
     path.setAttribute('tabindex','0');
@@ -647,7 +651,7 @@ function setShift(value,commit=false){
 }
 
 $('focus-reset').onclick=()=>focus(null);
-$('region-select').onchange=e=>focus(e.target.value||null);
+$('region-select').onchange=e=>focus(e.target.value||null,true,true);
 $('time-shift').onchange=e=>setShift(e.target.value,true);
 $('time-shift').oninput=e=>{$('time-shift-label').textContent=e.target.value==0?'LIVE':(e.target.value>0?'+':'−')+Math.abs(e.target.value)+'H'};
 $('now-button').onclick=()=>setShift(0,true);
