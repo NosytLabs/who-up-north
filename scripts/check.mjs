@@ -48,6 +48,7 @@ for (const id of [
   'province-data',
   'province-stat-grid',
   'province-open-results',
+  'open-data-org',
   'territory-grid',
 ]) {
   if (!html.includes(`id="${id}"`)) {
@@ -59,10 +60,16 @@ for (const fn of [
   'renderProvinceData',
   'loadProvinceOpenData',
   'renderTerritories',
+  'prepareMapGeometry',
 ]) {
   if (!main.includes(`function ${fn}(`)) {
     throw new Error(`src/main.js missing ${fn}()`);
   }
+}
+
+const styles = await readFile('src/styles.css', 'utf8');
+if (!styles.includes('--surface:') || !styles.includes('@media(prefers-reduced-motion:reduce)')) {
+  throw new Error('responsive visual system or reduced-motion safeguard missing');
 }
 
 function equal(actual, expected, label) {
