@@ -51,9 +51,20 @@ for (const id of [
   'open-data-org',
   'territory-grid',
   'region-select',
+  'focus-copy-link',
+  'back-top',
 ]) {
   if (!html.includes(`id="${id}"`)) {
     throw new Error(`index.html missing #${id}`);
+  }
+}
+
+for (const fn of [
+  'updatePageContext',
+  'updateScrollUi',
+]) {
+  if (!main.includes(`function ${fn}(`)) {
+    throw new Error(`src/main.js missing quality-of-life control: ${fn}()`);
   }
 }
 
@@ -105,6 +116,17 @@ for (const expected of [
 ]) {
   if (!html.includes(expected) && !main.includes(expected)) {
     throw new Error(`dynamic source-link safeguard missing: ${expected}`);
+  }
+}
+
+for (const expected of [
+  'Region link copied.',
+  "aria-current','location",
+  "scrollIntoView({block:'start'",
+  'function focus(id,commit=true,reveal=false)',
+]) {
+  if (!main.includes(expected)) {
+    throw new Error(`quality-of-life safeguard missing: ${expected}`);
   }
 }
 
