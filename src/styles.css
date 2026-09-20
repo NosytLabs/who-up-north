@@ -1244,9 +1244,9 @@ margin:22px 0 10px;
   max-width:calc(50% - 3px)
 }
 .pills button:hover,.pills button.active,.suggestions button:hover {
-  border-color:var(--red);
+  border-color:var(--data);
   color:#fff;
-  background:rgba(240,93,104,.09)
+  background:rgba(120,199,211,.09)
 }
 .explorer {
 margin-top:14px;
@@ -1268,7 +1268,7 @@ margin-top:14px;
   display:none
 }
 .explorer summary span {
-  color:var(--red);
+  color:var(--data);
   font:750 .58rem/1 ui-monospace,monospace;
   letter-spacing:.09em
 }
@@ -1372,7 +1372,7 @@ padding:22px;
   background:var(--panel)
 }
 .steps b {
-  color:var(--red);
+  color:var(--data);
   font:900 .64rem/1 ui-monospace,monospace
 }
 .steps h3 {
