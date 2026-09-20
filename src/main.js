@@ -159,7 +159,8 @@ function renderTicker(){
   const d=instant();
   $('pulse-instant').textContent=d.toLocaleTimeString('en-CA',{timeZone:'UTC',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false})+' UTC';
   const set=CLOCKS.map(([name,tz])=>`<span>${name} ${local(tz,d,true)}</span>`).join('');
-  $('clock-ticker').innerHTML=set+set;
+  const duplicate=CLOCKS.map(([name,tz])=>`<span aria-hidden="true">${name} ${local(tz,d,true)}</span>`).join('');
+  $('clock-ticker').innerHTML=set+duplicate;
   $('map-clock').textContent=d.toLocaleTimeString('en-CA',{timeZone:'UTC',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false})+' UTC';
   renderReleaseClock();
   renderFreshness();
@@ -543,7 +544,7 @@ function renderLive(){
   $('weather-count').textContent=Number.isFinite(w.numberMatched)?num(w.numberMatched):'—';
   $('weather-caption').textContent=Number.isFinite(w.numberMatched)?'current alert records':'feed unavailable';
   $('weather-detail').textContent=wi?`${wi.name||'Weather alert'} · ${wi.feature||wi.province||'Canada'}`:'No current alert detail.';
-  $('weather-list').innerHTML=weatherItems.slice(0,4).map((q,i)=>`<button class="${i===state.w?'active':''}" data-w="${i}" type="button" title="${esc((q.name||'Weather alert')+' · '+(q.feature||q.province||'Canada'))}">${esc(q.province||'CA')} · ${esc(q.name||'alert')}</button>`).join('');
+  $('weather-list').innerHTML=weatherItems.slice(0,4).map((q,i)=>`<button class="${i===state.w?'active':''}" data-w="${i}" type="button" aria-pressed="${i===state.w?'true':'false'}" title="${esc((q.name||'Weather alert')+' · '+(q.feature||q.province||'Canada'))}">${esc(q.province||'CA')} · ${esc(q.name||'alert')}</button>`).join('');
   document.querySelectorAll('[data-w]').forEach(button=>button.onclick=()=>{state.w=+button.dataset.w;renderLive()});
   $('weather-card').classList.toggle('live',!!w.live);
 
@@ -552,7 +553,7 @@ function renderLive(){
   $('open-data-org').textContent=oi?.organization||'Federal Open Government catalogue';
   $('open-data-time').textContent=oi?.timestamp?new Date(oi.timestamp).toLocaleString('en-CA'):'—';
   $('open-data-link').href=oi?.url||'https://open.canada.ca/data/en/';
-  $('open-data-list').innerHTML=openItems.slice(0,4).map((q,i)=>`<button class="${i===state.o?'active':''}" data-o="${i}" type="button" title="${esc((q.title||q.organization||'dataset'))}">${String(i+1).padStart(2,'0')} · ${esc(q.title||q.organization||'dataset')}</button>`).join('');
+  $('open-data-list').innerHTML=openItems.slice(0,4).map((q,i)=>`<button class="${i===state.o?'active':''}" data-o="${i}" type="button" aria-pressed="${i===state.o?'true':'false'}" title="${esc((q.title||q.organization||'dataset'))}">${String(i+1).padStart(2,'0')} · ${esc(q.title||q.organization||'dataset')}</button>`).join('');
   document.querySelectorAll('[data-o]').forEach(button=>button.onclick=()=>{state.o=+button.dataset.o;renderLive()});
   $('open-card').classList.toggle('live',!!o.live);
 
