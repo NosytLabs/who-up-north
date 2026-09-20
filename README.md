@@ -1,10 +1,10 @@
-# Who Up North?
+# Who's Up North?
 
 **Canada, right now — through official public data.**
 
 [Live site](https://nosytlabs.github.io/who-up-north/) · [Data model](docs/DATA_MODEL.md) · [Sources & compliance](docs/SOURCES_AND_COMPLIANCE.md)
 
-Who Up North? is a static GitHub Pages data visualization that combines a live clock with Statistics Canada time-use distributions and current Canadian public-data signals.
+Who's Up North? is a static GitHub Pages data visualization that combines a live clock with Statistics Canada time-use distributions and current Canadian public-data signals.
 
 It does **not** track people. “Right now” means the representative Canadian reference clocks are applied to aggregate survey distributions.
 
@@ -135,6 +135,6 @@ Repository setup: **Settings → Pages → Build and deployment → Source → G
 
 Project code is MIT licensed. Source data keeps its own licence and terms.
 
-Who Up North? is independent and does not imply endorsement by the Government of Canada, Statistics Canada, ECCC, the Open Government Portal or the Bank of Canada.
+Who's Up North? is independent and does not imply endorsement by the Government of Canada, Statistics Canada, ECCC, the Open Government Portal or the Bank of Canada.
 
 See [docs/SOURCES_AND_COMPLIANCE.md](docs/SOURCES_AND_COMPLIANCE.md) for source-by-source details.
