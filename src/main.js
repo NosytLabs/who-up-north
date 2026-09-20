@@ -113,7 +113,7 @@ async function init(){
   try{
     [state.profile,state.pop]=await Promise.all([json(DATA.profile),json(DATA.population)]);
     if(Object.keys(state.profile.weekdays||{}).length!==288||Object.keys(state.profile.weekends||{}).length!==288)throw new Error('time-use profile incomplete');
-    chip('ready','STATCAN // VERIFIED');
+    chip('ready','DATA MODEL // VERIFIED');
     recompute();
     if(state.focus)loadProvinceOpenData(state.focus);
   }catch(e){
