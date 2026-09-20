@@ -73,6 +73,7 @@ for (const expected of [
   "state.w>=weatherItems.length",
   "state.o>=openItems.length",
   "ACTIVITIES.filter(activity=>activity.key!=='sleep')",
+  "fq=${activeFilter}",
 ]) {
   if (!main.includes(expected)) {
     throw new Error(`src/main.js missing regional/map safeguard: ${expected}`);
@@ -100,6 +101,12 @@ equal(
   VERIFIED_POPULATION.canada,
   'population',
 );
+
+for (const region of [...PROVINCES, ...TERRITORIES]) {
+  if (!region.clockLabel || !region.tz) {
+    throw new Error(`reference clock metadata missing for ${region.id}`);
+  }
+}
 
 const fixtureProfile = {
   source: { table: 'fixture' },
