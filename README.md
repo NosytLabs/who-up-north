@@ -25,7 +25,7 @@ It does **not** track people. “Right now” means the representative Canadian 
 | Time-use activity mix | Statistics Canada Table **45-10-0105-01**, 2022 Time Use Survey |
 | Quarterly population | Statistics Canada Table **17-10-0009-01** |
 | National 15+ share | Statistics Canada Table **17-10-0005-01** |
-| Province/territory geometry | Statistics Canada 2021 Digital Boundary Files, with an official Open Government-listed fallback |
+| Province/territory geometry | Statistics Canada 2021 Digital Boundary Files, official Manitoba fallback, then the last validated deployed boundary artifact for outage resilience |
 | StatCan release wire | WDS changed-table feed, major-indicator JSON and release-schedule JSON |
 | Weather alerts | ECCC / MSC GeoMet |
 | Federal open-data activity | Open Government Portal CKAN API |
