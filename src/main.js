@@ -632,9 +632,9 @@ $('time-shift').onchange=e=>setShift(e.target.value,true);
 $('time-shift').oninput=e=>{$('time-shift-label').textContent=e.target.value==0?'LIVE':(e.target.value>0?'+':'−')+Math.abs(e.target.value)+'H'};
 $('now-button').onclick=()=>setShift(0,true);
 $('share-button').onclick=async()=>{
-  const text=state.snapshot?`Who Up North? ${pct(state.snapshot.national.awakePercent)} of the modelled Canadian 15+ survey scope is awake right now.`:'Who Up North? Canada, right now.';
+  const text=state.snapshot?`Who's Up North? ${pct(state.snapshot.national.awakePercent)} of the modelled Canadian 15+ survey scope is awake right now.`:"Who's Up North? Canada, right now.";
   try{
-    if(navigator.share)await navigator.share({title:'Who Up North?',text,url:location.href});
+    if(navigator.share)await navigator.share({title:"Who's Up North?",text,url:location.href});
     else{await navigator.clipboard.writeText(text+' '+location.href);toast('Snapshot link copied.')}
   }catch{}
 };
