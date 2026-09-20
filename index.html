@@ -161,7 +161,7 @@
       <h3>tables updated</h3>
       <p id="statcan-updated-date">Loading WDS change list…</p>
       <div id="statcan-changed-list" class="changed-list" aria-label="Recently changed Statistics Canada tables"></div>
-      <a href="https://www.statcan.gc.ca/en/developers/wds" target="_blank" rel="noreferrer">Web Data Service ↗</a>
+      <a href="https://www.statcan.gc.ca/en/developers/wds/user-guide" target="_blank" rel="noreferrer">WDS user guide ↗</a>
     </article>
 
     <div class="indicator-panel">
@@ -185,7 +185,7 @@
       <h3 id="weather-caption">current alert records</h3>
       <p id="weather-detail">Loading Environment and Climate Change Canada alerts…</p>
       <div id="weather-list" class="pills"></div>
-      <a href="https://weather.gc.ca/" target="_blank" rel="noreferrer">Official weather ↗</a>
+      <a href="https://api.weather.gc.ca/collections/weather-alerts?f=html" target="_blank" rel="noreferrer">GeoMet alerts ↗</a>
     </article>
 
     <article id="open-card" class="signal-card">
@@ -206,7 +206,7 @@
       <h3>USD / CAD daily average</h3>
       <p id="fx-date">—</p>
       <p id="fx-description">Latest published official daily average. The API check is current; the underlying statistic updates once per business day.</p>
-      <a href="https://www.bankofcanada.ca/rates/exchange/" target="_blank" rel="noreferrer">Bank of Canada ↗</a>
+      <a href="https://www.bankofcanada.ca/valet/observations/FXUSDCAD/json?recent=1" target="_blank" rel="noreferrer">Valet data ↗</a>
     </article>
   </div>
 
@@ -238,16 +238,36 @@
 </section>
 
 <section class="sources wrap" aria-label="Primary sources">
-  <article><span>STATISTICS CANADA</span><h3>Time Use + WDS</h3><p>Five-minute time-use rates, population weights, daily table changes, economic indicators and the release schedule.</p><a href="https://www.statcan.gc.ca/en/developers" target="_blank" rel="noreferrer">Developer services ↗</a></article>
-  <article><span>ECCC / MSC</span><h3>Weather alerts</h3><p>Current alert records from the GeoMet OGC API, shown without rewriting warning meaning.</p><a href="https://api.weather.gc.ca/collections/weather-alerts?f=html" target="_blank" rel="noreferrer">GeoMet ↗</a></article>
-  <article><span>OPEN GOVERNMENT</span><h3>CKAN catalogue</h3><p>Recent catalogue changes, region title matches and direct public-data search from open.canada.ca.</p><a href="https://open.canada.ca/en/access-our-application-programming-interface-api" target="_blank" rel="noreferrer">API ↗</a></article>
-  <article><span>BANK OF CANADA</span><h3>Valet API</h3><p>Latest official USD/CAD daily average, clearly separated from real-time market quotes.</p><a href="https://www.bankofcanada.ca/valet/docs/" target="_blank" rel="noreferrer">Valet ↗</a></article>
+  <article>
+    <div class="source-title"><span class="source-icon" aria-hidden="true">▦</span><span>STATISTICS CANADA</span></div>
+    <h3>Time Use + WDS</h3>
+    <p>2022 Time Use Survey Table 45-10-0105-01, quarterly population, WDS changed tables, indicators and release schedule.</p>
+    <div class="source-links"><a href="https://www150.statcan.gc.ca/t1/tbl1/en/tv.action?pid=4510010501" target="_blank" rel="noreferrer">Time-use table ↗</a><a href="https://www.statcan.gc.ca/en/developers/wds/user-guide" target="_blank" rel="noreferrer">WDS guide ↗</a></div>
+  </article>
+  <article>
+    <div class="source-title"><span class="source-icon" aria-hidden="true">☁</span><span>ECCC / MSC</span></div>
+    <h3>Weather alerts</h3>
+    <p>Current Environment and Climate Change Canada alerts from the GeoMet OGC API Features weather-alerts collection.</p>
+    <div class="source-links"><a href="https://api.weather.gc.ca/collections/weather-alerts?f=html" target="_blank" rel="noreferrer">Alert collection ↗</a><a href="https://eccc-msc.github.io/open-data/msc-data/alerts/readme_alerts-geomet_en/" target="_blank" rel="noreferrer">GeoMet docs ↗</a></div>
+  </article>
+  <article>
+    <div class="source-title"><span class="source-icon" aria-hidden="true">◫</span><span>OPEN GOVERNMENT</span></div>
+    <h3>CKAN catalogue</h3>
+    <p>GET-only CKAN Action API for recent activity, regional title searches and direct federal public-data discovery.</p>
+    <div class="source-links"><a href="https://open.canada.ca/data/en/" target="_blank" rel="noreferrer">Catalogue ↗</a><a href="https://open.canada.ca/en/access-our-application-programming-interface-api" target="_blank" rel="noreferrer">API docs ↗</a></div>
+  </article>
+  <article>
+    <div class="source-title"><span class="source-icon" aria-hidden="true">$</span><span>BANK OF CANADA</span></div>
+    <h3>Valet FX</h3>
+    <p>Latest official FXUSDCAD daily-average observation from the Bank of Canada Valet API.</p>
+    <div class="source-links"><a href="https://www.bankofcanada.ca/valet/observations/FXUSDCAD/json?recent=1" target="_blank" rel="noreferrer">FXUSDCAD JSON ↗</a><a href="https://www.bankofcanada.ca/valet/docs/" target="_blank" rel="noreferrer">Valet docs ↗</a></div>
+  </article>
 </section>
 </main>
 
 <footer class="wrap">
   <div><strong>WHO'S UP NORTH?</strong><span>Independent public-data project by Nosyt Labs.</span></div>
-  <div><a href="./docs/SOURCES_AND_COMPLIANCE.md">Sources & methodology ↗</a><a href="https://github.com/NosytLabs/who-up-north" target="_blank" rel="noreferrer">GitHub ↗</a></div>
+  <div><a href="https://github.com/NosytLabs/who-up-north/blob/main/docs/SOURCES_AND_COMPLIANCE.md" target="_blank" rel="noreferrer">Sources & methodology ↗</a><a href="https://github.com/NosytLabs/who-up-north" target="_blank" rel="noreferrer">GitHub ↗</a></div>
 </footer>
 
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
