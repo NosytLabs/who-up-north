@@ -19,12 +19,21 @@ const CLOCKS=[
   ['VANCOUVER','America/Vancouver'],['CALGARY','America/Edmonton'],['WINNIPEG','America/Winnipeg'],
   ['TORONTO','America/Toronto'],['HALIFAX','America/Halifax'],["ST. JOHN'S",'America/St_Johns']
 ];
-const state={profile:null,pop:null,geo:null,snapshot:null,fact:null,focus:null,shift:0,live:null,lastCheckAt:null,directOk:0,directExpected:0,w:0,o:0,toast:null};
+const state={profile:null,pop:null,geo:null,snapshot:null,fact:null,focus:null,shift:0,live:null,lastCheckAt:null,directOk:0,directExpected:0,w:0,o:0,toast:null,provinceOpen:{},provinceRequest:0};
 const colours=Object.fromEntries(ACTIVITIES.map(a=>[a.key,a.colour]));
 const GEO_ID={'10':'nl','11':'pe','12':'ns','13':'nb','24':'qc','35':'on','46':'mb','47':'sk','48':'ab','59':'bc','60':'yt','61':'nt','62':'nu'};
 const LABEL_COORDS={
   bc:[-124.5,54.4],ab:[-114.5,54.9],sk:[-106.1,54.8],mb:[-98.8,54.7],on:[-84.2,50.6],qc:[-71.5,52.5],
   nb:[-66.5,46.6],ns:[-63.0,45.0],pe:[-63.35,46.35],nl:[-58.7,53.2],yt:[-135.2,64.3],nt:[-121.5,66.2],nu:[-96.0,67.4]
+};
+const PROVINCE_STAT_ORDER=['unemployment','employment','earnings','building','retail','gdp'];
+const PROVINCE_STAT_LABELS={
+  unemployment:'UNEMPLOYMENT RATE',
+  employment:'EMPLOYMENT LEVEL',
+  earnings:'AVG WEEKLY EARNINGS',
+  building:'BUILDING PERMITS',
+  retail:'RETAIL SALES',
+  gdp:'REAL GDP'
 };
 
 const num=n=>Number.isFinite(n)?Math.round(n).toLocaleString('en-CA'):'—';
@@ -134,6 +143,7 @@ function renderCore(){
   renderProvinces();
   renderMap();
   renderFocus();
+  renderProvinceData();
 }
 function renderTicker(){
   const d=instant();
@@ -165,7 +175,12 @@ function renderProvinces(){
 }
 function focus(id){
   state.focus=id;
-  renderMap();renderFocus();renderProvinces();
+  state.provinceRequest+=1;
+  renderMap();
+  renderFocus();
+  renderProvinces();
+  renderProvinceData();
+  if(id)loadProvinceOpenData(id);
 }
 function renderFocus(){
   const all=[...state.snapshot.regions,...state.snapshot.territories],r=all.find(x=>x.id===state.focus);
@@ -190,6 +205,101 @@ function renderFocus(){
     $('focus-copy').textContent=`Canada-level survey profile evaluated at ${r.localTime} local time and population-scaled to ${r.name}. This is not a province-specific diary estimate.`;
   }
 }
+function focusedRegion(){
+  if(!state.snapshot||!state.focus)return null;
+  return[...state.snapshot.regions,...state.snapshot.territories].find(region=>region.id===state.focus)||null;
+}
+function growthMarkup(indicator){
+  if(!indicator?.growth)return'';
+  const cls=indicator.direction==='2'?'down':indicator.direction==='1'?'up':'flat';
+  const arrow=indicator.direction==='2'?'↓':indicator.direction==='1'?'↑':'•';
+  const growth=esc(indicator.growth),detail=esc(indicator.growthDetail||'');
+  if(indicator.value===indicator.growth)return`<em class="${cls}">${detail||'LATEST RELEASE'}</em>`;
+  return`<em class="${cls}">${arrow} ${growth} ${detail}</em>`;
+}
+function renderProvinceOpenData(region,record){
+  $('province-open-title').textContent=`Catalogue matches mentioning ${region.name}`;
+  if(!record){
+    $('province-open-status').textContent='SEARCHING OPEN CANADA…';
+    $('province-open-results').innerHTML='<div class="province-open-empty">Loading recent catalogue matches…</div>';
+    return;
+  }
+  if(record.error){
+    $('province-open-status').textContent='SEARCH UNAVAILABLE';
+    $('province-open-results').innerHTML='<div class="province-open-empty">Open Government catalogue search is unavailable right now.</div>';
+    return;
+  }
+  $('province-open-status').textContent=`${num(record.count)} MATCHES`;
+  $('province-open-results').innerHTML=record.items.length?record.items.map(item=>`<a href="${esc(item.url)}" target="_blank" rel="noreferrer"><small>${esc(item.organization||'Open Government')} · ${esc(item.modified||'')}</small><strong>${esc(item.title)}</strong></a>`).join(''):'<div class="province-open-empty">No recent catalogue matches found.</div>';
+}
+function renderProvinceData(){
+  const panel=$('province-data'),region=focusedRegion();
+  if(!panel||!region){
+    if(panel)panel.hidden=true;
+    return;
+  }
+  panel.hidden=false;
+  $('province-data-title').textContent=region.name;
+  $('province-data-status').textContent=state.live?.generatedAt?`STATCAN SNAPSHOT · ${ageLabel(state.live.generatedAt)}`:'STATCAN SNAPSHOT LOADING';
+
+  const indicators=state.live?.statcan?.provinces?.[region.id]?.indicators||{};
+  const populationShare=Number.isFinite(Number(state.pop?.canada))?region.population/Number(state.pop.canada)*100:null;
+  const cards=[{
+    key:'population',
+    label:'QUARTERLY POPULATION',
+    value:num(region.population),
+    reference:state.pop?.asOf||'latest official estimate',
+    growth:populationShare==null?'':`${populationShare.toFixed(1)}% of Canada total`,
+    url:'https://www150.statcan.gc.ca/t1/tbl1/en/tv.action?pid=1710000901'
+  }];
+
+  for(const key of PROVINCE_STAT_ORDER){
+    const indicator=indicators[key];
+    if(indicator)cards.push({...indicator,label:PROVINCE_STAT_LABELS[key]||indicator.title});
+  }
+
+  $('province-stat-grid').innerHTML=cards.map(card=>{
+    const source=card.url||'https://www.statcan.gc.ca/en/subjects-start';
+    const growth=card.key==='population'
+      ?`<em class="flat">${esc(card.growth)}</em>`
+      :growthMarkup(card);
+    return`<a class="province-stat-card" href="${esc(source)}" target="_blank" rel="noreferrer"><small>${esc(card.label||card.title)}</small><strong>${esc(card.value)}</strong><span>${esc(card.reference||card.releaseDate||'Latest release')}</span>${growth}</a>`;
+  }).join('');
+
+  renderProvinceOpenData(region,state.provinceOpen[region.id]);
+}
+async function loadProvinceOpenData(id){
+  const region=[...state.snapshot.regions,...state.snapshot.territories].find(item=>item.id===id);
+  if(!region)return;
+  if(state.provinceOpen[id]){
+    if(state.focus===id)renderProvinceOpenData(region,state.provinceOpen[id]);
+    return;
+  }
+
+  const request=++state.provinceRequest;
+  if(state.focus===id)renderProvinceOpenData(region,null);
+  try{
+    const url=`${LIVE.search}?rows=4&sort=metadata_modified%20desc&q=${encodeURIComponent(region.name)}`;
+    const response=await json(url),result=response?.result||{},rows=result.results||[];
+    const record={
+      count:Number(result.count)||0,
+      items:rows.map(item=>({
+        id:item.id,
+        title:item.title_translated?.en||item.title||item.name||'Dataset',
+        organization:item.organization?.title||'Open Government',
+        modified:item.metadata_modified?new Date(item.metadata_modified).toLocaleDateString('en-CA'):'',
+        url:`https://open.canada.ca/data/en/dataset/${item.id}`
+      }))
+    };
+    state.provinceOpen[id]=record;
+    if(state.focus===id&&request===state.provinceRequest)renderProvinceOpenData(region,record);
+  }catch{
+    const record={error:true,items:[],count:0};
+    state.provinceOpen[id]=record;
+    if(state.focus===id&&request===state.provinceRequest)renderProvinceOpenData(region,record);
+  }
+}
+
 function projectCanada(lon,lat){
   const rad=Math.PI/180,phi=lat*rad,lambda=lon*rad,phi1=50*rad,phi2=70*rad,phi0=40*rad,lambda0=-96*rad;
   const n=.5*(Math.sin(phi1)+Math.sin(phi2)),C=Math.cos(phi1)**2+2*n*Math.sin(phi1);
@@ -354,6 +464,7 @@ function renderStatCan(){
     return`<a class="indicator-card" href="${esc(i.url||'https://www.statcan.gc.ca/en/subjects-start')}" target="_blank" rel="noreferrer"><small>${esc(i.releaseDate)} // ${esc(i.reference)}</small><strong>${esc(i.value)}</strong><span>${esc(i.title)}</span><em class="${cls}">${arrow} ${esc(i.growth||'LATEST')} ${esc(i.growthDetail||'')}</em></a>`;
   }).join(''):'<div class="loading">INDICATOR SNAPSHOT UNAVAILABLE</div>';
   renderReleaseClock();renderFreshness();
+  if(state.focus)renderProvinceData();
 }
 
 async function search(query){
