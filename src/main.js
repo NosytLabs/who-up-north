@@ -33,7 +33,7 @@ const PROVINCE_STAT_LABELS={
   earnings:'AVG WEEKLY EARNINGS',
   building:'BUILDING PERMITS',
   retail:'RETAIL SALES',
-  gdp:'REAL GDP'
+  gdp:'REAL GDP GROWTH'
 };
 
 const num=n=>Number.isFinite(n)?Math.round(n).toLocaleString('en-CA'):'—';
@@ -521,7 +521,7 @@ async function loadLive(options={}){
 function renderFreshness(){
   if(!state.live)return;
   const snap=state.live.generatedAt;
-  $('hero-freshness').textContent=state.lastCheckAt?`${state.directOk}/${state.directExpected} · ${ageLabel(state.lastCheckAt)}`:snap?'SNAPSHOT · '+ageLabel(snap):'OFFLINE';
+  $('hero-freshness').textContent=state.lastCheckAt?`${state.directOk}/${state.directExpected} CHECKED · ${ageLabel(state.lastCheckAt)}`:snap?'SNAPSHOT · '+ageLabel(snap):'OFFLINE';
   const sourceState=(source,directLabel,cachedLabel='CACHED RESULT')=>source?.live
     ?directLabel
     :source?.checkFailedAt
@@ -565,7 +565,7 @@ function renderLive(){
   $('fx-description').textContent=b.description||'Official daily USD/CAD average.';
   $('bank-card').classList.toggle('daily',Number.isFinite(b.value));
 
-  $('live-status').textContent=state.lastCheckAt?`${state.directOk}/${state.directExpected} PUBLIC APIS RESPONDED · ${ageLabel(state.lastCheckAt)}`:`BUILD SNAPSHOT · ${state.live.generatedAt?ageLabel(state.live.generatedAt):'NO TIMESTAMP'}`;
+  $('live-status').textContent=state.lastCheckAt?`${state.directOk}/${state.directExpected} CHECKED APIS RESPONDED · ${ageLabel(state.lastCheckAt)}`:`BUILD SNAPSHOT · ${state.live.generatedAt?ageLabel(state.live.generatedAt):'NO TIMESTAMP'}`;
   renderFreshness();
 }
 function nextRelease(){
