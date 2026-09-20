@@ -191,7 +191,7 @@ function openSnapshot(o,recent){
       timestamp:r.timestamp,
       id:r.object_id,
       title:r.data?.package?.title_translated?.en||r.data?.package?.title||r.data?.package?.name||'Updated dataset',
-      organization:r.data?.package?.organization?.title||r.data?.package?.owner_org||'',
+      organization:String(r.data?.package?.organization?.title||r.data?.package?.owner_org||'').split(' | ')[0].trim(),
       url:`https://open.canada.ca/data/en/dataset/${r.object_id}`
     }))
   };
