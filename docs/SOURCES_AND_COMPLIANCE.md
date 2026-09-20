@@ -132,7 +132,7 @@ The core time-use model can run entirely from the static Pages artifact.
 The UI separates:
 
 - **Live clock** — current device time converted to Canadian time zones.
-- **Statistical model** — historical survey distributions applied to the current local five-minute interval.
+- **Statistical model** — historical survey distributions applied to a configured representative reference clock for each province. Provinces that span multiple real-world time zones are not subdivided by time zone.
 - **Direct API check** — a successful current request to an official public endpoint.
 - **Build snapshot** — data captured during the most recent successful GitHub Actions refresh.
 - **Daily statistic** — a value such as Bank of Canada FX that may be freshly checked but is published only daily.
