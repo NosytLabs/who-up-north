@@ -308,7 +308,7 @@ function renderLive(){
   $('fx-rate').textContent=Number.isFinite(b.value)?b.value.toFixed(4):'—';
   $('fx-date').textContent=b.date?'Published '+b.date:'—';
   $('fx-description').textContent=b.description||'Official daily USD/CAD average.';
-  $('bank-card').classList.toggle('live',!!b.live);
+  $('bank-card').classList.toggle('daily',!!b.live);
 
   const liveCount=[w,o,b].filter(x=>x?.live).length;
   $('live-status').textContent=liveCount?`${liveCount}/3 SOURCES CHECKED DIRECTLY // STATCAN SNAPSHOT VERIFIED`:`BUILD SNAPSHOT // ${state.live.generatedAt?ageLabel(state.live.generatedAt):'NO TIMESTAMP'}`;
