@@ -448,7 +448,8 @@ function renderMap(){
     path.setAttribute('tabindex','0');
     path.setAttribute('role','button');
   });
-  $('map-legend').innerHTML=ACTIVITIES.filter(activity=>activity.key!=='sleep').map(activity=>`<span><i style="--legend:${activity.colour}"></i>${esc(activity.label)}</span>`).join('');
+  $('map-legend').innerHTML=ACTIVITIES.filter(activity=>activity.key!=='sleep').map(activity=>`<span><i style="--legend:${activity.colour}"></i>${esc(activity.label)}</span>`).join('')
+    +'<span><i style="--legend:#53645d"></i>Territory context</span>';
 }
 
 async function loadFact(){
@@ -553,7 +554,7 @@ function renderLive(){
   $('fx-rate').textContent=Number.isFinite(b.value)?b.value.toFixed(4):'—';
   $('fx-date').textContent=b.date?'Published '+b.date:'—';
   $('fx-description').textContent=b.description||'Official daily USD/CAD average.';
-  $('bank-card').classList.toggle('daily',!!b.live);
+  $('bank-card').classList.toggle('daily',Number.isFinite(b.value));
 
   $('live-status').textContent=state.lastCheckAt?`${state.directOk}/${state.directExpected} PUBLIC APIS RESPONDED · ${ageLabel(state.lastCheckAt)}`:`BUILD SNAPSHOT · ${state.live.generatedAt?ageLabel(state.live.generatedAt):'NO TIMESTAMP'}`;
   renderFreshness();
