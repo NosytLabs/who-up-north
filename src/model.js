@@ -10,22 +10,22 @@ export const ACTIVITIES = [
 ];
 
 export const PROVINCES = [
-  { id: 'bc', name: 'British Columbia', abbr: 'B.C.', population: 5_646_420, tz: 'America/Vancouver' },
-  { id: 'ab', name: 'Alberta', abbr: 'Alta.', population: 5_057_077, tz: 'America/Edmonton' },
-  { id: 'sk', name: 'Saskatchewan', abbr: 'Sask.', population: 1_266_092, tz: 'America/Regina' },
-  { id: 'mb', name: 'Manitoba', abbr: 'Man.', population: 1_503_865, tz: 'America/Winnipeg' },
-  { id: 'on', name: 'Ontario', abbr: 'Ont.', population: 16_103_890, tz: 'America/Toronto' },
-  { id: 'qc', name: 'Quebec', abbr: 'Que.', population: 9_016_222, tz: 'America/Toronto' },
-  { id: 'nb', name: 'New Brunswick', abbr: 'N.B.', population: 866_497, tz: 'America/Moncton' },
-  { id: 'ns', name: 'Nova Scotia', abbr: 'N.S.', population: 1_090_852, tz: 'America/Halifax' },
-  { id: 'pe', name: 'Prince Edward Island', abbr: 'P.E.I.', population: 181_715, tz: 'America/Halifax' },
-  { id: 'nl', name: 'Newfoundland and Labrador', abbr: 'N.L.', population: 547_910, tz: 'America/St_Johns' },
+  { id: 'bc', name: 'British Columbia', abbr: 'B.C.', population: 5_646_420, tz: 'America/Vancouver', clockLabel: 'Vancouver' },
+  { id: 'ab', name: 'Alberta', abbr: 'Alta.', population: 5_057_077, tz: 'America/Edmonton', clockLabel: 'Edmonton' },
+  { id: 'sk', name: 'Saskatchewan', abbr: 'Sask.', population: 1_266_092, tz: 'America/Regina', clockLabel: 'Regina' },
+  { id: 'mb', name: 'Manitoba', abbr: 'Man.', population: 1_503_865, tz: 'America/Winnipeg', clockLabel: 'Winnipeg' },
+  { id: 'on', name: 'Ontario', abbr: 'Ont.', population: 16_103_890, tz: 'America/Toronto', clockLabel: 'Toronto' },
+  { id: 'qc', name: 'Quebec', abbr: 'Que.', population: 9_016_222, tz: 'America/Toronto', clockLabel: 'Montréal/Toronto' },
+  { id: 'nb', name: 'New Brunswick', abbr: 'N.B.', population: 866_497, tz: 'America/Moncton', clockLabel: 'Moncton' },
+  { id: 'ns', name: 'Nova Scotia', abbr: 'N.S.', population: 1_090_852, tz: 'America/Halifax', clockLabel: 'Halifax' },
+  { id: 'pe', name: 'Prince Edward Island', abbr: 'P.E.I.', population: 181_715, tz: 'America/Halifax', clockLabel: 'Halifax' },
+  { id: 'nl', name: 'Newfoundland and Labrador', abbr: 'N.L.', population: 547_910, tz: 'America/St_Johns', clockLabel: "St. John's" },
 ];
 
 export const TERRITORIES = [
-  { id: 'yt', name: 'Yukon', abbr: 'Y.T.', population: 48_493, tz: 'America/Whitehorse' },
-  { id: 'nt', name: 'Northwest Territories', abbr: 'N.W.T.', population: 45_808, tz: 'America/Yellowknife' },
-  { id: 'nu', name: 'Nunavut', abbr: 'Nun.', population: 42_215, tz: 'America/Iqaluit' },
+  { id: 'yt', name: 'Yukon', abbr: 'Y.T.', population: 48_493, tz: 'America/Whitehorse', clockLabel: 'Whitehorse' },
+  { id: 'nt', name: 'Northwest Territories', abbr: 'N.W.T.', population: 45_808, tz: 'America/Yellowknife', clockLabel: 'Yellowknife' },
+  { id: 'nu', name: 'Nunavut', abbr: 'Nun.', population: 42_215, tz: 'America/Iqaluit', clockLabel: 'Iqaluit' },
 ];
 
 export const AGE_15_PLUS_SHARE =
