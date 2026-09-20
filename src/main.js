@@ -111,8 +111,14 @@ async function init(){
 
   try{
     state.geo=await json(DATA.boundaries);
+    state.mapGeometry=null;
     renderMap();
-  }catch{toast('Official map boundaries unavailable; the data dashboard still works.',true)}
+  }catch{
+    state.geo={features:[],error:true};
+    state.mapGeometry=null;
+    renderMap();
+    toast('Map boundaries are temporarily unavailable; use the region selector or cards.',true);
+  }
 
   try{
     state.live=await json(DATA.live);
@@ -401,7 +407,10 @@ function renderMap(){
   const shapeLayer=$('map-shapes'),labelLayer=$('map-labels'),grid=$('map-grid');
   const geometry=prepareMapGeometry();
   if(!geometry){
-    shapeLayer.innerHTML='<text x="600" y="360" text-anchor="middle" fill="#68736e" font-family="ui-monospace,monospace" font-size="14">LOADING VERIFIED CANADA BOUNDARIES…</text>';
+    const message=state.geo?.error
+      ?'MAP BOUNDARIES TEMPORARILY UNAVAILABLE · USE REGION SELECTOR OR CARDS'
+      :'LOADING VERIFIED CANADA BOUNDARIES…';
+    shapeLayer.innerHTML=`<text x="600" y="360" text-anchor="middle" fill="#68736e" font-family="ui-monospace,monospace" font-size="14">${message}</text>`;
     labelLayer.innerHTML='';
     return;
   }
