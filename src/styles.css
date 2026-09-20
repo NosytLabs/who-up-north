@@ -1727,6 +1727,14 @@ footer a {
   .province-head {
     font-size:.5rem
   }
+  .province-stat-card {
+    min-height:116px;
+    padding:14px
+  }
+  .province-stat-card strong {
+    font-size:1.16rem;
+    margin:12px 0 6px
+  }
   .province-grid {
     grid-template-columns:1fr 1fr
   }
@@ -1773,8 +1781,22 @@ footer a {
   .sources {
     grid-template-columns:1fr
   }
+  .sources article {
+    min-height:0;
+    padding:20px
+  }
+  .sources h3 {
+    margin:20px 0 8px
+  }
   .steps {
     grid-template-columns:1fr 1fr
+  }
+  .steps article {
+    min-height:150px;
+    padding:20px
+  }
+  .steps h3 {
+    margin:24px 0 8px
   }
   footer {
     align-items:flex-start;
@@ -1788,9 +1810,6 @@ footer a {
   }
 }
 @media(max-width:480px) {
-  .province-stat-grid {
-    grid-template-columns:1fr
-  }
   .steps,.model-path {
     grid-template-columns:1fr
   }
@@ -1827,7 +1846,7 @@ footer a {
 }
 
 @media(max-width:350px) {
-  .province-grid {
+  .province-grid,.province-stat-grid {
     grid-template-columns:1fr
   }
 }
