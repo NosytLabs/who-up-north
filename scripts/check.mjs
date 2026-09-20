@@ -155,7 +155,7 @@ if (existsSync('public/data/live-signals.json')) {
       throw new Error('StatCan provincial indicator snapshot missing');
     }
 
-    for (const id of ['bc', 'ab', 'sk', 'mb', 'on', 'qc', 'nb', 'ns', 'pe', 'nl']) {
+    for (const id of ['bc', 'ab', 'sk', 'mb', 'on', 'qc', 'nb', 'ns', 'pe', 'nl', 'yt', 'nt', 'nu']) {
       if (!provinces[id]?.indicators || !Object.keys(provinces[id].indicators).length) {
         throw new Error(`StatCan provincial indicators missing for ${id}`);
       }
