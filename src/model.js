@@ -15,7 +15,7 @@ export const PROVINCES = [
   { id: 'sk', name: 'Saskatchewan', abbr: 'Sask.', population: 1_266_092, tz: 'America/Regina', clockLabel: 'Regina' },
   { id: 'mb', name: 'Manitoba', abbr: 'Man.', population: 1_503_865, tz: 'America/Winnipeg', clockLabel: 'Winnipeg' },
   { id: 'on', name: 'Ontario', abbr: 'Ont.', population: 16_103_890, tz: 'America/Toronto', clockLabel: 'Toronto' },
-  { id: 'qc', name: 'Quebec', abbr: 'Que.', population: 9_016_222, tz: 'America/Toronto', clockLabel: 'Montréal/Toronto' },
+  { id: 'qc', name: 'Quebec', abbr: 'Que.', population: 9_016_222, tz: 'America/Toronto', clockLabel: 'Montréal' },
   { id: 'nb', name: 'New Brunswick', abbr: 'N.B.', population: 866_497, tz: 'America/Moncton', clockLabel: 'Moncton' },
   { id: 'ns', name: 'Nova Scotia', abbr: 'N.S.', population: 1_090_852, tz: 'America/Halifax', clockLabel: 'Halifax' },
   { id: 'pe', name: 'Prince Edward Island', abbr: 'P.E.I.', population: 181_715, tz: 'America/Halifax', clockLabel: 'Halifax' },
