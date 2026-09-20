@@ -97,21 +97,21 @@ button:focus-visible,a:focus-visible,input:focus-visible,summary:focus-visible {
   border-radius:50%;
   filter:blur(115px);
   pointer-events:none;
-  opacity:.11
+  opacity:.075
 }
 .aurora-a {
   width:54vw;
   height:36vw;
   left:-20vw;
   top:12vh;
-  background:#39dfad
+  background:var(--accent)
 }
 .aurora-b {
   width:58vw;
   height:35vw;
   right:-18vw;
   top:-8vw;
-  background:#416aff
+  background:var(--data)
 }
 .topbar {
 height:66px;
@@ -203,7 +203,7 @@ border:1px solid rgba(240,93,104,.34);
 .btn.ghost:hover {
   border-color:var(--red);
   color:#fff;
-  background:rgba(255,83,100,.1)
+  background:rgba(240,93,104,.1)
 }
 .chip {
   display:flex;
@@ -224,14 +224,14 @@ border:1px solid rgba(240,93,104,.34);
 }
 .chip.ready i,.live-dot {
   background:var(--green);
-  box-shadow:0 0 14px rgba(99,232,165,.78)
+  box-shadow:0 0 14px rgba(111,209,154,.78)
 }
 .live-dot {
   animation:livePulse 1.8s ease-in-out infinite
 }
 @keyframes livePulse {
   50% {
-    box-shadow:0 0 0 6px rgba(99,232,165,0),0 0 18px rgba(99,232,165,.9)
+    box-shadow:0 0 0 6px rgba(111,209,154,0),0 0 18px rgba(111,209,154,.9)
   }
 }
 .chip.error i {
@@ -273,8 +273,8 @@ color:var(--accent);
 .hero h1 em {
   font-style:normal;
   color:transparent;
-  -webkit-text-stroke:1.2px rgba(255,83,100,.92);
-  text-shadow:0 0 44px rgba(255,83,100,.12)
+  -webkit-text-stroke:1.2px rgba(240,93,104,.92);
+  text-shadow:0 0 44px rgba(240,93,104,.12)
 }
 .dek {
 max-width:62ch;
@@ -816,7 +816,7 @@ min-height:126px;
   min-width:0
 }
 .province-open-results a:hover {
-  background:rgba(255,83,100,.025)
+  background:rgba(240,93,104,.025)
 }
 .province-open-results small {
   display:block;
@@ -1154,7 +1154,7 @@ min-height:330px;
   background:linear-gradient(90deg,var(--green),var(--cyan))
 }
 .signal-card.daily:before {
-  background:linear-gradient(90deg,var(--orange),rgba(246,200,95,.25))
+  background:linear-gradient(90deg,var(--orange),rgba(217,185,105,.25))
 }
 .signal-top {
   display:flex;
@@ -1173,7 +1173,7 @@ min-height:330px;
 }
 .signal-card.daily .signal-top i {
   background:var(--orange);
-  box-shadow:0 0 10px rgba(246,200,95,.55)
+  box-shadow:0 0 10px rgba(217,185,105,.55)
 }
 .freshness {
   display:flex;
@@ -1264,7 +1264,7 @@ min-height:330px;
 .pills button:hover,.pills button.active,.suggestions button:hover {
   border-color:var(--red);
   color:#fff;
-  background:rgba(255,83,100,.09)
+  background:rgba(240,93,104,.09)
 }
 .explorer {
 margin-top:14px;
@@ -1330,7 +1330,7 @@ margin-top:14px;
   width:100%;
   min-width:0;
   min-height:44px;
-  background:#06090d;
+  background:#080d10;
   color:var(--ink);
   border:1px solid var(--line);
   border-radius:9px 0 0 9px;
@@ -1481,8 +1481,8 @@ footer a {
   transform:none
 }
 .toast.error {
-  border-color:rgba(255,83,100,.5);
-  color:#ff9aa5
+  border-color:rgba(240,93,104,.5);
+  color:#f59aa2
 }
 @media(max-width:1180px) {
   .topbar {
