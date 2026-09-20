@@ -141,6 +141,7 @@ function renderCore(){
   renderActivities();
   renderModelPath();
   renderProvinces();
+  renderTerritories();
   renderMap();
   renderFocus();
   renderProvinceData();
@@ -179,6 +180,7 @@ function focus(id){
   renderMap();
   renderFocus();
   renderProvinces();
+  renderTerritories();
   renderProvinceData();
   if(id)loadProvinceOpenData(id);
 }
@@ -229,7 +231,7 @@ function renderProvinceOpenData(region,record){
     $('province-open-results').innerHTML='<div class="province-open-empty">Open Government catalogue search is unavailable right now.</div>';
     return;
   }
-  $('province-open-status').textContent=`${num(record.count)} MATCHES`;
+  $('province-open-status').textContent=`${num(record.count)} ${record.mode||'MATCHES'}`;
   $('province-open-results').innerHTML=record.items.length?record.items.map(item=>`<a href="${esc(item.url)}" target="_blank" rel="noreferrer"><small>${esc(item.organization||'Open Government')} · ${esc(item.modified||'')}</small><strong>${esc(item.title)}</strong></a>`).join(''):'<div class="province-open-empty">No recent catalogue matches found.</div>';
 }
 function renderProvinceData(){
@@ -279,10 +281,17 @@ async function loadProvinceOpenData(id){
   const request=++state.provinceRequest;
   if(state.focus===id)renderProvinceOpenData(region,null);
   try{
-    const url=`${LIVE.search}?rows=4&sort=metadata_modified%20desc&q=${encodeURIComponent(region.name)}`;
-    const response=await json(url),result=response?.result||{},rows=result.results||[];
+    const exactQuery=`title:"${region.name.replaceAll('"','')}"`;
+    let response=await json(`${LIVE.search}?rows=4&sort=metadata_modified%20desc&q=${encodeURIComponent(exactQuery)}`);
+    let result=response?.result||{},rows=result.results||[];
+    let mode='TITLE MATCHES';
+    if(!rows.length){
+      response=await json(`${LIVE.search}?rows=4&sort=metadata_modified%20desc&q=${encodeURIComponent(region.name)}`);
+      result=response?.result||{};rows=result.results||[];mode='FULL-TEXT FALLBACK';
+    }
     const record={
       count:Number(result.count)||0,
+      mode,
       items:rows.map(item=>({
         id:item.id,
         title:item.title_translated?.en||item.title||item.name||'Dataset',
@@ -464,6 +473,10 @@ function renderStatCan(){
     return`<a class="indicator-card" href="${esc(i.url||'https://www.statcan.gc.ca/en/subjects-start')}" target="_blank" rel="noreferrer"><small>${esc(i.releaseDate)} // ${esc(i.reference)}</small><strong>${esc(i.value)}</strong><span>${esc(i.title)}</span><em class="${cls}">${arrow} ${esc(i.growth||'LATEST')} ${esc(i.growthDetail||'')}</em></a>`;
   }).join(''):'<div class="loading">INDICATOR SNAPSHOT UNAVAILABLE</div>';
   renderReleaseClock();renderFreshness();
+  if(state.snapshot){
+    renderProvinces();
+    renderTerritories();
+  }
   if(state.focus)renderProvinceData();
 }
 
