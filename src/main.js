@@ -19,7 +19,7 @@ const CLOCKS=[
   ['VANCOUVER','America/Vancouver'],['CALGARY','America/Edmonton'],['WINNIPEG','America/Winnipeg'],
   ['TORONTO','America/Toronto'],['HALIFAX','America/Halifax'],["ST. JOHN'S",'America/St_Johns']
 ];
-const state={profile:null,pop:null,geo:null,snapshot:null,fact:null,focus:null,shift:0,live:null,liveCheckedAt:null,w:0,o:0,toast:null,resizeFrame:null};
+const state={profile:null,pop:null,geo:null,snapshot:null,fact:null,focus:null,shift:0,live:null,liveCheckedAt:null,lastCheckAt:null,directOk:0,directExpected:0,w:0,o:0,toast:null,resizeFrame:null};
 const colours=Object.fromEntries(ACTIVITIES.map(a=>[a.key,a.colour]));
 const GEO_ID={'10':'nl','11':'pe','12':'ns','13':'nb','24':'qc','35':'on','46':'mb','47':'sk','48':'ab','59':'bc','60':'yt','61':'nt','62':'nu'};
 const LABEL_COORDS={
@@ -266,20 +266,26 @@ async function loadLive(options={}){
   const bankRequest=includeBank?json(LIVE.bank):Promise.resolve(null);
   const [w,o,oc,b]=await Promise.allSettled([json(LIVE.weather),json(LIVE.open),json(LIVE.openCount),bankRequest]);
   const previous=state.live||{weather:{items:[]},openGovernment:{items:[]},bank:{},statcan:{}};
+  const checkedAt=new Date();
+  const failed=source=>({...source,live:false,checkFailedAt:checkedAt.toISOString()});
   state.live={
     ...previous,
-    weather:w.status==='fulfilled'?weather(w.value):previous.weather,
-    openGovernment:o.status==='fulfilled'?openGov(o.value,oc.status==='fulfilled'?oc.value:null):previous.openGovernment,
-    bank:includeBank&&b.status==='fulfilled'&&b.value?bank(b.value):previous.bank
+    weather:w.status==='fulfilled'?weather(w.value):failed(previous.weather||{items:[]}),
+    openGovernment:o.status==='fulfilled'?openGov(o.value,oc.status==='fulfilled'?oc.value:null):failed(previous.openGovernment||{items:[]}),
+    bank:includeBank?(b.status==='fulfilled'&&b.value?bank(b.value):failed(previous.bank||{})):previous.bank
   };
-  if([w,o,oc,b].some(x=>x.status==='fulfilled'&&x.value))state.liveCheckedAt=new Date();
+  const direct=[w,o,...(includeBank?[b]:[])];
+  state.lastCheckAt=checkedAt;
+  state.directExpected=direct.length;
+  state.directOk=direct.filter(x=>x.status==='fulfilled'&&x.value).length;
+  if(state.directOk)state.liveCheckedAt=checkedAt;
   renderLive();renderStatCan();
   if(!auto)$('live-refresh').disabled=false;
 }
 function renderFreshness(){
   if(!state.live)return;
   const snap=state.live.generatedAt;
-  $('hero-freshness').textContent=state.liveCheckedAt?'DIRECT API CHECK '+ageLabel(state.liveCheckedAt):snap?'BUILD SNAPSHOT '+ageLabel(snap):'OFFLINE';
+  $('hero-freshness').textContent=state.lastCheckAt?`SOURCE CHECK ${state.directOk}/${state.directExpected} · ${ageLabel(state.lastCheckAt)}`:snap?'BUILD SNAPSHOT '+ageLabel(snap):'OFFLINE';
   $('weather-source-state').textContent=state.live.weather?.live?'DIRECT API':'BUILD SNAPSHOT';
   $('open-source-state').textContent=state.live.openGovernment?.live?'DIRECT API':'BUILD SNAPSHOT';
   $('bank-source-state').textContent=state.live.bank?.live?'DIRECT CHECK':'BUILD SNAPSHOT';
@@ -311,7 +317,7 @@ function renderLive(){
   $('bank-card').classList.toggle('daily',!!b.live);
 
   const liveCount=[w,o,b].filter(x=>x?.live).length;
-  $('live-status').textContent=liveCount?`${liveCount}/3 SOURCES CHECKED DIRECTLY // STATCAN SNAPSHOT VERIFIED`:`BUILD SNAPSHOT // ${state.live.generatedAt?ageLabel(state.live.generatedAt):'NO TIMESTAMP'}`;
+  $('live-status').textContent=state.lastCheckAt?`${liveCount}/3 CURRENT DIRECT RESPONSES // STATCAN SNAPSHOT VERIFIED`:`BUILD SNAPSHOT // ${state.live.generatedAt?ageLabel(state.live.generatedAt):'NO TIMESTAMP'}`;
   renderFreshness();
 }
 function nextRelease(){
