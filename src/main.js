@@ -19,7 +19,7 @@ const CLOCKS=[
   ['VANCOUVER','America/Vancouver'],['CALGARY','America/Edmonton'],['WINNIPEG','America/Winnipeg'],
   ['TORONTO','America/Toronto'],['HALIFAX','America/Halifax'],["ST. JOHN'S",'America/St_Johns']
 ];
-const state={profile:null,pop:null,geo:null,snapshot:null,fact:null,focus:null,shift:0,live:null,liveCheckedAt:null,lastCheckAt:null,directOk:0,directExpected:0,w:0,o:0,toast:null,resizeFrame:null};
+const state={profile:null,pop:null,geo:null,snapshot:null,fact:null,focus:null,shift:0,live:null,liveCheckedAt:null,lastCheckAt:null,directOk:0,directExpected:0,w:0,o:0,toast:null};
 const colours=Object.fromEntries(ACTIVITIES.map(a=>[a.key,a.colour]));
 const GEO_ID={'10':'nl','11':'pe','12':'ns','13':'nb','24':'qc','35':'on','46':'mb','47':'sk','48':'ab','59':'bc','60':'yt','61':'nt','62':'nu'};
 const LABEL_COORDS={
@@ -316,8 +316,7 @@ function renderLive(){
   $('fx-description').textContent=b.description||'Official daily USD/CAD average.';
   $('bank-card').classList.toggle('daily',!!b.live);
 
-  const liveCount=[w,o,b].filter(x=>x?.live).length;
-  $('live-status').textContent=state.lastCheckAt?`${liveCount}/3 CURRENT DIRECT RESPONSES // STATCAN SNAPSHOT VERIFIED`:`BUILD SNAPSHOT // ${state.live.generatedAt?ageLabel(state.live.generatedAt):'NO TIMESTAMP'}`;
+  $('live-status').textContent=state.lastCheckAt?`${state.directOk}/${state.directExpected} RESPONDED TO CURRENT CHECK // STATCAN SNAPSHOT VERIFIED`:`BUILD SNAPSHOT // ${state.live.generatedAt?ageLabel(state.live.generatedAt):'NO TIMESTAMP'}`;
   renderFreshness();
 }
 function nextRelease(){
@@ -390,12 +389,10 @@ $('share-button').onclick=async()=>{
 $('live-refresh').onclick=()=>loadLive();
 $('data-search-form').onsubmit=e=>{e.preventDefault();search($('data-search-input').value)};
 document.querySelectorAll('[data-search-query]').forEach(b=>b.onclick=()=>search(b.dataset.searchQuery));
-addEventListener('resize',()=>{cancelAnimationFrame(state.resizeFrame);state.resizeFrame=requestAnimationFrame(()=>state.snapshot&&renderMap())},{passive:true});
-
 const sh=Number(new URL(location.href).searchParams.get('shift')||0);
 if(Number.isFinite(sh)&&Math.abs(sh)<=12)state.shift=sh;
 setInterval(renderTicker,1000);
 setInterval(()=>{if(state.shift===0&&state.profile)recompute()},60000);
 setInterval(()=>{if(document.visibilityState==='visible')loadLive({auto:true,includeBank:false})},300000);
-document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&(!state.liveCheckedAt||Date.now()-state.liveCheckedAt.getTime()>300000))loadLive({auto:true,includeBank:false})});
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&(!state.lastCheckAt||Date.now()-state.lastCheckAt.getTime()>300000))loadLive({auto:true,includeBank:false})});
 init();
