@@ -62,9 +62,9 @@ National activity counts are the sum of the ten provincial model counts. Nationa
 
 ## Why province-local time matters
 
-A single Eastern-time slice multiplied by Canada's population would apply the wrong part of the daily profile to western and Atlantic provinces.
+A single Eastern-time slice multiplied by Canada's population would apply the wrong part of the daily profile to western and Atlantic provinces. The model therefore assigns one representative IANA time zone/reference city to each province.
 
-At one instant, Vancouver, Winnipeg, Toronto, Halifax and St. John's occupy different five-minute survey intervals. The model evaluates each province first, then combines them.
+At one instant, Vancouver, Winnipeg, Toronto, Halifax and St. John's occupy different five-minute survey intervals. The model evaluates each province on its configured reference clock first, then combines them. Some provinces span more than one real-world time zone; this model does not split provincial population across multiple time zones.
 
 ## StatCan time coding
 
@@ -115,7 +115,7 @@ Province cards and map colours are model outputs, not province-specific survey e
 
 For each province they show:
 
-- local clock time;
+- the configured reference-clock time;
 - current modelled awake share/count;
 - leading non-sleep activity.
 
