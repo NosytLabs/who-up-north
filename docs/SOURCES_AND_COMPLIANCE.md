@@ -42,7 +42,7 @@ The browser does not call these population endpoints per visitor. GitHub Actions
 
 The dashboard also consumes official Statistics Canada developer services for context:
 
-- major economic indicators JSON;
+- major economic indicators JSON, including province/territory records for employment, unemployment, weekly earnings, building permits, retail sales and real GDP where published;
 - major-release schedule JSON;
 - WDS `getChangedCubeList`;
 - WDS `getCubeMetadata` for names of selected changed tables.
@@ -69,7 +69,7 @@ Read-only CKAN endpoints power:
 - catalogue search;
 - a rolling count of records whose `metadata_modified` timestamp falls within the previous 24 hours.
 
-Public read requests require no API key. The site does not create or modify catalogue records.
+Public read requests require no API key. The site does not create or modify catalogue records. Selecting a province/territory can issue a read-only `package_search` query using that region name; results are labelled as catalogue matches, not as records published by that provincial government.
 
 ## Environment and Climate Change Canada / MSC GeoMet
 
