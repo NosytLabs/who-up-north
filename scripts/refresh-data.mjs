@@ -213,6 +213,49 @@ function statcanIndicators(data){
       url:x.daily_url?.en?new URL(x.daily_url.en,'https://www150.statcan.gc.ca/n1').href:null
     }));
 }
+const INDICATOR_GEO={
+  '1':'nl','2':'pe','3':'ns','4':'nb','5':'qc','6':'on','7':'mb',
+  '8':'sk','9':'ab','10':'bc','11':'yt','12':'nt','13':'nu'
+};
+const PROVINCE_INDICATOR_MATCHERS=[
+  ['unemployment',title=>title==='unemployment rate'],
+  ['employment',title=>title==='employment level'],
+  ['earnings',title=>title.startsWith('average weekly earnings')],
+  ['building',title=>title.startsWith('building permits')],
+  ['retail',title=>title.startsWith('retail sales')],
+  ['gdp',title=>title.startsWith('annual real gross domestic product by industry')]
+];
+function statcanProvincialIndicators(data){
+  const output={};
+  const rows=(data?.results?.indicators||[])
+    .filter(row=>INDICATOR_GEO[String(row.geo_code)]&&row.title?.en&&row.release_date)
+    .sort((a,b)=>String(b.release_date).localeCompare(String(a.release_date)));
+
+  for(const row of rows){
+    const title=String(row.title.en).trim(),normalized=title.toLowerCase();
+    const match=PROVINCE_INDICATOR_MATCHERS.find(([,test])=>test(normalized));
+    const value=String(row.value?.en??'').trim();
+    if(!match||!value)continue;
+
+    const id=INDICATOR_GEO[String(row.geo_code)],key=match[0];
+    output[id]||={geoCode:String(row.geo_code),indicators:{}};
+    if(output[id].indicators[key])continue;
+
+    output[id].indicators[key]={
+      key,
+      title,
+      value,
+      reference:row.refper?.en||'',
+      releaseDate:row.release_date,
+      growth:row.growth_rate?.growth?.en||'',
+      growthDetail:row.growth_rate?.details?.en||'',
+      direction:row.growth_rate?.arrow_direction||'0',
+      url:row.daily_url?.en?new URL(row.daily_url.en,'https://www150.statcan.gc.ca/n1').href:null
+    };
+  }
+
+  return output;
+}
 function statcanSchedule(data){
   const today=easternDate();
   return(data||[])
@@ -284,6 +327,7 @@ async function live(){
     statcan:{
       status:ind||sched||changed?'ready':'error',
       indicators:statcanIndicators(ind),
+      provinces:statcanProvincialIndicators(ind),
       schedule:statcanSchedule(sched),
       changed:changed||{status:'error',date:null,count:0,productIds:[],items:[]},
       source:{
@@ -295,7 +339,7 @@ async function live(){
   };
 
   await writeFile(new URL('live-signals.json',OUT),JSON.stringify(out));
-  console.log(`signals: ok; StatCan indicators=${out.statcan.indicators.length}, upcoming=${out.statcan.schedule.length}, changed=${out.statcan.changed.count}`);
+  console.log(`signals: ok; StatCan indicators=${out.statcan.indicators.length}, province snapshots=${Object.keys(out.statcan.provinces).length}, upcoming=${out.statcan.schedule.length}, changed=${out.statcan.changed.count}`);
 }
 
 
