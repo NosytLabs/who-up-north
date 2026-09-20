@@ -37,14 +37,14 @@
 <main>
 <section id="now" class="hero wrap">
   <div class="hero-copy">
-    <p class="eyebrow"><span class="live-dot"></span> LIVE-TO-THE-CLOCK // CANADA</p>
+    <p class="eyebrow"><span class="live-dot"></span> CANADA // LIVE CLOCK + OFFICIAL DATA</p>
     <h1><span>WHO UP</span><em>NORTH?</em></h1>
-    <p class="dek">A statistical snapshot of what Canada is doing at this instant. The clocks are live; behaviour comes from Statistics Canada’s 2022 Time Use Survey. No people are tracked.</p>
+    <p class="dek">A live-clock statistical portrait of Canada built from Statistics Canada time-use distributions and current public-data APIs. It models aggregate patterns; it does not track people.</p>
 
     <div class="truth-strip" aria-label="Data scope">
-      <div><span>SURVEY</span><strong>2022–23</strong></div>
-      <div><span>SCOPE</span><strong>15+ // 10 PROVINCES</strong></div>
-      <div><span>OFFICIAL SIGNALS</span><strong id="hero-freshness">LOADING</strong></div>
+      <div><span>TIME USE</span><strong>2022 SURVEY</strong></div>
+      <div><span>MODEL SCOPE</span><strong>15+ // 10 PROVINCES</strong></div>
+      <div><span>PUBLIC APIS</span><strong id="hero-freshness">LOADING</strong></div>
     </div>
 
     <div class="time-machine">
@@ -78,7 +78,7 @@
 
 <section id="activity" class="section wrap activities">
   <div class="section-head">
-    <div><p class="eyebrow">NATIONAL SLICE</p><h2>What Canada is doing now.</h2></div>
+    <div><p class="eyebrow">NATIONAL MODEL</p><h2>Canada’s modelled activity mix.</h2></div>
     <p id="activity-note">Eight non-overlapping Statistics Canada activity groups, evaluated at local time and population-weighted.</p>
   </div>
   <div id="activity-list" class="activity-list"><div class="loading">LOADING VERIFIED PROFILE…</div></div>
@@ -88,8 +88,8 @@
 
 <section id="across" class="section wrap map-section">
   <div class="section-head">
-    <div><p class="eyebrow">ACROSS CANADA</p><h2>One instant. Six clocks.</h2></div>
-    <p>Every province gets the same Canada-level survey profile at its own local five-minute slot before the national result is combined. Select a region for its latest StatCan indicators and related federal Open Government catalogue matches.</p>
+    <div><p class="eyebrow">ACROSS CANADA</p><h2>One country. Six local clocks.</h2></div>
+    <p>The Canada-level survey profile is evaluated at each province’s local five-minute slot, then population-weighted. Select any region for official StatCan indicators and federal Open Government catalogue matches.</p>
   </div>
 
   <div class="map-shell">
@@ -108,24 +108,24 @@
   <div id="map-legend" class="map-legend" aria-label="Activity colour legend"></div>
 
   <div id="focus-card" class="focus">
-    <div><span id="focus-kicker">SELECT A PROVINCE</span><h3 id="focus-name">Canada</h3></div>
+    <div><span id="focus-kicker">SELECT A REGION</span><h3 id="focus-name">Canada</h3></div>
     <div><span>LOCAL</span><strong id="focus-time">—</strong></div>
     <div><span>AWAKE</span><strong id="focus-awake">—</strong></div>
     <div><span>LEADING</span><strong id="focus-dominant">—</strong></div>
-    <p id="focus-copy">Choose a province signal or card to inspect its local model slice.</p>
+    <p id="focus-copy">Choose a province or territory to inspect its local clock, model context and official data.</p>
     <button id="focus-reset" class="btn small" type="button">RESET</button>
   </div>
 
   <section id="province-data" class="province-data" hidden aria-live="polite">
     <div class="province-data-head">
-      <div><span>REGION DATA SNAPSHOT</span><strong id="province-data-title">Select a province</strong></div>
+      <div><span>REGION DATA</span><strong id="province-data-title">Select a region</strong></div>
       <span id="province-data-status">STATCAN + OPEN GOVERNMENT</span>
     </div>
     <div id="province-stat-grid" class="province-stat-grid"></div>
     <div class="province-open-data">
       <div class="province-open-head">
         <div><span>OPEN GOVERNMENT CATALOGUE</span><strong id="province-open-title">Region-related datasets</strong></div>
-        <span id="province-open-status">SELECT A PROVINCE</span>
+        <span id="province-open-status">SELECT A REGION</span>
       </div>
       <div id="province-open-results" class="province-open-results"></div>
     </div>
@@ -139,8 +139,8 @@
 
 <section id="statcan" class="section wrap statcan-section">
   <div class="section-head">
-    <div><p class="eyebrow">STATCAN RELEASE WIRE</p><h2>The official data heartbeat.</h2></div>
-    <p>Statistics Canada publishes updated tables each business day and exposes major indicators plus future release dates through public developer services.</p>
+    <div><p class="eyebrow">STATCAN PULSE</p><h2>What StatCan is publishing.</h2></div>
+    <p>Recent table updates, national indicators and the next scheduled major release—pulled from Statistics Canada developer services.</p>
   </div>
 
   <div class="statcan-grid">
@@ -171,7 +171,7 @@
 
 <section id="live" class="section wrap live-section">
   <div class="section-head">
-    <div><p class="eyebrow">OFFICIAL SIGNAL WIRE</p><h2>Things actually changing now.</h2></div>
+    <div><p class="eyebrow">PUBLIC API PULSE</p><h2>Fresh signals from official APIs.</h2></div>
     <div class="live-actions"><p id="live-status">LOADING SCHEDULED SNAPSHOT…</p><button id="live-refresh" class="btn small" type="button">CHECK NOW</button></div>
   </div>
 
@@ -190,8 +190,8 @@
       <div class="signal-top"><span>02 // OPEN GOVERNMENT</span><i></i></div>
       <div class="freshness"><span id="open-source-state">SNAPSHOT</span><span id="open-data-freshness">—</span></div>
       <div class="open-velocity"><strong id="open-updated-count">—</strong><span>datasets changed in the last 24h</span></div>
-      <p class="eyebrow card-kicker">RECENT DATASET CHANGE</p>
-      <h3 id="open-data-title">Loading Open Government activity…</h3>
+      <p class="eyebrow card-kicker">LATEST CATALOGUE CHANGE</p>
+      <h3 id="open-data-title">Loading Open Government activity…</h3><p id="open-data-org" class="signal-meta">—</p>
       <p id="open-data-time">—</p>
       <div id="open-data-list" class="pills"></div>
       <a id="open-data-link" href="https://open.canada.ca/data/en/" target="_blank" rel="noreferrer">Open dataset ↗</a>
@@ -209,14 +209,14 @@
   </div>
 
   <details class="explorer">
-    <summary><span>OPEN DATA EXPLORER</span><strong>Search Canada’s public-data catalogue</strong><i>+</i></summary>
+    <summary><span>OPEN DATA EXPLORER</span><strong>Search the federal public-data catalogue</strong><i>+</i></summary>
     <div class="explorer-body">
       <div>
         <p>Query the Open Government catalogue directly. Try housing, wildfire, ferries, salmon, or moose.</p>
         <div class="suggestions"><button data-search-query="housing">HOUSING</button><button data-search-query="wildfire">WILDFIRE</button><button data-search-query="ferries">FERRIES</button><button data-search-query="salmon">SALMON</button><button data-search-query="moose">MOOSE</button></div>
       </div>
       <form id="data-search-form"><label class="sr-only" for="data-search-input">Search Open Government data</label><input id="data-search-input" placeholder="Search open.canada.ca…" autocomplete="off"><button class="btn" type="submit">SEARCH</button></form>
-      <div id="data-search-results" class="search-results"><div class="search-empty">Pick a rabbit hole.</div></div>
+      <div id="data-search-results" class="search-results"><div class="search-empty">Try a topic above or enter your own search.</div></div>
     </div>
   </details>
 </section>
@@ -224,8 +224,8 @@
 <section id="method" class="section method wrap">
   <div>
     <p class="eyebrow">HOW IT WORKS</p>
-    <h2>Live clock.<br>Official distributions.<br>Clear limits.</h2>
-    <p>The browser advances the current five-minute survey slice using Canadian local time. GitHub Actions is scheduled every 15 minutes to refresh official population and signal snapshots; GitHub may delay scheduled jobs. On page load, the site checks ECCC weather, Open Government and the Bank of Canada directly. While the tab stays visible, weather and Open Government are rechecked every five minutes; the Bank of Canada value is a daily average and is not polled every five minutes.</p>
+    <h2>Live clock.<br>Official data.<br>Clear limits.</h2>
+    <p>The time-use model advances locally with Canadian clocks. GitHub Actions refreshes the official build snapshots on a 15-minute schedule, while the browser directly rechecks ECCC weather and Open Government every five minutes when visible. Bank of Canada FX is a daily statistic, so it is checked without pretending to be a live market quote.</p>
   </div>
   <div class="steps">
     <article><b>01</b><h3>Resolve clocks</h3><p>Convert one instant into each province’s local time.</p></article>
@@ -238,7 +238,7 @@
 <section class="sources wrap" aria-label="Primary sources">
   <article><span>STATISTICS CANADA</span><h3>Time Use + WDS</h3><p>Five-minute time-use rates, population weights, daily table changes, economic indicators and the release schedule.</p><a href="https://www.statcan.gc.ca/en/developers" target="_blank" rel="noreferrer">Developer services ↗</a></article>
   <article><span>ECCC / MSC</span><h3>Weather alerts</h3><p>Current alert records from the GeoMet OGC API, shown without rewriting warning meaning.</p><a href="https://api.weather.gc.ca/collections/weather-alerts?f=html" target="_blank" rel="noreferrer">GeoMet ↗</a></article>
-  <article><span>OPEN GOVERNMENT</span><h3>CKAN catalogue</h3><p>Recent dataset changes and direct catalogue search from open.canada.ca.</p><a href="https://open.canada.ca/en/access-our-application-programming-interface-api" target="_blank" rel="noreferrer">API ↗</a></article>
+  <article><span>OPEN GOVERNMENT</span><h3>CKAN catalogue</h3><p>Recent catalogue changes, region title matches and direct public-data search from open.canada.ca.</p><a href="https://open.canada.ca/en/access-our-application-programming-interface-api" target="_blank" rel="noreferrer">API ↗</a></article>
   <article><span>BANK OF CANADA</span><h3>Valet API</h3><p>Latest official USD/CAD daily average, clearly separated from real-time market quotes.</p><a href="https://www.bankofcanada.ca/valet/docs/" target="_blank" rel="noreferrer">Valet ↗</a></article>
 </section>
 </main>
