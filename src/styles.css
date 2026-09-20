@@ -595,14 +595,14 @@ font-size:clamp(2.8rem,5.5vw,5rem);
   font:750 .57rem/1.3 ui-monospace,monospace
 }
 .map-shell {
-height:min(50vw,600px);
-  min-height:460px;
+height:min(48vw,580px);
+  min-height:440px;
   position:relative;
   border:1px solid var(--line);
   border-radius:var(--radius) var(--radius) 0 0;
   background:
-    radial-gradient(circle at 60% 62%,rgba(120,199,211,.045),transparent 35%),
-    linear-gradient(180deg,#0b1115,#070b0e);
+    radial-gradient(circle at 58% 60%,rgba(120,199,211,.055),transparent 35%),
+    linear-gradient(180deg,#0b1317,#070b0e);
   overflow:hidden
 }
 .canada-map {
@@ -615,25 +615,25 @@ height:min(50vw,600px);
   stroke-width:1
 }
 .province-shape {
-  stroke:rgba(227,241,234,.34);
+stroke:rgba(227,241,234,.42);
   stroke-width:1.15;
   vector-effect:non-scaling-stroke;
   cursor:pointer;
-  transition:opacity .16s,filter .16s,stroke .16s,fill-opacity .16s;
-  opacity:.86;
-  fill-opacity:.24
+  transition:opacity .15s,filter .15s,stroke .15s,fill-opacity .15s;
+  opacity:.92;
+  fill-opacity:.48
 }
 .province-shape:hover,.province-shape.active,.province-shape:focus-visible {
   opacity:1;
   fill-opacity:.48;
   stroke:rgba(255,255,255,.9);
   stroke-width:2;
-  filter:url(#map-glow);
+  filter:drop-shadow(0 0 7px rgba(120,199,211,.35));
   outline:none
 }
 .province-shape.territory {
-  opacity:.48;
-  fill-opacity:.2
+opacity:.62;
+  fill-opacity:.28
 }
 .map-label {
   pointer-events:none;
@@ -690,6 +690,36 @@ height:min(50vw,600px);
   border-radius:50%;
   background:var(--legend);
   box-shadow:0 0 9px var(--legend)
+}
+.region-picker {
+  display:grid;
+  grid-template-columns:auto minmax(220px,360px) 1fr;
+  gap:12px;
+  align-items:center;
+  padding:12px 16px;
+  border:1px solid var(--line);
+  border-top:0;
+  background:rgba(255,255,255,.008)
+}
+.region-picker label {
+  color:var(--dim);
+  font:750 .56rem/1 ui-monospace,monospace;
+  letter-spacing:.09em
+}
+.region-picker select {
+  width:100%;
+  min-height:38px;
+  border:1px solid var(--line);
+  border-radius:9px;
+  background:#080d10;
+  color:var(--ink);
+  padding:0 34px 0 11px;
+  font:700 .68rem/1 ui-monospace,monospace
+}
+.region-picker span {
+  color:var(--dim);
+  font-size:.67rem;
+  line-height:1.35
 }
 .focus {
 border:1px solid var(--line);
@@ -860,8 +890,8 @@ min-height:126px;
   overflow:hidden
 }
 .territory-card {
-min-height:142px;
-  padding:17px;
+min-height:128px;
+  padding:15px 16px;
   position:relative;
   border:0;
   border-right:1px solid var(--line);
@@ -893,23 +923,23 @@ min-height:142px;
   font:700 .56rem/1 ui-monospace,monospace
 }
 .territory-card .time {
-  font:950 1.75rem/1 ui-monospace,monospace;
-  margin:9px 0 7px
+  font:950 1.6rem/1 ui-monospace,monospace;
+  margin:8px 0 7px
 }
 .territory-card .awake {
   color:var(--muted);
   font-size:.73rem
 }
 .territory-card .dom {
-  margin-top:18px;
+  margin-top:14px;
   color:var(--cyan);
   font-size:.68rem;
   line-height:1.35;
   font-weight:760
 }
 .province-card {
-min-height:156px;
-  padding:17px;
+min-height:140px;
+  padding:15px 16px;
   position:relative;
   border:0;
   border-right:1px solid var(--line);
@@ -939,24 +969,25 @@ min-height:156px;
   font:700 .56rem/1 ui-monospace,monospace
 }
 .province-name {
-  margin-top:16px;
+margin-top:14px;
+  min-height:2.45em;
   color:#dce6e1;
   font-size:.72rem;
+  line-height:1.22;
   font-weight:780;
-  white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis
+  white-space:normal;
+  overflow-wrap:anywhere
 }
 .province-card .time {
-  font:950 1.95rem/1 ui-monospace,monospace;
-  margin:9px 0 7px
+  font:950 1.72rem/1 ui-monospace,monospace;
+  margin:8px 0 7px
 }
 .province-card .awake {
   color:var(--muted);
   font-size:.73rem
 }
 .province-card .dom {
-  margin-top:18px;
+  margin-top:14px;
   font-size:.72rem;
   font-weight:850
 }
@@ -1655,8 +1686,8 @@ footer a {
     border-bottom:1px solid var(--line)
   }
   .map-shell {
-    height:390px;
-    min-height:390px
+    height:320px;
+    min-height:320px
   }
   .map-meta span:last-child {
     display:none
@@ -1686,6 +1717,14 @@ footer a {
   }
   .open-velocity {
     margin-top:26px
+  }
+  .region-picker {
+    grid-template-columns:1fr;
+    gap:8px;
+    align-items:start
+  }
+  .region-picker span {
+    display:none
   }
   .focus {
     grid-template-columns:1fr 1fr
@@ -1785,7 +1824,7 @@ footer a {
   .province-stat-grid {
     grid-template-columns:1fr
   }
-  .province-grid,.steps,.model-path {
+  .steps,.model-path {
     grid-template-columns:1fr
   }
   .model-step {
@@ -1796,10 +1835,16 @@ footer a {
     border-bottom:0
   }
   .province-card {
-    min-height:145px
+    min-height:132px;
+    padding:14px
   }
   .province-card .time {
-    margin-top:18px
+    font-size:1.5rem;
+    margin-top:8px
+  }
+  .province-card .top {
+    gap:5px;
+    font-size:.5rem
   }
 }
 @media(prefers-reduced-motion:reduce) {
@@ -1811,5 +1856,11 @@ footer a {
   }
   .activity-track span {
     transition:none
+  }
+}
+
+@media(max-width:350px) {
+  .province-grid {
+    grid-template-columns:1fr
   }
 }
