@@ -17,20 +17,20 @@
 </head>
 <body>
 <a class="skip-link" href="#now">Skip to dashboard</a>
-<div class="aurora aurora-a"></div><div class="aurora aurora-b"></div>
-
 <header class="topbar">
-  <a class="brand" href="#now" aria-label="Who's Up North home"><b>WHO'S UP NORTH?</b><span>CANADA // NOW</span></a>
-  <nav aria-label="Primary">
-    <a href="#now">Now</a>
-    <a href="#across">Across Canada</a>
-    <a href="#statcan">StatCan pulse</a>
-    <a href="#live">Live signals</a>
-    <a href="#method">Method</a>
-  </nav>
-  <div class="actions">
-    <div id="source-chip" class="chip" aria-live="polite"><i></i><span>LOADING VERIFIED DATA</span></div>
-    <button id="share-button" class="btn ghost" type="button">SHARE</button>
+  <div class="topbar-inner">
+    <a class="brand" href="#now" aria-label="Who's Up North home"><b>WHO'S UP NORTH?</b><span>CANADA // NOW</span></a>
+    <nav aria-label="Primary">
+      <a href="#now">Now</a>
+      <a href="#across">Across Canada</a>
+      <a href="#statcan">StatCan</a>
+      <a href="#live">Live APIs</a>
+      <a href="#method">Method</a>
+    </nav>
+    <div class="actions">
+      <div id="source-chip" class="chip" aria-live="polite"><i></i><span>LOADING VERIFIED DATA</span></div>
+      <button id="share-button" class="btn ghost" type="button">SHARE</button>
+    </div>
   </div>
 </header>
 
@@ -133,7 +133,7 @@
     </div>
   </section>
 
-  <div class="province-head"><span>PROVINCE PULSE</span><span>SAME SURVEY // DIFFERENT REFERENCE CLOCKS</span></div>
+  <div class="province-head"><span>PROVINCE MODEL</span><span>SAME SURVEY // DIFFERENT REFERENCE CLOCKS</span></div>
   <div id="province-grid" class="province-grid"></div>
   <div class="province-head territory-head"><span>TERRITORY CONTEXT</span><span>REFERENCE CLOCK + OFFICIAL DATA // NOT IN TIME-USE MODEL</span></div>
   <div id="territory-grid" class="territory-grid"></div>
@@ -142,7 +142,7 @@
 <section id="statcan" class="section wrap statcan-section">
   <div class="section-head">
     <div><p class="eyebrow">STATCAN PULSE</p><h2>What StatCan is publishing.</h2></div>
-    <p>Recent table updates, national indicators and the next scheduled major release—pulled from Statistics Canada developer services.</p>
+    <p>Recent table updates, major indicators and the next scheduled release from Statistics Canada developer services.</p>
   </div>
 
   <div class="statcan-grid">
@@ -173,7 +173,7 @@
 
 <section id="live" class="section wrap live-section">
   <div class="section-head">
-    <div><p class="eyebrow">PUBLIC API PULSE</p><h2>Fresh signals from official APIs.</h2></div>
+    <div><p class="eyebrow">PUBLIC API PULSE</p><h2>Current signals from official APIs.</h2></div>
     <div class="live-actions"><p id="live-status">LOADING SCHEDULED SNAPSHOT…</p><button id="live-refresh" class="btn small" type="button">CHECK NOW</button></div>
   </div>
 
@@ -227,7 +227,7 @@
   <div>
     <p class="eyebrow">HOW IT WORKS</p>
     <h2>Live clock.<br>Official data.<br>Clear limits.</h2>
-    <p>The time-use model advances locally with Canadian clocks. GitHub Actions refreshes the official build snapshots on a 15-minute schedule, while the browser directly rechecks ECCC weather and Open Government every five minutes when visible. Bank of Canada FX is a daily statistic, so it is checked without pretending to be a live market quote.</p>
+    <p>The time-use model advances using configured Canadian reference clocks. GitHub Actions refreshes the official build snapshots on a 15-minute schedule, while the browser directly rechecks ECCC weather and Open Government every five minutes when visible. Bank of Canada FX is a daily statistic, so it is checked without pretending to be a live market quote.</p>
   </div>
   <div class="steps">
     <article><b>01</b><h3>Resolve clocks</h3><p>Convert one instant into each province’s representative reference clock.</p></article>
