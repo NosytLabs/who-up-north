@@ -2,7 +2,7 @@
 
 _Last reviewed: 2026-09-20._
 
-Who Up North? is an independent public-data visualization. It is not affiliated with, endorsed by, or operated by the Government of Canada, Statistics Canada, Environment and Climate Change Canada, the Open Government Portal or the Bank of Canada.
+Who's Up North? is an independent public-data visualization. It is not affiliated with, endorsed by, or operated by the Government of Canada, Statistics Canada, Environment and Climate Change Canada, the Open Government Portal or the Bank of Canada.
 
 For model equations and assumptions, see [DATA_MODEL.md](DATA_MODEL.md).
 
