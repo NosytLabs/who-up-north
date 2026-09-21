@@ -101,7 +101,8 @@ function zonedInstant(date,hour,minute,tz){
   return guess;
 }
 function countdown(ms){
-  if(!Number.isFinite(ms)||ms<=0)return'RELEASING TODAY';
+  if(!Number.isFinite(ms))return'SCHEDULE UNAVAILABLE';
+  if(ms<=0)return'CHECK THE DAILY';
   const minutes=Math.floor(ms/60000),days=Math.floor(minutes/1440),hours=Math.floor(minutes%1440/60),mins=minutes%60;
   if(days)return`IN ${days}D ${hours}H`;
   if(hours)return`IN ${hours}H ${mins}M`;
@@ -539,16 +540,28 @@ async function loadLive(options={}){
   renderLive();renderStatCan();
   if(!auto)$('live-refresh').disabled=false;
 }
+function currentCheck(source){
+  const age=Date.now()-Date.parse(source?.checkedAt||'');
+  return source?.live===true&&!source.checkFailedAt&&Number.isFinite(age)&&age>=0&&age<600000;
+}
 function renderFreshness(){
   if(!state.live)return;
   const snap=state.live.generatedAt;
+  const captured=Date.parse(snap||'');
+  $('snapshot-captured').textContent=Number.isFinite(captured)?new Date(captured).toISOString().slice(0,16).replace('T',' ')+' UTC':'Unavailable';
+  const w=state.live.weather||{};
+  $('open-window-label').textContent=currentCheck(state.live.openGovernment)?'catalogue records modified in the last 24h':'catalogue records modified in the 24h before the saved check';
+  $('weather-caption').textContent=Number.isFinite(w.numberMatched)
+    ?currentCheck(w)?'current alert records':'alert records in saved snapshot'
+    :'feed unavailable';
+  $('weather-card').classList.toggle('live',currentCheck(w));
   $('hero-freshness').textContent=state.lastCheckAt?`${state.directOk}/${state.directExpected} CHECKED · ${ageLabel(state.lastCheckAt)}`:snap?'SNAPSHOT · '+ageLabel(snap):'OFFLINE';
   const sourceState=(source,directLabel,cachedLabel='CACHED RESULT')=>source?.live
     ?directLabel
     :source?.checkFailedAt
       ?cachedLabel
       :'BUILD SNAPSHOT';
-  $('weather-source-state').textContent=sourceState(state.live.weather,'DIRECT API');
+  $('weather-source-state').textContent=sourceState(state.live.weather,currentCheck(w)?'DIRECT API':'LAST DIRECT CHECK');
   $('open-source-state').textContent=sourceState(state.live.openGovernment,'DIRECT API');
   $('bank-source-state').textContent=sourceState(state.live.bank,'DIRECT CHECK','CACHED DAILY');
   $('weather-freshness').textContent=state.live.weather?.checkedAt?ageLabel(state.live.weather.checkedAt):ageLabel(snap);
@@ -563,8 +576,8 @@ function renderLive(){
   if(state.o>=openItems.length)state.o=0;
   const wi=weatherItems[state.w],oi=openItems[state.o];
   $('weather-count').textContent=Number.isFinite(w.numberMatched)?num(w.numberMatched):'—';
-  $('weather-caption').textContent=Number.isFinite(w.numberMatched)?'current alert records':'feed unavailable';
-  $('weather-detail').textContent=wi?`${wi.name||'Weather alert'} · ${wi.feature||wi.province||'Canada'}`:'No current alert detail.';
+  $('weather-caption').textContent=Number.isFinite(w.numberMatched)?(currentCheck(w)?'current alert records':'alert records in saved snapshot'):'feed unavailable';
+  $('weather-detail').textContent=wi?`${wi.name||'Weather alert'} · ${wi.feature||wi.province||'Canada'}`:'No alert details in the available response.';
   $('weather-link').href=wi?.id
     ?`https://api.weather.gc.ca/collections/weather-alerts/items/${encodeURIComponent(wi.id)}?f=html`
     :'https://api.weather.gc.ca/collections/weather-alerts?f=html';
@@ -590,18 +603,33 @@ function renderLive(){
   renderFreshness();
 }
 function nextRelease(){
-  const schedule=state.live?.statcan?.schedule||[],now=new Date();
+  const schedule=state.live?.statcan?.schedule;
+  if(!Array.isArray(schedule))return null;
+  let next=null;
   for(const item of schedule){
+    if(!item||!/^\d{4}-\d{2}-\d{2}$/.test(item.date||''))continue;
+    const date=new Date(item.date+'T12:00:00Z');
+    if(!Number.isFinite(date.getTime())||date.toISOString().slice(0,10)!==item.date)continue;
     const target=zonedInstant(item.date,8,30,'America/Toronto');
-    if(target.getTime()>now.getTime()-30*60000)return{item,target};
+    if(target.getTime()>Date.now()-30*60000&&(!next||target<next.target))next={item,target};
   }
-  return schedule[0]?{item:schedule[0],target:zonedInstant(schedule[0].date,8,30,'America/Toronto')}:null;
+  return next;
 }
 function renderReleaseClock(){
   const next=nextRelease();
-  if(!next)return;
-  const delta=next.target.getTime()-Date.now();
-  $('statcan-countdown').textContent=countdown(delta);
+  if(!next){
+    $('statcan-next-date').textContent='SAVED SCHEDULE';
+    $('statcan-next-title').textContent='No upcoming release in this snapshot';
+    $('statcan-next-description').textContent='Automatic snapshot refresh is paused. Check The Daily for the current release calendar.';
+    $('statcan-next-link').href='https://www150.statcan.gc.ca/n1/dai-quo/index-eng.html';
+    $('statcan-countdown').textContent='CHECK THE DAILY';
+    return;
+  }
+  $('statcan-next-date').textContent=dateLabel(next.item.date)+' // 08:30 ET';
+  $('statcan-next-title').textContent=next.item.title;
+  $('statcan-next-description').textContent=next.item.description||'Major Statistics Canada release';
+  $('statcan-next-link').href=next.item.url||'https://www150.statcan.gc.ca/n1/dai-quo/index-eng.html';
+  $('statcan-countdown').textContent=countdown(next.target.getTime()-Date.now());
 }
 function renderStatCan(){
   const s=state.live?.statcan;
@@ -709,8 +737,9 @@ const sh=Number(initialUrl.searchParams.get('shift')||0);
 if(Number.isFinite(sh)&&Math.abs(sh)<=12)state.shift=sh;
 const initialRegion=String(initialUrl.searchParams.get('region')||'').toLowerCase();
 if(/^(bc|ab|sk|mb|on|qc|nb|ns|pe|nl|yt|nt|nu)$/.test(initialRegion))state.focus=initialRegion;
+setShift(state.shift);
 setInterval(renderTicker,1000);
-setInterval(()=>{if(state.shift===0&&state.profile)recompute()},60000);
+setInterval(()=>{if(state.profile&&document.visibilityState==='visible')recompute()},60000);
 setInterval(()=>{if(document.visibilityState==='visible')loadLive({auto:true,includeBank:false})},300000);
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&(!state.lastCheckAt||Date.now()-state.lastCheckAt.getTime()>300000))loadLive({auto:true,includeBank:false})});
 init().then(()=>{

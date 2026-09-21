@@ -11,7 +11,7 @@ It does **not** track people. “Right now” means the representative Canadian 
 ## What the site shows
 
 - **Canada now:** an estimate of the survey-aligned 15+ population awake and participating in eight non-overlapping activity groups.
-- **Across Canada:** the same Canada-level time-use profile evaluated at one representative reference clock for each province, plus province/territory drilldowns for current StatCan indicators. Territories also have dedicated clock/data cards even though they are excluded from the time-use model.
+- **Across Canada:** the same Canada-level time-use profile evaluated at one representative reference clock for each province, plus province/territory drilldowns for the published StatCan indicator snapshot. Territories also have dedicated clock/data cards even though they are excluded from the time-use model.
 - **Time-model path:** how the model changes over the next several hours using the same official survey profile.
 - **StatCan release wire:** recent changed tables, major economic indicators and the next scheduled major release.
 - **Official signal wire:** ECCC weather-alert records, Open Government catalogue activity and the Bank of Canada USD/CAD daily average.
@@ -39,7 +39,7 @@ There are three different update speeds:
 
 1. **Live clock:** browser time updates continuously and the core survey model advances with Canadian local time.
 2. **Direct public APIs:** on page load the browser checks the GeoMet `weather-alerts` collection, Open Government CKAN recent activity/search, and Bank of Canada `FXUSDCAD`. Weather and Open Government are rechecked every five minutes while the tab is visible.
-3. **Build snapshots:** GitHub Actions is scheduled every 15 minutes to refresh population, StatCan release data, map geometry and fallback signal snapshots. Scheduled GitHub jobs can run late.
+3. **Build snapshots:** Automatic snapshot refresh is paused for cost containment. Population, StatCan release data, map geometry and fallback signals remain at the last published build until a manually authorized refresh and deployment succeeds. The page shows the saved build timestamp separately from direct API checks. “Check now” does not refresh the StatCan snapshot.
 
 The Time Use Survey itself is a statistical distribution from the 2022 survey cycle, not a live sensor.
 
@@ -93,7 +93,7 @@ npm run build
 npm run preview
 ```
 
-- `npm run check` runs model/integrity checks plus workflow regression tests.
+- `npm run check` runs model/integrity checks, workflow regression tests and page-content/state regressions.
 - `npm run refresh` calls the official data endpoints and writes generated files under `public/data/`.
 - `npm run build` creates the static Pages artifact in `dist/`.
 - `npm run preview` serves `dist/` locally on port 4173.
@@ -102,11 +102,7 @@ A build without generated core data intentionally fails closed in the UI instead
 
 ## GitHub Pages
 
-Deployment is handled by [.github/workflows/pages.yml](.github/workflows/pages.yml) on:
-
-- pushes to `main`;
-- manual workflow dispatch;
-- the configured 15-minute schedule.
+The regular [.github/workflows/pages.yml](.github/workflows/pages.yml) definition is manual-only, and the workflow is currently disabled for cost containment. There are no push or scheduled deployment triggers. To publish an update, explicitly re-enable only that workflow and dispatch it, or use an owner-authorized one-time publishing run. Do not re-enable recurring workloads merely to correct page content.
 
 The workflow refreshes data, runs checks, builds `dist/`, uploads the Pages artifact, verifies that Pages uses **GitHub Actions**, then deploys.
 

@@ -35,6 +35,7 @@
 </header>
 
 <main>
+<noscript><p class="wrap fine">JavaScript is required for the clocks, statistical model and interactive controls. No live values are available with JavaScript disabled. <a href="#method">Read the methodology and source links below.</a></p></noscript>
 <section id="now" class="hero wrap">
   <div class="hero-copy">
     <p class="eyebrow"><span class="live-dot"></span> CANADA // LIVE CLOCK + OFFICIAL DATA</p>
@@ -174,7 +175,7 @@
 <section id="live" class="section wrap live-section">
   <div class="section-head">
     <div><p class="eyebrow">PUBLIC API PULSE</p><h2>Current signals from official APIs.</h2></div>
-    <div class="live-actions"><p id="live-status">LOADING SCHEDULED SNAPSHOT…</p><button id="live-refresh" class="btn small" type="button">CHECK NOW</button></div>
+    <div class="live-actions"><p id="live-status">LOADING SAVED SNAPSHOT…</p><button id="live-refresh" class="btn small" type="button">CHECK NOW</button></div>
   </div>
 
   <div class="live-grid">
@@ -191,7 +192,7 @@
     <article id="open-card" class="signal-card">
       <div class="signal-top"><span class="signal-label"><span class="source-icon small" aria-hidden="true">◫</span><span>02 // OPEN GOVERNMENT</span></span><i aria-hidden="true"></i></div>
       <div class="freshness"><span id="open-source-state">SNAPSHOT</span><span id="open-data-freshness">—</span></div>
-      <div class="open-velocity"><strong id="open-updated-count">—</strong><span>catalogue records modified in the last 24h</span></div>
+      <div class="open-velocity"><strong id="open-updated-count">—</strong><span id="open-window-label">catalogue records modified in the saved 24h window</span></div>
       <p class="eyebrow card-kicker">LATEST CATALOGUE CHANGE</p>
       <h3 id="open-data-title">Loading Open Government activity…</h3><p id="open-data-org" class="signal-meta">—</p>
       <p id="open-data-time">—</p>
@@ -227,12 +228,13 @@
   <div>
     <p class="eyebrow">HOW IT WORKS</p>
     <h2>Live clock.<br>Official data.<br>Clear limits.</h2>
-    <p>The time-use model advances using configured Canadian reference clocks. GitHub Actions refreshes the official build snapshots on a 15-minute schedule, while the browser directly rechecks ECCC weather and Open Government every five minutes when visible. Bank of Canada FX is a daily statistic, so it is checked without pretending to be a live market quote.</p>
+    <p>The time-use model advances using configured Canadian reference clocks. Automatic snapshot refresh is paused. Population, StatCan indicators and release dates come from the last published build, not a live feed. The browser still rechecks ECCC weather and Open Government every five minutes while visible. “Check now” rechecks those APIs and Bank of Canada FX; it does not refresh the StatCan snapshot. FX is a daily average, not a live market quote.</p>
+    <p class="fine">Build snapshot captured: <strong id="snapshot-captured">Loading saved timestamp…</strong>. The release countdown is a saved schedule, not confirmation that a release has been published.</p>
   </div>
   <div class="steps">
     <article><b>01</b><h3>Resolve clocks</h3><p>Convert one instant into each province’s representative reference clock.</p></article>
     <article><b>02</b><h3>Select survey slot</h3><p>Use the official weekday/weekend five-minute participation vector.</p></article>
-    <article><b>03</b><h3>Weight population</h3><p>Apply current quarterly province estimates and the latest national 15+ share.</p></article>
+    <article><b>03</b><h3>Weight population</h3><p>Apply the published population snapshot and its recorded national 15+ share.</p></article>
     <article><b>04</b><h3>Combine transparently</h3><p>Sum the ten survey-covered provinces and label every limitation.</p></article>
   </div>
 </section>

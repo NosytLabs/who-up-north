@@ -1,6 +1,6 @@
 # Sources, methodology and compliance
 
-_Last reviewed: 2026-09-20._
+_Last reviewed: 2026-09-21._
 
 Who's Up North? is an independent public-data visualization. It is not affiliated with, endorsed by, or operated by the Government of Canada, Statistics Canada, Environment and Climate Change Canada, the Open Government Portal or the Bank of Canada.
 
@@ -36,7 +36,7 @@ Safeguards require:
 
 **Table 17-10-0005-01** supplies the national age denominator. The site derives the 15+ share as all ages minus the 0–4, 5–9 and 10–14 groups.
 
-The browser does not call these population endpoints per visitor. GitHub Actions refreshes them and publishes a reusable static snapshot.
+The browser does not call these population endpoints per visitor. Automatic refresh and deployment are paused for cost containment. A manually authorized build can refresh these endpoints and publish a reusable static snapshot. Direct browser API checks do not update population, StatCan indicators or release dates.
 
 ## Statistics Canada — release wire
 
@@ -47,7 +47,7 @@ The dashboard also consumes official Statistics Canada developer services for co
 - WDS `getChangedCubeList`;
 - WDS `getCubeMetadata` for names of selected changed tables.
 
-The release countdown uses the published schedule. It is not a prediction.
+The release countdown uses a saved copy of the published schedule. It is not a prediction or confirmation of publication. Invalid dates are skipped; when no upcoming date remains, the card links to The Daily instead of recycling an expired release. The displayed build timestamp is separate from browser API-check timestamps.
 
 ## Canada map geometry
 
@@ -134,7 +134,8 @@ The UI separates:
 - **Live clock** — current device time converted to Canadian time zones.
 - **Statistical model** — historical survey distributions applied to a configured representative reference clock for each province. Provinces that span multiple real-world time zones are not subdivided by time zone.
 - **Direct API check** — a successful current request to an official public endpoint.
-- **Build snapshot** — data captured during the most recent successful GitHub Actions refresh.
+- **Build snapshot** — data captured during the most recent successful authorized refresh; automatic snapshot refresh is currently paused.
+- **Saved weather snapshot** — previously captured alert records, not confirmed-current warnings. A failed check or a direct result older than ten minutes is labelled as saved data.
 - **Daily statistic** — a value such as Bank of Canada FX that may be freshly checked but is published only daily.
 
 “Live” never means that individual people are being observed.
