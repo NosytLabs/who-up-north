@@ -33,7 +33,7 @@ function page(now = '2026-09-21T13:00:00Z', query = '') {
     location: { href: `https://example.test/who-up-north/${query}` },
   });
   vm.runInContext(main.slice(start, end).replaceAll('import.meta.url', JSON.stringify(new URL('src/main.js', root).href)), context);
-  const controller = vm.runInContext('({state,nextRelease,renderReleaseClock,renderLive,renderFreshness,countdown,setShift})', context);
+  const controller = vm.runInContext('({state,nextRelease,renderReleaseClock,renderLive,renderFreshness,countdown,setShift,copyText})', context);
   return { ...controller, element, context, setNow(value) { clock = Date.parse(value); } };
 }
 const release = (date, title) => ({ date, title, description: title, url: 'https://www150.statcan.gc.ca/n1/dai-quo/index-eng.html' });
@@ -130,4 +130,19 @@ test('cached Open Government count describes its saved 24-hour window', () => {
   p.state.live = { generatedAt: '2026-09-20T07:00:00Z', openGovernment: { live: false, changedLast24h: 27, items: [] } };
   p.renderFreshness();
   assert.match(p.element('open-window-label').textContent, /before the saved check/);
+});
+
+test('clipboard denial falls back to the legacy copy path', async () => {
+  let appended = 0, removed = 0, execCalls = 0;
+  const p = page();
+  p.context.navigator = { clipboard: { writeText: async () => { throw new Error('denied'); } } };
+  p.context.document.createElement = () => ({
+    value: '', style: {}, setAttribute() {}, select() {}, remove() { removed += 1; },
+  });
+  p.context.document.body = { append() { appended += 1; } };
+  p.context.document.execCommand = command => { assert.equal(command, 'copy'); execCalls += 1; return true; };
+  await p.copyText('https://example.test/shared');
+  assert.equal(appended, 1);
+  assert.equal(execCalls, 1);
+  assert.equal(removed, 1);
 });
