@@ -1,0 +1,45 @@
+name: Publish clipboard repair once
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/publish-clipboard-repair-once.yml']
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: pages-one-time-clipboard-repair
+  cancel-in-progress: true
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+      - name: Refresh official public data
+        env:
+          AI_GATEWAY_API_KEY: ''
+        run: |
+          node scripts/refresh-data.mjs
+          node scripts/generate-jev-fact.mjs
+      - run: npm run check
+      - run: npm run build
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: ./dist
+          retention-days: 1
+  deploy:
+    needs: build
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5
