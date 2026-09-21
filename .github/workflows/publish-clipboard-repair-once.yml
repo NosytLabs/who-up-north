@@ -5,6 +5,7 @@ on:
     paths: ['.github/workflows/publish-clipboard-repair-once.yml']
 permissions:
   contents: read
+  actions: read
   pages: write
   id-token: write
 concurrency:
@@ -13,7 +14,7 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 8
     steps:
       - uses: actions/checkout@v6
         with:
@@ -21,14 +22,19 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: 22
-      - name: Refresh official public data
+      - name: Verify source regression suite
+        run: npm run check
+      - name: Reuse last verified Pages data bundle
         env:
-          AI_GATEWAY_API_KEY: ''
+          GH_TOKEN: ${{ github.token }}
         run: |
-          node scripts/refresh-data.mjs
-          node scripts/generate-jev-fact.mjs
-      - run: npm run check
-      - run: npm run build
+          rm -rf previous dist
+          mkdir -p previous dist
+          gh run download 35570956088 -n github-pages -D previous
+          tar -xf previous/artifact.tar -C dist
+          test -f dist/data/live-signals.json
+          cp src/main.js dist/src/main.js
+          node --check dist/src/main.js
       - uses: actions/upload-pages-artifact@v5
         with:
           path: ./dist
