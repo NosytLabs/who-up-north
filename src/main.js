@@ -59,12 +59,17 @@ function chip(status,message){
 }
 async function copyText(value){
   if(navigator.clipboard?.writeText){
-    await navigator.clipboard.writeText(value);
-    return;
+    try{
+      await navigator.clipboard.writeText(value);
+      return;
+    }catch{}
   }
   const input=document.createElement('textarea');
   input.value=value;input.setAttribute('readonly','');input.style.position='fixed';input.style.opacity='0';
-  document.body.append(input);input.select();document.execCommand('copy');input.remove();
+  document.body.append(input);input.select();
+  try{
+    if(!document.execCommand('copy'))throw new Error('copy command rejected');
+  }finally{input.remove()}
 }
 function updatePageContext(region=null){
   const title=region?`${region.name} — Who's Up North?`:"Who's Up North? — Canada right now";
