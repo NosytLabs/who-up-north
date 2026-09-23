@@ -102,7 +102,7 @@ A build without generated core data intentionally fails closed in the UI instead
 
 ## GitHub Pages
 
-The regular [.github/workflows/pages.yml](.github/workflows/pages.yml) definition is manual-only, and the workflow is currently disabled for cost containment. There are no push or scheduled deployment triggers. To publish an update, explicitly re-enable only that workflow and dispatch it, or use an owner-authorized one-time publishing run. Do not re-enable recurring workloads merely to correct page content.
+The regular [.github/workflows/pages.yml](.github/workflows/pages.yml) definition is **manual-only** for cost containment. There are no push or scheduled deployment triggers. Publish updates by explicitly dispatching that workflow from GitHub Actions.
 
 The workflow refreshes data, runs checks, builds `dist/`, uploads the Pages artifact, verifies that Pages uses **GitHub Actions**, then deploys.
 
