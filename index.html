@@ -12,6 +12,51 @@
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://nosytlabs.github.io/who-up-north/">
   <link rel="canonical" href="https://nosytlabs.github.io/who-up-north/">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebSite",
+        "@id": "https://nosytlabs.github.io/who-up-north/#website",
+        "url": "https://nosytlabs.github.io/who-up-north/",
+        "name": "Who's Up North?",
+        "description": "A live-to-the-clock statistical portrait of Canada built from Statistics Canada and current Canadian public-data signals.",
+        "inLanguage": "en-CA",
+        "publisher": {
+          "@type": "Organization",
+          "name": "Nosyt Labs",
+          "url": "https://github.com/NosytLabs"
+        }
+      },
+      {
+        "@type": "Dataset",
+        "@id": "https://nosytlabs.github.io/who-up-north/#dataset",
+        "name": "Who's Up North? Canada public-data snapshot",
+        "description": "Aggregate Canadian time-use model and public-data signal snapshot. It does not track individuals.",
+        "url": "https://nosytlabs.github.io/who-up-north/",
+        "inLanguage": "en-CA",
+        "spatialCoverage": {
+          "@type": "Country",
+          "name": "Canada"
+        },
+        "creator": {
+          "@type": "Organization",
+          "name": "Nosyt Labs",
+          "url": "https://github.com/NosytLabs"
+        },
+        "license": "https://github.com/NosytLabs/who-up-north/blob/main/docs/SOURCES_AND_COMPLIANCE.md",
+        "isBasedOn": [
+          "https://www150.statcan.gc.ca/t1/tbl1/en/tv.action?pid=4510010501",
+          "https://www.statcan.gc.ca/en/developers/wds/user-guide",
+          "https://api.weather.gc.ca/collections/weather-alerts?f=html",
+          "https://open.canada.ca/en/access-our-application-programming-interface-api",
+          "https://www.bankofcanada.ca/valet/docs/"
+        ]
+      }
+    ]
+  }
+  </script>
   <link rel="icon" href="./favicon.svg">
   <link rel="stylesheet" href="./src/styles.css">
 </head>
