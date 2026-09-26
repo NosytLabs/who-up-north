@@ -33,7 +33,7 @@ function page(now = '2026-09-21T13:00:00Z', query = '') {
     location: { href: `https://example.test/who-up-north/${query}` },
   });
   vm.runInContext(main.slice(start, end).replaceAll('import.meta.url', JSON.stringify(new URL('src/main.js', root).href)), context);
-  const controller = vm.runInContext('({state,nextRelease,renderReleaseClock,renderLive,renderFreshness,countdown,setShift,copyText})', context);
+  const controller = vm.runInContext('({state,nextRelease,renderReleaseClock,renderLive,renderFreshness,renderCoreUnavailable,renderStatCan,countdown,setShift,copyText})', context);
   return { ...controller, element, context, setNow(value) { clock = Date.parse(value); } };
 }
 const release = (date, title) => ({ date, title, description: title, url: 'https://www150.statcan.gc.ca/n1/dai-quo/index-eng.html' });
@@ -145,4 +145,21 @@ test('clipboard denial falls back to the legacy copy path', async () => {
   assert.equal(appended, 1);
   assert.equal(execCalls, 1);
   assert.equal(removed, 1);
+});
+
+
+test('missing core data ends loading states and disables unusable controls', () => {
+  const p = page();
+  p.renderCoreUnavailable();
+  for (const id of ['time-shift', 'now-button', 'region-select']) assert.equal(p.element(id).disabled, true);
+  assert.match(p.element('fact-title').textContent, /unavailable/i);
+  assert.doesNotMatch(p.element('model-path').innerHTML, /BUILDING|LOADING/);
+  assert.match(p.element('map-shapes').innerHTML, /UNAVAILABLE/);
+  assert.equal(p.state.snapshot, null);
+});
+test('missing StatCan bundle renders unavailable instead of endless loading', () => {
+  const p = page(); p.state.live = {};
+  p.renderStatCan();
+  assert.match(p.element('indicator-grid').innerHTML, /UNAVAILABLE/);
+  assert.match(p.element('statcan-next-title').textContent, /No upcoming release/);
 });

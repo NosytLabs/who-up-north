@@ -1934,3 +1934,13 @@ footer a {
 .sources article,.steps article,.province-open-results a {
   background:var(--panel)
 }
+
+/* Provenance and controls must remain readable on outdoor/mobile screens. */
+.freshness { flex-wrap:wrap; gap:6px 12px; font-size:.8125rem; line-height:1.5; color:var(--muted); }
+.open-velocity span { max-width:18rem; font-size:.8125rem; line-height:1.5; color:var(--muted); }
+.pills button,.suggestions button { min-height:44px; font-size:.875rem; line-height:1.4; white-space:normal; overflow-wrap:anywhere; }
+.signal-card .pills button { min-height:44px; }
+.signal-meta,.source-title,.source-links a,.sources a { font-size:.875rem; line-height:1.5; }
+.sources p,.signal-card p { font-size:1rem; }
+.province-head { font-size:.8125rem; line-height:1.5; flex-wrap:wrap; }
+button:disabled,select:disabled,input:disabled { cursor:not-allowed; opacity:.6; }

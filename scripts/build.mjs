@@ -1,5 +1,10 @@
 import { access, cp, copyFile, mkdir, rm, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
+import { validateDataBundle } from './validate-data.mjs';
+
+const smokeOnly = process.argv.includes('--allow-missing-data');
+if (!smokeOnly) await validateDataBundle('public/data');
+else console.warn('UI smoke build only: data may be missing. Do not deploy this artifact.');
 
 await rm('dist', { recursive: true, force: true });
 await mkdir('dist/src', { recursive: true });
@@ -17,6 +22,7 @@ if (existsSync('docs')) {
 }
 
 await writeFile('dist/.nojekyll', '');
+if (!smokeOnly) await validateDataBundle('dist/data');
 
 for (const file of [
   'dist/index.html',

@@ -95,7 +95,8 @@ npm run preview
 
 - `npm run check` runs model/integrity checks, workflow regression tests and page-content/state regressions.
 - `npm run refresh` calls the official data endpoints and writes generated files under `public/data/`.
-- `npm run build` creates the static Pages artifact in `dist/`.
+- `npm run build` validates the required survey, population, map and signal bundles before and after creating `dist/`. Missing or malformed core data fails publication.
+- `npm run build -- --allow-missing-data` is an explicit local UI smoke-test escape hatch. Never publish that artifact; the manual Pages workflow always uses the normal guarded build.
 - `npm run preview` serves `dist/` locally on port 4173.
 
 A build without generated core data intentionally fails closed in the UI instead of inventing substitute numbers.
@@ -141,3 +142,7 @@ Project code is MIT licensed. Source data keeps its own licence and terms.
 Who's Up North? is independent and does not imply endorsement by the Government of Canada, Statistics Canada, ECCC, the Open Government Portal or the Bank of Canada.
 
 See [docs/SOURCES_AND_COMPLIANCE.md](docs/SOURCES_AND_COMPLIANCE.md) for source-by-source details.
+
+## Reuse boundary for HuntFish Atlantic
+
+This repository remains a Canada-wide statistics dashboard. Reuse source provenance, explicit capture dates, failure states and data validation. Do not copy the national activity model, currency/economic feeds, optional AI fact selector, dense dashboard layout or single-page filter URLs into the Atlantic hunting/fishing product. Issue pages need their own crawlable routes and responsible-authority records. The hunting/fishing resource currently lives in the nb-advocacy-v3 donor; no standalone product repository is implied here.

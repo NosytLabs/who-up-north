@@ -124,9 +124,7 @@ async function init(){
     if(state.focus)loadProvinceOpenData(state.focus);
   }catch(e){
     chip('error','CORE DATA UNAVAILABLE');
-    $('awake-percent').textContent='—';
-    $('awake-count').textContent='No substitute numbers shown.';
-    $('activity-list').innerHTML='<div class="loading">VERIFIED CORE DATA UNAVAILABLE</div>';
+    renderCoreUnavailable();
     toast('Verified time-use data bundle unavailable.',true);
   }
 
@@ -138,7 +136,7 @@ async function init(){
     state.geo={features:[],error:true};
     state.mapGeometry=null;
     renderMap();
-    toast('Map boundaries are temporarily unavailable; use the region selector or cards.',true);
+    toast(state.snapshot?'Map boundaries are temporarily unavailable; use the region selector or cards.':'Core data and map are unavailable. Official source links remain available below.',true);
   }
 
   try{
@@ -146,9 +144,25 @@ async function init(){
     renderLive();
     renderStatCan();
   }catch{
+    state.live={};
     $('live-status').textContent='BUILD SNAPSHOT UNAVAILABLE // CHECKING SOURCES';
+    renderStatCan();
   }
   loadLive();
+}
+function renderCoreUnavailable(){
+  state.profile=null;state.pop=null;state.snapshot=null;
+  $('awake-percent').textContent='—';
+  $('awake-count').textContent='No substitute numbers shown.';
+  $('activity-list').innerHTML='<div class="loading">VERIFIED CORE DATA UNAVAILABLE</div>';
+  $('model-path').innerHTML='<div class="loading">MODEL PATH UNAVAILABLE WITHOUT SURVEY DATA</div>';
+  $('fact-title').textContent='Survey data unavailable';
+  $('fact-detail').textContent='The published data bundle could not be loaded. Read the official sources and methodology below; direct API checks are separate.';
+  $('focus-copy').textContent='Regional model controls are unavailable without the survey data. Official source links remain available below.';
+  $('time-shift').disabled=true;
+  $('now-button').disabled=true;
+  $('region-select').disabled=true;
+  $('map-shapes').innerHTML='<text x="600" y="360" text-anchor="middle" fill="#a7b1ac" font-size="18">MODEL MAP UNAVAILABLE · SEE OFFICIAL SOURCES BELOW</text>';
 }
 function recompute(){
   if(!state.profile||!state.pop)return;
@@ -637,8 +651,7 @@ function renderReleaseClock(){
   $('statcan-countdown').textContent=countdown(next.target.getTime()-Date.now());
 }
 function renderStatCan(){
-  const s=state.live?.statcan;
-  if(!s)return;
+  const s=state.live?.statcan||{};
   const next=nextRelease();
   if(next){
     $('statcan-next-date').textContent=dateLabel(next.item.date)+' // 08:30 ET';
