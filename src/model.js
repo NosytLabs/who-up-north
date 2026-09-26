@@ -80,7 +80,35 @@ function dayBucket(weekday) {
 }
 
 function populationFor(data, region) {
-  return Number(data?.values?.[region.id] ?? region.population);
+  return data.values[region.id];
+}
+
+// Use the same acceptance rules before publication and before showing a model.
+export function validateCoreData(profile, population) {
+  for (const bucket of ['weekdays', 'weekends']) {
+    for (let code = 1; code <= 288; code++) {
+      const rates = ACTIVITIES.map(a => profile?.[bucket]?.[code]?.[a.key]);
+      if (!rates.every(rate => Number.isFinite(rate) && rate >= 0 && rate <= 100)) {
+        throw new Error(`Incomplete or invalid survey vector: ${bucket}/${code}`);
+      }
+      // Published components are rounded; allow one percentage point in total.
+      if (Math.abs(rates.reduce((sum, rate) => sum + rate, 0) - 100) > 1) {
+        throw new Error(`Invalid survey vector total: ${bucket}/${code}`);
+      }
+    }
+  }
+  if (!Number.isFinite(population?.canada) || population.canada <= 0
+      || !Number.isFinite(population.age15PlusShare)
+      || population.age15PlusShare <= 0 || population.age15PlusShare >= 1) {
+    throw new Error('Invalid population scope');
+  }
+  const values = [...PROVINCES, ...TERRITORIES].map(region => population.values?.[region.id]);
+  if (!values.every(value => Number.isFinite(value) && value > 0)) {
+    throw new Error('Incomplete regional population');
+  }
+  if (Math.abs(values.reduce((sum, value) => sum + value, 0) - population.canada) / population.canada > .025) {
+    throw new Error('Regional population does not reconcile with Canada');
+  }
 }
 
 function dominantAwakeActivity(activities) {
@@ -96,12 +124,10 @@ export function buildCanadaSnapshot(
   population = VERIFIED_POPULATION,
   at = new Date(),
 ) {
-  if (!profile?.weekdays || !profile?.weekends) {
-    throw new Error('Time-use profile unavailable');
-  }
+  validateCoreData(profile, population);
 
   const instant = at instanceof Date ? at : new Date(at);
-  const age15PlusShare = population.age15PlusShare ?? AGE_15_PLUS_SHARE;
+  const age15PlusShare = population.age15PlusShare;
   const totals = Object.fromEntries(ACTIVITIES.map(activity => [activity.key, 0]));
   let scopedPopulationTotal = 0;
 

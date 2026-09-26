@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
 import { test } from 'node:test';
-import { ACTIVITIES } from '../../src/model.js';
+import { ACTIVITIES, buildCanadaSnapshot } from '../../src/model.js';
 
 const root = new URL('../../', import.meta.url);
 const main = readFileSync(new URL('src/main.js', root), 'utf8');
@@ -20,6 +20,7 @@ function page(now = '2026-09-21T13:00:00Z', query = '') {
       textContent: id === 'time-shift-label' ? 'LIVE' : '',
       innerHTML: id === 'pulse-mode' ? '<i></i> LIVE CLOCK' : '', value: id === 'time-shift' ? '0' : '', href: '',
       classList: { toggle() {} },
+      querySelector: () => element(`${id}-span`),
     });
     return elements.get(id);
   };
@@ -28,12 +29,13 @@ function page(now = '2026-09-21T13:00:00Z', query = '') {
     static now() { return clock; }
   }
   const context = vm.createContext({
-    ACTIVITIES, URL, Date: Clock,
+    ACTIVITIES, buildCanadaSnapshot, URL, Date: Clock,
+    setTimeout: () => 0, clearTimeout() {},
     document: { getElementById: element, querySelectorAll: () => [] },
     location: { href: `https://example.test/who-up-north/${query}` },
   });
   vm.runInContext(main.slice(start, end).replaceAll('import.meta.url', JSON.stringify(new URL('src/main.js', root).href)), context);
-  const controller = vm.runInContext('({state,nextRelease,renderReleaseClock,renderLive,renderFreshness,countdown,setShift,copyText})', context);
+  const controller = vm.runInContext('({state,nextRelease,renderReleaseClock,renderLive,renderFreshness,renderCoreUnavailable,renderStatCan,recompute,countdown,setShift,copyText})', context);
   return { ...controller, element, context, setNow(value) { clock = Date.parse(value); } };
 }
 const release = (date, title) => ({ date, title, description: title, url: 'https://www150.statcan.gc.ca/n1/dai-quo/index-eng.html' });
@@ -145,4 +147,36 @@ test('clipboard denial falls back to the legacy copy path', async () => {
   assert.equal(appended, 1);
   assert.equal(execCalls, 1);
   assert.equal(removed, 1);
+});
+
+
+test('missing core data ends loading states and disables unusable controls', () => {
+  const p = page();
+  p.renderCoreUnavailable();
+  for (const id of ['time-shift', 'now-button', 'region-select']) assert.equal(p.element(id).disabled, true);
+  assert.match(p.element('fact-title').textContent, /unavailable/i);
+  assert.doesNotMatch(p.element('model-path').innerHTML, /BUILDING|LOADING/);
+  assert.match(p.element('map-shapes').innerHTML, /UNAVAILABLE/);
+  assert.equal(p.state.snapshot, null);
+});
+test('missing StatCan bundle renders unavailable instead of endless loading', () => {
+  const p = page(); p.state.live = {};
+  p.renderStatCan();
+  assert.match(p.element('indicator-grid').innerHTML, /UNAVAILABLE/);
+  assert.match(p.element('statcan-next-title').textContent, /No upcoming release/);
+});
+test('model failures clear stale figures and remove the verified label', () => {
+  const p = page();
+  p.state.profile = { weekdays: {}, weekends: {} };
+  p.state.pop = {};
+  p.state.snapshot = { old: true };
+  p.element('source-chip-span').textContent = 'DATA MODEL // VERIFIED';
+  p.element('hero-leading').textContent = 'OLD VALUE';
+  p.element('province-grid').innerHTML = 'OLD REGION CARDS';
+  p.recompute();
+  assert.equal(p.state.snapshot, null);
+  assert.equal(p.element('source-chip-span').textContent, 'CORE DATA UNAVAILABLE');
+  assert.equal(p.element('hero-leading').textContent, '—');
+  assert.doesNotMatch(p.element('province-grid').innerHTML, /OLD REGION/);
+  assert.equal(p.element('time-shift').disabled, true);
 });
