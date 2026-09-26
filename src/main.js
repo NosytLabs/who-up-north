@@ -119,9 +119,8 @@ async function init(){
   try{
     [state.profile,state.pop]=await Promise.all([json(DATA.profile),json(DATA.population)]);
     if(Object.keys(state.profile.weekdays||{}).length!==288||Object.keys(state.profile.weekends||{}).length!==288)throw new Error('time-use profile incomplete');
-    chip('ready','DATA MODEL // VERIFIED');
     recompute();
-    if(state.focus)loadProvinceOpenData(state.focus);
+    if(state.snapshot&&state.focus)loadProvinceOpenData(state.focus);
   }catch(e){
     chip('error','CORE DATA UNAVAILABLE');
     renderCoreUnavailable();
@@ -152,7 +151,14 @@ async function init(){
 }
 function renderCoreUnavailable(){
   state.profile=null;state.pop=null;state.snapshot=null;
+  chip('error','CORE DATA UNAVAILABLE');
   $('awake-percent').textContent='—';
+  for(const id of ['hero-leading','focus-time','focus-awake','focus-dominant'])$(id).textContent='—';
+  $('pulse-updated').textContent='MODEL UNAVAILABLE';
+  $('province-grid').innerHTML='';
+  $('territory-grid').innerHTML='';
+  $('focus-reset').hidden=true;
+  $('focus-copy-link').hidden=true;
   $('awake-count').textContent='No substitute numbers shown.';
   $('activity-list').innerHTML='<div class="loading">VERIFIED CORE DATA UNAVAILABLE</div>';
   $('model-path').innerHTML='<div class="loading">MODEL PATH UNAVAILABLE WITHOUT SURVEY DATA</div>';
@@ -169,8 +175,9 @@ function recompute(){
   try{
     state.snapshot=buildCanadaSnapshot(state.profile,state.pop,instant());
     renderCore();
+    chip('ready','DATA MODEL // VERIFIED');
     if(state.shift===0)loadFact();else{state.fact=deterministicFact(state.snapshot);renderFact()}
-  }catch(e){toast(e.message||String(e),true)}
+  }catch(e){renderCoreUnavailable();toast(e.message||String(e),true)}
 }
 function renderCore(){
   const s=state.snapshot;

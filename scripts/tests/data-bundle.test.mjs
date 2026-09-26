@@ -4,7 +4,7 @@ import { mkdtemp, writeFile, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { validateDataBundle } from '../validate-data.mjs';
-import { ACTIVITIES } from '../../src/model.js';
+import { ACTIVITIES, buildCanadaSnapshot } from '../../src/model.js';
 
 async function bundle(run) {
   const dir = await mkdtemp(join(tmpdir(), 'data-bundle-'));
@@ -20,6 +20,26 @@ async function bundle(run) {
 }
 test('a complete captured bundle can be published', () => bundle(async ({dir}) => { assert.equal(await validateDataBundle(dir), true); }));
 test('missing data fails publication, including the live-site 404 regression', () => bundle(async ({dir}) => { await rm(join(dir, 'time-use-profile.json')); await assert.rejects(validateDataBundle(dir), /npm run refresh/); }));
-test('partial survey data is rejected', () => bundle(async ({dir,files,save}) => { delete files['time-use-profile.json'].weekdays[100]; await save(); await assert.rejects(validateDataBundle(dir), /Incomplete survey vector/); }));
+test('partial survey data is rejected', () => bundle(async ({dir,files,save}) => { delete files['time-use-profile.json'].weekdays[100]; await save(); await assert.rejects(validateDataBundle(dir), /Incomplete or invalid survey vector/); }));
 test('missing regional population is rejected', () => bundle(async ({dir,files,save}) => { delete files['population.json'].values.pe; await save(); await assert.rejects(validateDataBundle(dir), /regional population/); }));
 test('duplicate boundaries are rejected', () => bundle(async ({dir,files,save}) => { files['canada-provinces.geojson'].features[1].properties.PRUID = '10'; await save(); await assert.rejects(validateDataBundle(dir), /boundary bundle/); }));
+
+test('zero-filled survey slots cannot produce a verified awake estimate', () => bundle(async ({dir,files,save}) => {
+  const profile = files['time-use-profile.json'];
+  profile.weekdays[100] = Object.fromEntries(ACTIVITIES.map(a => [a.key, 0]));
+  await save();
+  await assert.rejects(validateDataBundle(dir), /survey vector/);
+  assert.throws(() => buildCanadaSnapshot(profile, files['population.json']), /survey vector/);
+}));
+test('rates over 100 percent are rejected', () => bundle(async ({dir,files,save}) => {
+  files['time-use-profile.json'].weekdays[100].sleep = 120;
+  await save(); await assert.rejects(validateDataBundle(dir), /survey vector/);
+}));
+test('regional population must reconcile with Canada', () => bundle(async ({dir,files,save}) => {
+  files['population.json'].canada = 5000;
+  await save(); await assert.rejects(validateDataBundle(dir), /reconcile/);
+}));
+test('browser model rejects partial population instead of using a hidden fallback', () => bundle(async ({files}) => {
+  delete files['population.json'].values.pe;
+  assert.throws(() => buildCanadaSnapshot(files['time-use-profile.json'], files['population.json']), /regional population/);
+}));
