@@ -13,11 +13,12 @@ The published HTML at `https://nosytlabs.github.io/who-up-north/` returned 200, 
 - `scripts/validate-data.mjs` checks required bundles, valid capture timestamps, all weekday/weekend survey slots, regional population and the complete 13-region boundary set. `scripts/build.mjs` validates both input and copied output before accepting a publication build.
 - CI may explicitly build with `--allow-missing-data` for local/UI smoke checks. This mode warns against deployment. The existing manual Pages workflow still refreshes data and runs the guarded default build; automatic schedules remain paused.
 - `src/main.js` ends the fact/model/map loading states when core data fails, disables unusable controls, and shows source-oriented fallback copy. Missing StatCan data renders unavailable rather than staying in a loading state.
+- `src/model.js` shares survey/population validation with the publication check. Invalid rates, zero totals, missing regions and unreconciled populations fail validation. The verified label appears only after a successful computation; errors clear stale figures and regional cards.
 - `src/styles.css` makes provenance readable, wraps long pills and gives pill/suggestion buttons a 44px minimum height.
 - `index.html` adds a Sources navigation destination and distinguishes official inputs from the project's derived model.
 
 ## Verification
 
-`npm run check` passed all 40 tests, including five data-bundle cases and two new unavailable-state cases. `npm run refresh` successfully regenerated local ignored data from the official sources, and the guarded `npm run build` passed with that bundle. Browser review of the resulting local artifact showed populated national figures, the 13-region map and snapshot labels. Visible pill controls measured at least 44px and freshness text measured 13px. No modelled figures were invented to hide missing data.
+`npm run check` passed all 45 tests, including missing-data, invalid-value and failed-computation cases. `npm run refresh` successfully regenerated local ignored data from the official sources, and the guarded `npm run build` passed with that bundle. Browser review of the resulting local artifact showed populated national figures, the 13-region map and snapshot labels. Visible pill controls measured at least 44px and freshness text measured 13px. No modelled figures were invented to hide missing data.
 
 The regenerated bundle is ignored build input, not source code committed to this PR. The manual Pages workflow regenerates it before publication. The live site remains unchanged until this fix is reviewed and the refreshed build is deployed. No DNS, Pages settings, schedules or production deployment were changed by this review.
