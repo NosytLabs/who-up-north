@@ -107,7 +107,7 @@ Some survey cells are suppressed or incomplete.
 
 The build does **not** fabricate a missing activity. If any component is missing, it replaces the entire interval with the nearest complete official five-minute vector from the same weekday/weekend series.
 
-Every substitution is recorded in `public/data/time-use-profile.json` under `gapFill`.
+Every substitution is recorded in `data/time-use-profile.json` under `gapFill`.
 
 ## Province cards and map
 

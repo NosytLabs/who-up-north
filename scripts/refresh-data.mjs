@@ -1,7 +1,7 @@
 import{mkdir,writeFile}from'node:fs/promises';
 import{ACTIVITIES,AGE_15_PLUS_SHARE,VERIFIED_POPULATION}from'../src/model.js';
 
-const OUT=new URL('../public/data/',import.meta.url);
+const OUT=new URL('../data/',import.meta.url);
 await mkdir(OUT,{recursive:true});
 
 const TF='https://www150.statcan.gc.ca/t1/wds/sdmx/statcan/rest/data/DF_45100105';

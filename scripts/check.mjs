@@ -208,9 +208,9 @@ for (const expected of [
   }
 }
 
-if (existsSync('public/data/population.json')) {
+if (existsSync('data/population.json')) {
   const population = JSON.parse(
-    await readFile('public/data/population.json', 'utf8'),
+    await readFile('data/population.json', 'utf8'),
   );
 
   if (!Number.isFinite(Number(population.canada)) || !population.values) {
@@ -246,9 +246,9 @@ if (existsSync('public/data/population.json')) {
   }
 }
 
-if (existsSync('public/data/live-signals.json')) {
+if (existsSync('data/live-signals.json')) {
   const signals = JSON.parse(
-    await readFile('public/data/live-signals.json', 'utf8'),
+    await readFile('data/live-signals.json', 'utf8'),
   );
 
   if (!signals.generatedAt) {
@@ -291,9 +291,9 @@ if (existsSync('public/data/live-signals.json')) {
   }
 }
 
-if (existsSync('public/data/canada-provinces.geojson')) {
+if (existsSync('data/canada-provinces.geojson')) {
   const geo = JSON.parse(
-    await readFile('public/data/canada-provinces.geojson', 'utf8'),
+    await readFile('data/canada-provinces.geojson', 'utf8'),
   );
 
   if (geo?.type !== 'FeatureCollection' || geo.features?.length !== 13) {

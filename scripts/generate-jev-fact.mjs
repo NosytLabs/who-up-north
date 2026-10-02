@@ -6,7 +6,7 @@ import {
   factCandidates,
 } from '../src/model.js';
 
-const dataDir = new URL('../public/data/', import.meta.url);
+const dataDir = new URL('../data/', import.meta.url);
 
 const profile = JSON.parse(
   await readFile(new URL('time-use-profile.json', dataDir), 'utf8'),

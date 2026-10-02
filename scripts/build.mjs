@@ -3,7 +3,7 @@ import { existsSync } from 'node:fs';
 import { validateDataBundle } from './validate-data.mjs';
 
 const smokeOnly = process.argv.includes('--allow-missing-data');
-if (!smokeOnly) await validateDataBundle('public/data');
+if (!smokeOnly) await validateDataBundle('data');
 else console.warn('UI smoke build only: data may be missing. Do not deploy this artifact.');
 
 await rm('dist', { recursive: true, force: true });
@@ -15,6 +15,11 @@ await cp('src', 'dist/src', { recursive: true });
 
 if (existsSync('public')) {
   await cp('public', 'dist', { recursive: true });
+}
+
+if (existsSync('data')) {
+  await mkdir('dist/data', { recursive: true });
+  await cp('data', 'dist/data', { recursive: true });
 }
 
 if (existsSync('docs')) {
