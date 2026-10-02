@@ -103,9 +103,7 @@ A build without generated core data intentionally fails closed in the UI instead
 
 ## GitHub Pages
 
-The live site is published from the `main` branch root. `src/main.js` loads `/data/*` next to `src/`, so the generated bundle in `data/` is committed. `public/data/` is not published: Pages is not serving a build artifact, and that directory is gitignored.
-
-The [.github/workflows/pages.yml](.github/workflows/pages.yml) workflow is manual-only. It refreshes data, builds `dist/`, and deploys only when Pages is set to **GitHub Actions**. That is not the current source. Until it is, pushing `data/` to `main` is what updates the live site.
+Pages is a GitHub Actions deployment (`build_type: workflow`). A push to `main` does not publish. `src/main.js` loads `/data/*`, and those files are committed under `data/` so the checkout contains the bundle. The [.github/workflows/pages.yml](.github/workflows/pages.yml) workflow is manual-only: it refreshes `data/`, checks, builds `dist/`, and deploys. Dispatch that workflow to update the live site.
 
 ## Project structure
 
