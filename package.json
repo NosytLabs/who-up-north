@@ -13,7 +13,7 @@
     "preview": "python3 -m http.server 4173 -d dist"
   },
   "dependencies": {
-    "ai": "7.0.105"
+    "ai": "7.0.127"
   },
   "engines": {
     "node": ">=22"
