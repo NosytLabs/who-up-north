@@ -94,7 +94,7 @@ npm run preview
 ```
 
 - `npm run check` runs model/integrity checks, workflow regression tests and page-content/state regressions.
-- `npm run refresh` calls the official data endpoints and writes generated files under `data/`.
+- `npm run refresh` calls the official data endpoints and writes generated files under `public/data/`.
 - `npm run build` validates the required survey, population, map and signal bundles before and after creating `dist/`. Missing or malformed core data fails publication.
 - `npm run build -- --allow-missing-data` is an explicit local UI smoke-test escape hatch. Never publish that artifact; the manual Pages workflow always uses the normal guarded build.
 - `npm run preview` serves `dist/` locally on port 4173.
@@ -103,7 +103,11 @@ A build without generated core data intentionally fails closed in the UI instead
 
 ## GitHub Pages
 
-Pages is a GitHub Actions deployment (`build_type: workflow`). A push to `main` does not publish. `src/main.js` loads `/data/*`, and those files are committed under `data/` so the checkout contains the bundle. The [.github/workflows/pages.yml](.github/workflows/pages.yml) workflow is manual-only: it refreshes `data/`, checks, builds `dist/`, and deploys. Dispatch that workflow to update the live site.
+The regular [.github/workflows/pages.yml](.github/workflows/pages.yml) definition is **manual-only** for cost containment. There are no push or scheduled deployment triggers. Publish updates by explicitly dispatching that workflow from GitHub Actions.
+
+The workflow refreshes data, runs checks, builds `dist/`, uploads the Pages artifact, verifies that Pages uses **GitHub Actions**, then deploys.
+
+Repository setup: **Settings → Pages → Build and deployment → Source → GitHub Actions**.
 
 ## Project structure
 
@@ -111,8 +115,7 @@ Pages is a GitHub Actions deployment (`build_type: workflow`). A push to `main` 
 .
 ├── .github/workflows/      # CI and Pages deployment
 ├── docs/                   # model and source documentation
-├── data/                   # generated bundles published with the site
-├── public/                 # favicon, sitemap, robots
+├── public/                 # favicon + generated public/data
 ├── scripts/                # refresh, checks, build and tests
 ├── src/
 │   ├── main.js             # browser controller/rendering
