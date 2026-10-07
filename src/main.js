@@ -332,10 +332,6 @@ function renderProvinceData(){
   panel.hidden=false;
   $('province-data-title').textContent=region.name;
   const indicators=state.live?.statcan?.provinces?.[region.id]?.indicators||{};
-  const indicatorCount=Object.keys(indicators).length;
-  $('province-data-status').textContent=state.live?.generatedAt
-    ?`STATCAN · ${indicatorCount} INDICATOR${indicatorCount===1?'':'S'} · ${ageLabel(state.live.generatedAt)}`
-    :'STATCAN DATA LOADING';
   const populationShare=Number.isFinite(Number(state.pop?.canada))?region.population/Number(state.pop.canada)*100:null;
   const cards=[{
     key:'population',
@@ -350,6 +346,10 @@ function renderProvinceData(){
     const indicator=indicators[key];
     if(indicator)cards.push({...indicator,label:PROVINCE_STAT_LABELS[key]||indicator.title});
   }
+
+  $('province-data-status').textContent=state.live?.generatedAt
+    ?`STATCAN · ${cards.length} INDICATOR${cards.length===1?'':'S'} · ${ageLabel(state.live.generatedAt)}`
+    :'STATCAN DATA LOADING';
 
   $('province-stat-grid').innerHTML=cards.map(card=>{
     const source=card.url||'https://www150.statcan.gc.ca/n1/dai-quo/index-eng.html';
