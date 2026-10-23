@@ -71,7 +71,9 @@ Set this repository secret to enable it:
 AI_GATEWAY_API_KEY
 ```
 
-Without the secret, the site uses a deterministic verified fact.
+The Pages workflow uses a deterministic verified fact by default. Select the
+`ai_facts` input when manually deploying to use the configured provider. Without
+the secret, it also uses the deterministic verified fact.
 
 ## API references
 
